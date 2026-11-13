@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Sticky rice basket and a bowl of larb">
+  <rect width="400" height="300" fill="#fff4e0"/>
+  <circle cx="345" cy="55" r="24" fill="#ffc800"/>
+  <ellipse cx="200" cy="262" rx="170" ry="16" fill="#e8dfc8"/>
+  <!-- sticky rice basket (khao niao) -->
+  <g>
+    <path d="M70 130 L150 130 L138 235 L82 235 Z" fill="#d9a441"/>
+    <path d="M70 130 L150 130 L146 158 L74 158 Z" fill="#c68a2e"/>
+    <ellipse cx="110" cy="130" rx="40" ry="12" fill="#f7e8c3"/>
+    <path d="M78 170 L142 170 M82 195 L138 195 M86 220 L134 220" stroke="#b57c26" stroke-width="4"/>
+    <path d="M92 132 L88 233 M110 132 L110 235 M128 132 L132 233" stroke="#b57c26" stroke-width="4"/>
+    <!-- rice mound -->
+    <path d="M78 128 Q110 100 142 128 Q110 118 78 128 Z" fill="#fffdf2"/>
+  </g>
+  <!-- bowl of larb -->
+  <g>
+    <ellipse cx="285" cy="200" rx="70" ry="20" fill="#7a5230"/>
+    <path d="M215 200 Q285 250 355 200 Q355 232 285 236 Q215 232 215 200 Z" fill="#a06a3b"/>
+    <ellipse cx="285" cy="198" rx="62" ry="16" fill="#7cb342"/>
+    <ellipse cx="285" cy="196" rx="48" ry="11" fill="#9ccc65"/>
+    <circle cx="265" cy="193" r="4" fill="#ff5252"/>
+    <circle cx="300" cy="196" r="4" fill="#ff5252"/>
+    <circle cx="285" cy="190" r="3" fill="#fff59d"/>
+  </g>
+  <!-- chilies -->
+  <g stroke="#e53935" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M180 250 Q200 238 218 248"/>
+    <path d="M186 262 Q206 252 224 260"/>
+  </g>
+  <path d="M218 248 l8 -6 M224 260 l8 -5" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>
+</svg>
