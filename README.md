@@ -6,7 +6,7 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the who
 
 ## ✨ What's inside
 
-- **🎯 Learning path** — 12 units / 36 bite-size lessons with Duolingo-style exercises: multiple choice, typing, matching pairs, **listening** (🔊 text-to-speech), **word tiles**, and **speaking practice** (🎤 microphone) — including Unit 12 with famous Lao **proverbs in context** 💬. XP ⚡, hearts ❤️ and daily streaks 🔥 keep you motivated.
+- **🎯 Learning path** — 13 units / 39 bite-size lessons with Duolingo-style exercises: multiple choice, typing, matching pairs, **listening** (🔊 text-to-speech), **word tiles**, and **speaking practice** (🎤 microphone) — including Unit 12 with famous Lao **proverbs in context** 💬 and Unit 13 with **everyday dialogues** 🗣️. XP ⚡, hearts ❤️ and daily streaks 🔥 keep you motivated.
 - **📖 Grammar bible** — the Lao script, the 6 tones, sentence structure, verb particles, negation, questions, classifiers, politeness, telling time, ordering food, directions… explained simply, always with Lao script + transliteration + English.
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
@@ -102,7 +102,7 @@ assets/js/data/     ALL CONTENT LIVES HERE:
 
 ## ✏️ Contribute (please!)
 
-The site is **content-driven**, so non-developers can contribute too:
+The site is **content-driven**, so non-developers can contribute too. Full guide + roadmap of ideas to pick up (AI coach, quiz, push notifications…): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 1. **Add a word/phrase**: append an entry to `assets/js/data/vocab.js` — `{ id, lao, tr, en, cat }`.
 2. **Add a lesson**: in `assets/js/data/units.js`, add a lesson to a unit using the helpers `mc()`, `typeEx()`, `match()`, `listen()`, `tiles()`, `speak()` with vocab ids.
@@ -115,7 +115,7 @@ The site is **content-driven**, so non-developers can contribute too:
 
 5. Open a pull request 🎉
 
-Ideas: example dialogues, a quiz mode, Lao dialect notes (Luang Prabang, Isan), community links, full Lao/French translations of the long grammar & culture texts.
+Roadmap & ideas (weekly quiz, friend leaderboards, streak push, an **AI coach** that explains mistakes, full Lao/French translations of long texts…): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🧪 Tests
 

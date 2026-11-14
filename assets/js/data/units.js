@@ -496,6 +496,51 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'u13', num: 13, icon: '🗣️', color: '#14b8a6',
+    title: 'Everyday dialogues', desc: 'Short real-life conversations: the market, a Lao restaurant, meeting friends.',
+    lessons: [
+      {
+        id: 'u13l1', title: 'At the market', blurb: 'You walk into a market in Vientiane. A vendor smiles: "How much is this?" Time to haggle politely — and ask for the bill at the end!',
+        exercises: [
+          mc('how_much_this', ['where_toilet', 'name_q', 'eaten_q']),
+          tiles('ອັນນີ້ເທ່າໄຫຣ່', ['ອັນນີ້', 'ເທ່າໄຫຣ່'], 'How much is this?', 'an ni thao dai?'),
+          listen('bill_please', ['how_much_this', 'eaten_q', 'speak_slow']),
+          mc('cheap', ['expensive', 'big', 'small'], 'en2lao'),
+          tiles('ເກັບເງິນໄດ້ບ່', ['ເກັບເງິນ', 'ໄດ້', 'ບ່'], 'The bill, please', 'kep ngoen dai bo?'),
+          typeEx('buy'),
+          match(['how_much_this', 'bill_please', 'cheap', 'expensive', 'buy', 'money']),
+          speak('how_much_this'),
+        ],
+      },
+      {
+        id: 'u13l2', title: 'At a Lao restaurant', blurb: 'Lunch with friends at a riverside stall. "Have you eaten yet?" — the classic Lao greeting — then order noodles and say the food is delicious.',
+        exercises: [
+          mc('eaten_q', ['how_are_you', 'speak_lao_q', 'name_q']),
+          listen('eaten_q', ['speak_slow', 'how_much_this', 'nice_meet']),
+          tiles('ກິນຂ້າວແລ້ວບ່', ['ກິນ', 'ຂ້າວ', 'ແລ້ວ', 'ບ່'], 'Have you eaten yet?', 'kin khao laew bo?'),
+          mc('tasty', ['spicy', 'sweet', 'sour'], 'en2lao'),
+          tiles('ໄມ່ກິນເຜັດ', ['ໄມ່', 'ກິນ', 'ເຜັດ'], 'I don\'t eat spicy food', 'mai kin pet'),
+          tiles('ຂ້າວເປີຢກເສ້ນຫນຶ່ງຊາມ', ['ຂ້າວເປີຢກເສ້ນ', 'ຫນຶ່ງ', 'ຊາມ'], 'One bowl of noodles, please', 'khao piak sen neung cham'),
+          match(['eaten_q', 'tasty', 'spicy', 'eat', 'food', 'rice']),
+          speak('eaten_q'),
+        ],
+      },
+      {
+        id: 'u13l3', title: 'Meeting friends', blurb: 'You meet a Lao friend at the café after class. "Do you speak Lao?" — small talk, making plans and saying goodbye until tomorrow.',
+        exercises: [
+          mc('speak_lao_q', ['name_q', 'how_are_you', 'where_toilet']),
+          listen('speak_slow', ['speak_lao_q', 'fine', 'nice_meet']),
+          tiles('ພູດຊ້າໆໄດ້ບ່', ['ພູດ', 'ຊ້າໆ', 'ໄດ້', 'ບ່'], 'Please speak slowly', 'phut cha cha dai bo?'),
+          tiles('ພບກັນພຣຸ່ງນີ້', ['ພບ', 'ກັນ', 'ພຣຸ່ງນີ້'], 'See you tomorrow', 'phoep kan phuk ni'),
+          mc('learning_lao', ['i_am_lao', 'speak_lao_q', 'see_you_tomorrow']),
+          tiles('ກຳລັງເຣີຢນພາສາລາວ', ['ກຳລັງ', 'ເຣີຢນ', 'ພາສາລາວ'], 'I am learning Lao', 'kamlang hian phasa Lao'),
+          match(['speak_lao_q', 'speak_slow', 'nice_meet', 'see_you', 'learning_lao', 'plan']),
+          speak('nice_meet'),
+        ],
+      },
+    ],
+  },
 ];
 
 export const LESSON_BY_ID = {};
