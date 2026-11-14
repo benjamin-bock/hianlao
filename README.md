@@ -56,7 +56,7 @@ The site works 100% statically (progress in `localStorage`). On Vercel, it also 
 - **Progress sync**: XP, streak, completed lessons are saved server-side and merged with the local copy on login (max/union) — your progress follows you across devices.
 - **🏆 Leaderboard** and **🏅 achievements** (badges).
 
-**Setup (2 min)**: in the Vercel project → *Storage* → add **Upstash Redis (Vercel KV)** (free tier). It auto-injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` into the functions. No code changes needed. Without those env vars, the API answers "not configured" and the site silently falls back to localStorage — perfect for GitHub Pages or local dev.
+**Setup (2 min)**: in the Vercel project → *Storage* → add **Upstash Redis (Vercel KV)** (free tier), then **Connect/Lier le projet** on that database and pick your project — that is what injects the env vars into the functions (`KV_REST_API_URL` / `KV_REST_API_TOKEN`, or the Upstash-native `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`; `api/_lib/kv.js` accepts both). Check them under *Settings → Environment Variables*, then **redeploy** (new env vars only apply to new deployments). Verify with `GET /api/health` → `{"ok":true,"kv":true}`. Without those env vars, the API answers "not configured" and the site silently falls back to localStorage — perfect for GitHub Pages or local dev.
 
 ### API endpoints
 | Endpoint | Method | Purpose |
