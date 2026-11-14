@@ -337,6 +337,85 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'u9', num: 9, icon: '🧳', color: '#8b5cf6',
+    title: 'Travel & emergencies', desc: 'Get help, handle health issues and find your way around Laos.',
+    lessons: [
+      {
+        id: 'u9l1', title: 'Getting help', blurb: 'Help, lost, police and phones.',
+        exercises: [
+          mc('help', ['eat', 'sleep', 'walk']),
+          mc('help_bang', ['hello', 'goodbye', 'thanks'], 'en2lao'),
+          typeEx('lost'),
+          listen('lost_way', ['help', 'sick', 'police']),
+          mc('police', ['doctor', 'teacher', 'friend']),
+          typeEx('phone'),
+          speak('help_bang'),
+        ],
+      },
+      {
+        id: 'u9l2', title: 'Health', blurb: 'When you or someone else feels sick.',
+        exercises: [
+          mc('sick', ['happy', 'tired', 'hungry']),
+          typeEx('doctor'),
+          mc('medicine', ['water', 'food', 'ticket'], 'en2lao'),
+          listen('pharmacy', ['hospital', 'school', 'market']),
+          tiles('ຂ່ອຢປ່ວຢ', ['ຂ່ອຢ', 'ປ່ວຢ'], 'I am sick', 'khoi puai'),
+          match(['sick', 'doctor', 'medicine', 'pharmacy', 'hospital', 'water']),
+        ],
+      },
+      {
+        id: 'u9l3', title: 'On the road', blurb: 'Taxis, passports, rooms and asking the way.',
+        exercises: [
+          mc('taxi', ['boat', 'bicycle', 'plane']),
+          typeEx('passport'),
+          tiles('ຂອຫ້ອງຫນຶ່ງ', ['ຂອ', 'ຫ້ອງ', 'ຫນຶ່ງ'], 'I would like one room', 'khor hong neung'),
+          listen('exchange', ['money', 'price', 'cheap']),
+          mc('how_to_wat', ['where_market', 'how_are_you', 'name_q']),
+          mc('where_market', ['how_to_wat', 'bill_please', 'where_toilet'], 'en2lao'),
+          match(['taxi', 'passport', 'phone', 'exchange', 'airport', 'hotel']),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'u10', num: 10, icon: '💭', color: '#f59e0b',
+    title: 'Feelings & opinions', desc: 'Say what you think, feel and hope for.',
+    lessons: [
+      {
+        id: 'u10l1', title: 'Opinions', blurb: '"I think that…" and what matters to you.',
+        exercises: [
+          mc('think_that', ['understand', 'want', 'like']),
+          tiles('ຄິດວ່າອາຫາຣລາວແສ່ບ', ['ຄິດວ່າ', 'ອາຫາຣລາວ', 'ແສ່ບ'], 'I think Lao food is delicious', 'khit wa ahan Lao saep'),
+          typeEx('possible'),
+          mc('important', ['fun', 'easy', 'small'], 'en2lao'),
+          listen('interesting', ['difficult', 'bored', 'afraid']),
+        ],
+      },
+      {
+        id: 'u10l2', title: 'Emotions', blurb: 'Afraid, angry, sad, hopeful…',
+        exercises: [
+          mc('afraid', ['angry', 'sad', 'fun']),
+          typeEx('angry'),
+          mc('sad', ['happy', 'hope', 'dream'], 'en2lao'),
+          listen('miss', ['think_that', 'bored', 'lonely']),
+          typeEx('hope'),
+          match(['afraid', 'angry', 'sad', 'miss', 'hope', 'dream', 'bored']),
+        ],
+      },
+      {
+        id: 'u10l3', title: 'Putting it together', blurb: 'Real sentences about real feelings.',
+        exercises: [
+          tiles('ຖ້າພນຕກກັໄມ່ໄປ', ['ຖ້າ', 'ພນຕກ', 'ກັ', 'ໄມ່ໄປ'], "If it rains, we won't go", 'tha fon tok kho mai pai'),
+          mc('fun', ['sad', 'afraid', 'bored']),
+          typeEx('difficult'),
+          mc('easy', ['difficult', 'expensive', 'big'], 'en2lao'),
+          mc('surprised', ['lonely', 'interesting', 'possible']),
+          match(['fun', 'interesting', 'difficult', 'easy', 'surprised', 'important', 'possible']),
+        ],
+      },
+    ],
+  },
 ];
 
 export const LESSON_BY_ID = {};

@@ -11,6 +11,7 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the who
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
 - **🔊 Voice** — listening exercises use your browser's Lao voice when available (`lo-LA`); speaking exercises use the Web Speech API where supported, with graceful fallbacks.
+- **👤 Accounts & sync** — free username/password accounts on Vercel (serverless `api/` + Upstash KV): progress synced across devices, 🏆 leaderboard, 🏅 achievement badges. Without a backend the site still works fully offline (localStorage).
 
 ## 🚀 Run it locally
 
@@ -33,7 +34,30 @@ The site is a **static site** — it runs anywhere that serves files. Two free o
 
 **Vercel** — zero config: import this repo at [vercel.com/new](https://vercel.com/new) (or run `npx vercel --prod` from the repo root). No build command, no output directory — `vercel.json` only enables clean URLs (`/learn` works alongside `/learn.html`). Every push to `main` auto-deploys; every PR gets a preview URL. The repo must be public, or grant Vercel access to the private repo.
 
-> Accounts/server: **not needed** for the current site — progress (XP, streaks, completed lessons) is stored in the browser's `localStorage`. If we later add accounts, cross-device sync or leaderboards, we can add Vercel serverless functions (`api/`) + a database, with a graceful fallback to localStorage when offline.
+## 👤 Accounts, sync & leaderboard (optional backend)
+
+The site works 100% statically (progress in `localStorage`). On Vercel, it also gets a small serverless backend in `api/` (Node functions + Upstash Redis / Vercel KV) for **free accounts**:
+
+- **Sign up / sign in** with username + password (scrypt-hashed, httpOnly session cookie, rate-limited, same-origin guarded).
+- **Progress sync**: XP, streak, completed lessons are saved server-side and merged with the local copy on login (max/union) — your progress follows you across devices.
+- **🏆 Leaderboard** and **🏅 achievements** (badges).
+
+**Setup (2 min)**: in the Vercel project → *Storage* → add **Upstash Redis (Vercel KV)** (free tier). It auto-injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` into the functions. No code changes needed. Without those env vars, the API answers "not configured" and the site silently falls back to localStorage — perfect for GitHub Pages or local dev.
+
+### API endpoints
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/health` | GET | `{ ok, kv }` — backend availability probe |
+| `/api/auth/register` | POST | create account (merges `localProgress`), sets session cookie |
+| `/api/auth/login` | POST | sign in (merges `localProgress`), sets session cookie |
+| `/api/auth/logout` | POST | destroy session |
+| `/api/auth/me` | GET | current user + progress (or `null`) |
+| `/api/progress` | GET/PUT | read / save `{ xp, done, streak, lastVisit }` (validated against lesson ids) |
+| `/api/leaderboard?limit=N` | GET | top learners by XP |
+
+KV data model: `user:<name>` (JSON record), `session:<token>` (30-day TTL), `progress:<name>` (JSON), `lb:xp` (sorted set). No secrets in the repo — env vars only.
+
+**Tests**: `npm test` runs `tests/check-data.mjs` (content integrity) and `tests/api.test.mjs` (spins a loopback mock of the KV REST API and exercises the full register → login → sync → leaderboard → logout flow: 24 assertions).
 
 ## 🗂️ Project structure
 
@@ -44,6 +68,8 @@ lesson.html?id=…    lesson runner (exercise engine)
 words.html          searchable dictionary
 grammar.html        grammar bible
 culture.html        culture guide
+account.html        account / profile page
+api/                serverless backend (Vercel functions + KV): auth, progress sync, leaderboard
 assets/css/main.css the design
 assets/img/*.svg    original illustrations (no external assets)
 assets/js/main.js   shared header/footer/nav + helpers

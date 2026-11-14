@@ -24,9 +24,9 @@ ok(VOCAB.every(v => hasLao(v.lao)), 'every lao field contains Lao script');
 ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');
 
 console.log('Units & lessons:');
-ok(UNITS.length === 8, `${UNITS.length} units`);
+ok(UNITS.length === 10, `${UNITS.length} units`);
 const lessonCount = Object.keys(LESSON_BY_ID).length;
-ok(lessonCount === 24, `${lessonCount} lessons`);
+ok(lessonCount === 30, `${lessonCount} lessons`);
 const unitErrors = validateUnits();
 ok(unitErrors.length === 0, `validateUnits() clean${unitErrors.length ? ': ' + unitErrors.join('; ') : ''}`);
 ok(UNITS.every(u => u.lessons.every(l => l.exercises.length >= 4)), 'every lesson has >=4 exercises');
@@ -34,13 +34,13 @@ const types = new Set(UNITS.flatMap(u => u.lessons.flatMap(l => l.exercises.map(
 ok(['mc', 'type', 'match', 'listen', 'tiles', 'speak'].every(t => types.has(t)), `all 6 exercise types used (${[...types].join(', ')})`);
 
 console.log('Grammar & culture:');
-ok(GRAMMAR.length >= 10, `${GRAMMAR.length} grammar sections`);
+ok(GRAMMAR.length >= 14, `${GRAMMAR.length} grammar sections`);
 ok(new Set(GRAMMAR.map(g => g.id)).size === GRAMMAR.length, 'grammar ids unique');
-ok(CULTURE.length >= 6, `${CULTURE.length} culture sections`);
+ok(CULTURE.length >= 7, `${CULTURE.length} culture sections`);
 CULTURE.forEach(c => ok(!c.img || existsSync(join(root, 'assets/img', c.img)), `culture img exists: ${c.img || '(none)'}`));
 
 console.log('Pages & assets:');
-const pages = ['index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html', 'culture.html'];
+const pages = ['index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html', 'culture.html', 'account.html'];
 for (const p of pages) {
   ok(existsSync(join(root, p)), `${p} exists`);
   const html = readFileSync(join(root, p), 'utf8');

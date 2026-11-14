@@ -1,5 +1,5 @@
 // Shared shell: header, footer, nav, XP/streak pills. Imported by every page.
-import { getState, touchStreak } from './store.js';
+import { getState, touchStreak, getUser, initAuth } from './store.js';
 import { VOCAB } from './data/vocab.js';
 import { UNITS, LESSON_BY_ID } from './data/units.js';
 import { GRAMMAR } from './data/grammar.js';
@@ -65,9 +65,13 @@ export function renderShell(activePage) {
       el('div', { class: 'header-stats' },
         el('span', { class: 'pill xp-pill', title: 'XP earned' }, `⚡ ${state.xp}`),
         el('span', { class: 'pill streak-pill', title: 'Daily streak' }, `🔥 ${state.streak}`),
+        el('a', { id: 'auth-chip', class: 'pill auth-chip', href: 'account.html', title: 'Account & progress sync' },
+          getUser() ? `👤 ${getUser().displayName || getUser().username}` : 'Sign in'),
       ),
     );
     header.append(bar);
+    // Detect backend + restore session (updates the chip when done).
+    initAuth().then(refreshAuthChip).catch(() => {});
   }
   if (footer) {
     footer.innerHTML = '';
@@ -85,6 +89,14 @@ export function renderShell(activePage) {
     ));
   }
   document.body.classList.add(`page-${activePage}`);
+}
+
+export function refreshAuthChip() {
+  const chip = document.getElementById('auth-chip');
+  if (!chip) return;
+  const u = getUser();
+  chip.textContent = u ? `👤 ${u.displayName || u.username}` : 'Sign in';
+  chip.classList.toggle('signed-in', !!u);
 }
 
 export function shuffle(arr) {

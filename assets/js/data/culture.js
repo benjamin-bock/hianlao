@@ -70,4 +70,16 @@ export const CULTURE = [
       { t: 'note', html: 'Know a Lao community event, a good Lao teacher or a resource? Open an issue on GitHub and help us grow the community links!' },
     ],
   },
+  {
+    id: 'proverbs', icon: '💬', img: 'script.svg', title: 'Lao proverbs & sayings',
+    blocks: [
+      { t: 'p', html: 'Lao wisdom in a few words — these sayings are used in everyday life and are a lovely way to sound like a local:' },
+      { t: 'list', items: [
+        '<span class="lao">ນ້ຳຂຶ້ນໃຫ້ຣີບຕັກ</span> <i>(nam khuen hai rep tak)</i> — "When the water rises, scoop quickly" → <b>seize the opportunity!</b>',
+        '<span class="lao">ຊ້າໆ ໄດ້ພຣ້າເລ່ມງາມ</span> <i>(cha cha dai phra lem ngam)</i> — "Slowly you get a beautiful blade" → <b>slow and steady wins the race</b>.',
+        '<span class="lao">ຄວາມພຢາຢາມອຢູ່ທີ່ໄຫນ ຄວາມສຳເຣັຈອຢູ່ທີ່ນັ່ນ</span> <i>(khwam phayayam yu thi nai, khwam samret yu thi nan)</i> — "Where there is effort, there is success." Perfect for language learning!',
+      ] },
+      { t: 'note', html: 'Know a beautiful Lao proverb? Add it in <code>assets/js/data/culture.js</code> and send a pull request! 🇱🇦' },
+    ],
+  },
 ];

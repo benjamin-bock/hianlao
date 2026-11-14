@@ -4,6 +4,7 @@ import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
 import { addXp, markDone, isDone, getState } from './store.js';
+import { unlockedAchievements } from './achievements.js';
 import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice } from './speech.js';
 
 const params = new URLSearchParams(location.search);
@@ -414,7 +415,16 @@ function summaryScreen() {
       nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, 'Next lesson →') : null,
       el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, 'Back to path'),
       el('a', { class: 'btn btn-ghost', href: `lesson.html?id=${lesson.id}` }, '↻ Replay'),
-    )));
+    ),
+    (() => {
+      const badges = unlockedAchievements();
+      if (!badges.length) return null;
+      return el('div', { class: 'summary-badges' },
+        el('h3', {}, '🏅 Achievements'),
+        el('div', { class: 'badge-grid' }, badges.slice(-6).map(a =>
+          el('div', { class: 'badge-card' }, el('span', { class: 'badge-icon' }, a.icon), el('div', {}, el('strong', {}, a.name), el('p', {}, a.desc))))));
+    })()
+  ));
 }
 
 function failScreen() {

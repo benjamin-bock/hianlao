@@ -17,6 +17,8 @@ export const CATEGORIES = {
   time: 'Time & days',
   directions: 'Directions',
   colors: 'Colors',
+  travel: 'Travel & emergencies',
+  emotions: 'Feelings & opinions',
 };
 
 export const VOCAB = [
@@ -268,6 +270,43 @@ export const VOCAB = [
   { id: 'milk',   lao: 'ນມ',        tr: 'nom',       en: 'milk', cat: 'food' },
   { id: 'hear',   lao: 'ໄດ້ຢິນ',    tr: 'dai yin',   en: 'to hear', cat: 'verbs' },
   { id: 'run',    lao: 'ວິ່ງ',      tr: 'wing',      en: 'to run', cat: 'verbs' },
+  // ---- Travel & emergencies ----
+  { id: 'taxi',       lao: 'ຣຖແທັກສີ່',       tr: 'rot taxi',          en: 'taxi', cat: 'travel' },
+  { id: 'passport',   lao: 'ຫນັງສືອເດິນທາງ',  tr: 'nangseu deun thang', en: 'passport', cat: 'travel' },
+  { id: 'help',       lao: 'ຊ່ວຢເຫລືອ',      tr: 'chuai luea',        en: 'to help', cat: 'travel' },
+  { id: 'help_bang',  lao: 'ຊ່ວຢດ້ວຢ',        tr: 'chuai duai',        en: 'Help!', cat: 'travel' },
+  { id: 'lost',       lao: 'ຫາຢ',           tr: 'hai',               en: 'lost', cat: 'travel' },
+  { id: 'lost_way',   lao: 'ຫລງທາງ',         tr: 'lang thang',        en: 'to get lost', cat: 'travel' },
+  { id: 'sick',       lao: 'ປ່ວຢ',          tr: 'puai',              en: 'sick', cat: 'travel' },
+  { id: 'medicine',   lao: 'ຢາ',            tr: 'ya',                en: 'medicine', cat: 'travel' },
+  { id: 'pharmacy',   lao: 'ຣ້ານຂາຢຢາ',      tr: 'ran khai ya',      en: 'pharmacy', cat: 'travel' },
+  { id: 'police',     lao: 'ຕຳຣວຈ',         tr: 'tamruat',           en: 'police', cat: 'travel' },
+  { id: 'phone',      lao: 'ໂທຣສັພທ໌',       tr: 'tholaphap',         en: 'phone', cat: 'travel' },
+  { id: 'room_q',     lao: 'ຂອຫ້ອງຫນຶ່ງ',     tr: 'khor hong neung',   en: 'I would like one room', cat: 'travel' },
+  { id: 'exchange',   lao: 'ທີ່ແລກເງິນ',      tr: 'thi laek ngoen',    en: 'money exchange', cat: 'travel' },
+  { id: 'how_to_wat', lao: 'ໄປວັດຢັງໄງ',      tr: 'pai wat jang?',     en: 'How do I get to the temple?', cat: 'travel' },
+  { id: 'where_market',lao: 'ຕລາດອຢູ່ໃສ',     tr: 'talat yu sai?',     en: 'Where is the market?', cat: 'travel' },
+
+  // ---- Feelings & opinions ----
+  { id: 'think_that',  lao: 'ຄິດວ່າ',        tr: 'khit wa',            en: 'to think that', cat: 'emotions' },
+  { id: 'afraid',      lao: 'ກລັວ',         tr: 'klua',               en: 'afraid', cat: 'emotions' },
+  { id: 'angry',       lao: 'ໂກຣຘ',         tr: 'krot',               en: 'angry', cat: 'emotions' },
+  { id: 'sad',         lao: 'ເສີຢໃຈ',        tr: 'sia jai',            en: 'sad', cat: 'emotions' },
+  { id: 'miss',        lao: 'ຄິດຖຶງ',        tr: 'khit thung',         en: 'to miss (someone)', cat: 'emotions' },
+  { id: 'bored',       lao: 'ເບື່ອ',        tr: 'beau',               en: 'bored', cat: 'emotions' },
+  { id: 'lonely',      lao: 'ເຫງາ',         tr: 'ngao',               en: 'lonely', cat: 'emotions' },
+  { id: 'hope',        lao: 'ຫວັງ',         tr: 'wang',               en: 'to hope', cat: 'emotions' },
+  { id: 'dream',       lao: 'ພັນ',          tr: 'fan',                en: 'to dream', cat: 'emotions' },
+  { id: 'fun',         lao: 'ສນຸກ',         tr: 'sanuk',              en: 'fun', cat: 'emotions' },
+  { id: 'interesting', lao: 'ນ່າສນໃຈ',      tr: 'na sanai',           en: 'interesting', cat: 'emotions' },
+  { id: 'important',   lao: 'ສຳຄັຍ',        tr: 'samkhan',            en: 'important', cat: 'emotions' },
+  { id: 'difficult',   lao: 'ຢາກ',          tr: 'yak',                en: 'difficult', cat: 'emotions' },
+  { id: 'easy',        lao: 'ງ່າຢ',         tr: 'ngai',               en: 'easy', cat: 'emotions' },
+  { id: 'possible',    lao: 'ເປັນໄປໄດ້',     tr: 'pen pai dai',        en: 'possible', cat: 'emotions' },
+  { id: 'surprised',   lao: 'ແປລກໃຈ',        tr: 'plak jai',           en: 'surprised', cat: 'emotions' },
+  { id: 'food_opinion',lao: 'ຄິດວ່າອາຫາຣລາວແສ່ບ', tr: 'khit wa ahan Lao saep', en: 'I think Lao food is delicious', cat: 'emotions' },
+  { id: 'rain_plan',   lao: 'ຖ້າພນຕກກັໄມ່ໄປ',  tr: 'tha fon tok kho mai pai', en: "If it rains, we won't go", cat: 'emotions' },
+
 ];
 
 export const VOCAB_BY_ID = Object.fromEntries(VOCAB.map(v => [v.id, v]));

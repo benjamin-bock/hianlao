@@ -46,7 +46,8 @@ const features = el('section', { class: 'features' },
     feature('📖', 'Grammar bible', 'From the Lao script and its 6 tones to sentence structure, particles, classifiers and questions — explained simply, with Lao examples.'),
     feature('🧺', 'Words & phrases', 'A searchable dictionary of 200+ words and real-life phrases, sorted by theme: greetings, food, family, travel…'),
     feature('🇱🇦', 'Culture', 'Festivals (Pi Mai!), food, etiquette, the Mekong, and why the diaspora keeps the language alive.'),
-    feature('💚', 'Free & open-source', 'No accounts, no paywall, no ads. The code is on GitHub under MIT — contribute a lesson or a word!'),
+    feature('👤', 'Free accounts & sync', 'Create a free account to sync XP, streaks and completed lessons across all your devices, and climb the 🏆 leaderboard. No account? No problem — progress stays on your device.'),
+    feature('💚', 'Free & open-source', 'No paywall, no ads. The code is on GitHub under MIT — contribute a lesson or a word!'),
   ),
 );
 

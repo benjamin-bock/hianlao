@@ -193,4 +193,34 @@ export const GRAMMAR = [
       { t: 'ex', lao: 'ຣຖ / ຈັກຣຢານ / ເຣືອ / ເຣືອບິນ', tr: 'rot / jak kra yan / ruea / ruea bin', en: 'car / bicycle / boat / plane' },
     ],
   },
+  {
+    id: 'connectors', icon: '🔗', title: 'Connecting sentences',
+    blocks: [
+      { t: 'p', html: 'Lao loves chaining clauses with small connectors. Learn these and your sentences will flow:' },
+      { t: 'table', head: ['Lao', 'Transliteration', 'Meaning', 'Example'],
+        rows: [
+          ['ແລະ', 'lae', 'and', 'ຊອບກາແລະຊາ — I like coffee and tea'],
+          ['ແຕ່', 'tae', 'but', 'ແສ່ບແຕ່ເຜັດ — delicious but spicy'],
+          ['ຫຣືອ', 'ru', 'or', 'ຊາຫຣືອກາ? — tea or coffee?'],
+          ['ເພຣາະວ່າ', 'pho wa', 'because', 'ໄມ່ໄປເພຣາະວ່າພນຕກ — I don\'t go because it rains'],
+          ['ຖ້າ…ກັ', 'tha… kho', 'if… then', 'ຖ້າພນຕກກັໄມ່ໄປ — If it rains, we won\'t go'],
+          ['ແລ້ວ', 'laew', 'then / already', 'ກິນຂ້າວແລ້ວ — I already ate'],
+        ] },
+      { t: 'ex', lao: 'ຖ້າພນຕກກັໄມ່ໄປ', tr: 'tha fon tok kho mai pai', en: "If it rains, we won't go" },
+      { t: 'ex', lao: 'ຂ່ອຢຊອບກາແລະຊາ', tr: 'khoi mak ka lae cha', en: 'I like coffee and tea' },
+      { t: 'ex', lao: 'ແສ່ບແຕ່ເຜັດ', tr: 'saep tae pet', en: 'Delicious but spicy' },
+    ],
+  },
+  {
+    id: 'formal', icon: '🎩', title: 'Polite & formal Lao',
+    blocks: [
+      { t: 'p', html: 'Lao has polite registers. Add <span class="lao">ຄະ</span> <i>(kha)</i> if you are a woman or <span class="lao">ຄຣັບ</span> <i>(khap)</i> if you are a man at the end of a sentence. With elders or officials, use <span class="lao">ທ່ານ</span> <i>(than)</i> for "you" and <span class="lao">ໂປຣດ</span> <i>(prot)</i> for "please".' },
+      { t: 'ex', lao: 'ສບາຢດີຄ່ະ', tr: 'sa-bai-dii kha', en: 'Hello (said by a woman)' },
+      { t: 'ex', lao: 'ສບາຢດີຄຣັບ', tr: 'sa-bai-dii khap', en: 'Hello (said by a man)' },
+      { t: 'ex', lao: 'ຂອໂທສຄຣັບ', tr: 'kho thot khap', en: 'Sorry, excuse me (polite)' },
+      { t: 'ex', lao: 'ໂປຣດນັ່ງ', tr: 'prot nang', en: 'Please sit (formal)' },
+      { t: 'ex', lao: 'ທ່ານສບາຢດີໄຫມ', tr: 'than sa-bai-dii mai?', en: 'Hello (very formal, to an elder)' },
+      { t: 'note', html: 'And remember the <b>nop</b>: hands pressed together — higher for elders, monks and Buddha images. When in doubt, smile and say <span class="lao">ສະບາດີ</span>!' },
+    ],
+  },
 ];

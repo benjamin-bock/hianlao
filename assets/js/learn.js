@@ -1,6 +1,6 @@
 import { el, renderShell } from './main.js';
 import { UNITS } from './data/units.js';
-import { isDone, totalDone } from './store.js';
+import { isDone, totalDone, api, getUser } from './store.js';
 
 renderShell('learn');
 
@@ -59,3 +59,33 @@ if (firstUndone >= 0) {
   app.append(el('div', { class: 'sticky-cta' },
     el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ Continue: ${next.title}`)));
 }
+
+// Leaderboard (only when the backend is available and the user is signed in).
+async function leaderboardCard() {
+  const card = el('section', { class: 'card leaderboard-card' },
+    el('h2', {}, '🏆 Leaderboard'),
+    el('p', { class: 'muted' }, 'Top learners by XP — sign in to appear here!'),
+  );
+  const list = el('ol', { class: 'leaderboard-list' });
+  card.append(list);
+  app.append(card);
+  if (!api.available) {
+    list.append(el('li', { class: 'muted' }, 'Backend offline — leaderboard unavailable. The site still works fully as a guest!'));
+    return;
+  }
+  if (!getUser()) {
+    list.append(el('li', { class: 'muted' }, el('a', { href: 'account.html' }, 'Sign in or create a free account')), ' to join the leaderboard.');
+    return;
+  }
+  const entries = await api.leaderboard(10);
+  list.innerHTML = '';
+  if (!entries.length) { list.append(el('li', { class: 'muted' }, 'No scores yet — be the first! Complete a lesson to get on the board.')); return; }
+  entries.forEach((e2, i) => {
+    const me = getUser() && e2.username === getUser().username.toLowerCase();
+    list.append(el('li', { class: me ? 'me' : '' },
+      el('span', { class: 'lb-rank' }, `${i + 1}`),
+      el('span', { class: 'lb-name' }, e2.displayName || e2.username),
+      el('span', { class: 'lb-xp' }, `⚡ ${e2.xp}`)));
+  });
+}
+leaderboardCard();

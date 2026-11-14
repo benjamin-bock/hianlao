@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node tests/check-data.mjs",
+    "test": "node tests/check-data.mjs && node tests/api.test.mjs",
     "serve": "python3 -m http.server 8000"
   },
   "license": "MIT"
