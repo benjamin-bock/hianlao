@@ -3,7 +3,7 @@
 // available; otherwise localStorage. The site always works without a backend.
 const KEY = 'hianlao-v1';
 
-const defaults = () => ({ xp: 0, done: {}, streak: 0, lastVisit: null });
+const defaults = () => ({ xp: 0, done: {}, streak: 0, lastVisit: null, goal: 20, xpToday: 0, today: null, reviews: {} });
 
 export function load() {
   try {
@@ -26,11 +26,19 @@ const todayStr = () => {
 export function getState() { return load(); }
 
 export function mergeProgress(a, b) {
+  const reviews = { ...(a.reviews || {}) };
+  for (const [k, v] of Object.entries(b.reviews || {})) {
+    if (!reviews[k] || reviews[k].due < v.due) reviews[k] = v;
+  }
   return {
     xp: Math.max(a.xp || 0, b.xp || 0),
     done: { ...(a.done || {}), ...(b.done || {}) },
     streak: Math.max(a.streak || 0, b.streak || 0),
     lastVisit: [a.lastVisit, b.lastVisit].filter(Boolean).sort().pop() || null,
+    goal: (b.goal >= 10 && b.goal <= 500) ? b.goal : (a.goal || 20),
+    xpToday: Math.max(a.xpToday || 0, b.xpToday || 0),
+    today: a.today || b.today || null,
+    reviews,
   };
 }
 
@@ -48,6 +56,9 @@ async function putSoon() {
 export async function addXp(n) {
   const s = load();
   s.xp += n;
+  const today = todayStr();
+  if (s.today !== today) { s.today = today; s.xpToday = 0; }
+  s.xpToday = (s.xpToday || 0) + n;
   save(s);
   await putSoon();
   return s.xp;
@@ -68,6 +79,7 @@ export function totalDone() { return Object.keys(load().done).length; }
 export function touchStreak() {
   const s = load();
   const today = todayStr();
+  if (s.today !== today) { s.today = today; s.xpToday = 0; }
   if (s.lastVisit !== today) {
     const y = new Date(Date.now() - 86400000);
     const yStr = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
@@ -81,6 +93,42 @@ export function touchStreak() {
 
 export function resetAll() {
   try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+}
+
+// ---- daily goal ----
+export function setGoal(g) {
+  const s = load();
+  s.goal = Math.min(500, Math.max(10, Math.round(g) || 20));
+  save(s);
+  putSoon();
+  return s.goal;
+}
+
+// ---- spaced-repetition review queue (per lesson) ----
+export function scheduleReview(lessonId) {
+  const s = load();
+  const prev = s.reviews?.[lessonId];
+  const iv = Math.min(30, (prev?.iv || 1) * 2); // 1d -> 2d -> 4d ... capped at 30d
+  s.reviews = { ...(s.reviews || {}), [lessonId]: { due: Date.now() + iv * 86400000, iv } };
+  save(s);
+  putSoon();
+}
+
+export function getDueReviews() {
+  const s = load();
+  const now = Date.now();
+  return Object.entries(s.reviews || {})
+    .filter(([, v]) => v.due <= now)
+    .map(([id, v]) => ({ id, ...v }));
+}
+
+export function getUpcomingReviews() {
+  const s = load();
+  const now = Date.now();
+  return Object.entries(s.reviews || {})
+    .filter(([, v]) => v.due > now)
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a, b) => a.due - b.due);
 }
 
 export function getUser() { return currentUser; }
@@ -150,9 +198,9 @@ export const api = {
     });
     return r.ok;
   },
-  async leaderboard(limit = 10) {
+  async leaderboard(limit = 10, period = 'all') {
     try {
-      const r = await fetch(`api/leaderboard?limit=${limit}`, { cache: 'no-store' });
+      const r = await fetch(`api/leaderboard?limit=${limit}&period=${period}`, { cache: 'no-store' });
       const j = await r.json();
       return j.entries || [];
     } catch { return []; }

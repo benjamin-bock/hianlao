@@ -1,9 +1,10 @@
 // HianLao lesson engine: renders one exercise at a time, hearts, XP, feedback,
 // and a summary screen. Exercises come from data/units.js.
 import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
+import { t } from './ui.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
-import { addXp, markDone, isDone, getState } from './store.js';
+import { addXp, markDone, isDone, getState, scheduleReview } from './store.js';
 import { unlockedAchievements } from './achievements.js';
 import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice } from './speech.js';
 
@@ -56,7 +57,7 @@ function setActionBar(...nodes) {
   actionBar.append(...nodes);
 }
 
-const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, 'CHECK');
+const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, t('check'));
 
 function feedbackBanner(ok, correctText) {
   return el('div', { class: `feedback ${ok ? 'ok' : 'bad'}` },
@@ -65,7 +66,7 @@ function feedbackBanner(ok, correctText) {
       el('strong', {}, ok ? pick(['Awesome!', 'Correct!', 'ແສ່ບ! (Delicious = great!)', 'Well done!']) : 'Not quite'),
       !ok ? el('p', { html: `Correct answer: <b>${correctText}</b>` }) : el('p', {}, pick(['+10 XP', 'Keep it up!', 'You\'re on fire 🔥'])),
     ),
-    el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, 'CONTINUE'));
+    el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, t('cont')));
 }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -397,13 +398,14 @@ function summaryScreen() {
   const acc = Math.round((state.correct / total) * 100);
   addXp(state.xpEarned);
   markDone(lesson.id);
+  scheduleReview(lesson.id);
   progressFill.style.width = '100%';
   stage.innerHTML = '';
   setActionBar();
   const nextId = nextLessonId();
   stage.append(el('div', { class: 'summary card' },
     el('div', { class: 'summary-icon' }, '🏆'),
-    el('h1', {}, 'Lesson complete!'),
+    el('h1', {}, t('done_title')),
     el('p', { class: 'lao summary-lao' }, 'ທຳໄດ້ດີມາກ!'),
     el('p', {}, `${lesson.title} — ${state.correct}/${total} correct (${acc}%)`),
     el('div', { class: 'summary-stats' },
@@ -412,9 +414,9 @@ function summaryScreen() {
       el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, 'total XP')),
     ),
     el('div', { class: 'summary-actions' },
-      nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, 'Next lesson →') : null,
-      el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, 'Back to path'),
-      el('a', { class: 'btn btn-ghost', href: `lesson.html?id=${lesson.id}` }, '↻ Replay'),
+      nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
+      el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, t('back_path')),
+      el('a', { class: 'btn btn-ghost', href: `lesson.html?id=${lesson.id}` }, t('replay')),
     ),
     (() => {
       const badges = unlockedAchievements();
@@ -432,10 +434,10 @@ function failScreen() {
   setActionBar();
   stage.append(el('div', { class: 'summary card fail' },
     el('div', { class: 'summary-icon' }, '💔'),
-    el('h1', {}, 'Out of hearts!'),
+    el('h1', {}, t('fail_title')),
     el('p', {}, `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">ໄມ່ເປັນໄຣ</span> <i>(mai pen rai)</i> — "no worries". Try again!`),
     el('div', { class: 'summary-actions' },
-      el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${lesson.id}` }, '↻ Try again'),
+      el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${lesson.id}` }, t('try_again')),
       el('a', { class: 'btn btn-ghost', href: 'learn.html' }, 'Back to path'))));
 }
 

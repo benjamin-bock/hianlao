@@ -11,6 +11,8 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the who
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
 - **🔊 Voice** — listening exercises use your browser's Lao voice when available (`lo-LA`); speaking exercises use the Web Speech API where supported, with graceful fallbacks.
+- **📱 PWA / mobile app** — the site is already an installable Progressive Web App (manifest + service worker + icons): works offline, "Add to Home Screen" on Android & iOS. See the *Mobile app* section below for store publishing costs.
+- **🌙 Dark theme, 🌐 EN/FR/LAO UI, 🎯 daily XP goal, 🔁 spaced-repetition review, 🏆 weekly & all-time leaderboards** — all in the header / Learn page.
 - **👤 Accounts & sync** — free username/password accounts on Vercel (serverless `api/` + Upstash KV): progress synced across devices, 🏆 leaderboard, 🏅 achievement badges. Without a backend the site still works fully offline (localStorage).
 
 ## 🚀 Run it locally
@@ -25,6 +27,18 @@ python3 -m http.server 8000
 ```
 
 (ES modules need HTTP, not `file://` — that's why we use a tiny local server.)
+
+## 📱 Mobile app — cheap/free options
+
+The site is **already a PWA** (`manifest.webmanifest` + `sw.js` + generated PNG icons): installable on Android and iOS via "Add to Home Screen", works offline, dark theme follows the OS. **Cost: 0 €.**
+
+If you want it in the **stores**:
+
+1. **Google Play** — wrap the site with [Capacitor](https://capacitorjs.com/) (free, open-source): `npm i @capacitor/core @capacitor/cli && npx cap add android`, then open Android Studio and build an AAB. Publishing costs **$25 one-time** (Google Play Developer registration). No Mac needed.
+2. **Apple App Store** — same Capacitor wrapper (`npx cap add ios`), but building requires a **Mac with Xcode**; publishing costs **$99/year** (Apple Developer Program). Alternative without a Mac: [PWABuilder](https://www.pwabuilder.com/) (free) generates store-ready packages from the PWA URL.
+3. Cheapest path overall: ship the PWA now (0 €), add Play via Capacitor when you have users ($25), iOS later ($99/yr, unavoidable Apple fee).
+
+A `capacitor.config.json` skeleton is included for when you want it.
 
 ## 🌐 Deployment
 
@@ -69,6 +83,9 @@ words.html          searchable dictionary
 grammar.html        grammar bible
 culture.html        culture guide
 account.html        account / profile page
+review.html         spaced-repetition review queue
+manifest.webmanifest + sw.js   PWA (offline, installable)
+assets/js/ui.js     i18n (EN/FR/LAO) + theme
 api/                serverless backend (Vercel functions + KV): auth, progress sync, leaderboard
 assets/css/main.css the design
 assets/img/*.svg    original illustrations (no external assets)

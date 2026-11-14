@@ -1,6 +1,7 @@
 import { el, renderShell } from './main.js';
+import { t } from './ui.js';
 import { UNITS } from './data/units.js';
-import { isDone, totalDone, api, getUser } from './store.js';
+import { isDone, totalDone, api, getUser, getState, setGoal } from './store.js';
 
 renderShell('learn');
 
@@ -13,14 +14,36 @@ function isUnlocked(index) {
   return isDone(allLessons[index - 1].id);
 }
 
+let lbPeriod = 'all';
 const app = document.getElementById('app');
 
 app.append(
   el('div', { class: 'page-head' },
-    el('h1', {}, 'Learn Lao'),
-    el('p', { class: 'section-sub' }, `${totalDone()}/${allLessons.length} lessons completed · progress is saved on this device`),
+    el('h1', {}, t('learn_title')),
+    el('p', { class: 'section-sub' }, `${totalDone()}/${allLessons.length} ${t('learn_sub')}`),
   ),
 );
+
+const goalState0 = getState();
+const goalFill = el('div', { class: 'goal-fill' });
+const goalLabel = el('span', { class: 'muted' }, '');
+const goalSel = el('select', { 'aria-label': 'Daily goal' },
+  [10, 20, 50, 100].map(g => el('option', { value: String(g) }, `⚡ ${g} XP`)));
+goalSel.value = String(goalState0.goal || 20);
+function renderGoal() {
+  const s = getState();
+  const pct = Math.min(100, Math.round(((s.xpToday || 0) / (s.goal || 20)) * 100));
+  goalFill.style.width = pct + '%';
+  goalLabel.textContent = `${t('goal_today')}: ⚡ ${s.xpToday || 0} / ${s.goal || 20} XP (${pct}%)`;
+}
+goalSel.addEventListener('change', () => { setGoal(Number(goalSel.value)); renderGoal(); });
+renderGoal();
+app.append(el('div', { class: 'card goal-card' },
+  el('div', { class: 'goal-row' },
+    el('strong', {}, t('goal_title')),
+    goalSel,
+    el('div', { class: 'goal-bar' }, goalFill),
+    goalLabel)));
 
 UNITS.forEach((unit, ui) => {
   const section = el('section', { class: 'unit-section' },
@@ -57,27 +80,37 @@ UNITS.forEach((unit, ui) => {
 if (firstUndone >= 0) {
   const next = allLessons[firstUndone];
   app.append(el('div', { class: 'sticky-cta' },
-    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ Continue: ${next.title}`)));
+    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ ${t('next_cta')}: ${next.title}`)));
 }
 
 // Leaderboard (only when the backend is available and the user is signed in).
 async function leaderboardCard() {
   const card = el('section', { class: 'card leaderboard-card' },
-    el('h2', {}, '🏆 Leaderboard'),
+    el('h2', {}, t('lb_title')),
     el('p', { class: 'muted' }, 'Top learners by XP — sign in to appear here!'),
   );
   const list = el('ol', { class: 'leaderboard-list' });
-  card.append(list);
+  const tabs = el('div', { class: 'mode-tabs' });
+  for (const [key, p] of [[t('lb_all'), 'all'], [t('lb_week'), 'week']]) {
+    const b = el('button', { class: `chip${lbPeriod === p ? ' active' : ''}` }, key);
+    b.addEventListener('click', () => { lbPeriod = p; loadLb(); tabs.querySelectorAll('.chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); });
+    tabs.append(b);
+  }
+  card.append(tabs, list);
   app.append(card);
   if (!api.available) {
     list.append(el('li', { class: 'muted' }, 'Backend offline — leaderboard unavailable. The site still works fully as a guest!'));
     return;
   }
   if (!getUser()) {
-    list.append(el('li', { class: 'muted' }, el('a', { href: 'account.html' }, 'Sign in or create a free account')), ' to join the leaderboard.');
+    list.append(el('li', { class: 'muted' }, el('a', { href: 'account.html' }, t('lb_signin'))), ' ' + t('lb_join'));
     return;
   }
-  const entries = await api.leaderboard(10);
+  await loadLb();
+}
+async function loadLb() {
+  const list = document.querySelector('.leaderboard-list');
+  const entries = await api.leaderboard(10, lbPeriod);
   list.innerHTML = '';
   if (!entries.length) { list.append(el('li', { class: 'muted' }, 'No scores yet — be the first! Complete a lesson to get on the board.')); return; }
   entries.forEach((e2, i) => {

@@ -1,4 +1,5 @@
 import { el, renderShell } from './main.js';
+import { t } from './ui.js';
 import { GRAMMAR } from './data/grammar.js';
 
 renderShell('grammar');
@@ -50,7 +51,7 @@ GRAMMAR.forEach((g, i) => {
 
 app.append(
   el('div', { class: 'page-head' },
-    el('h1', {}, 'Grammar bible 📖'),
-    el('p', { class: 'section-sub' }, 'Lao grammar explained simply — from the script and tones to full sentences. Lao script, transliteration and English side by side.')),
+    el('h1', {}, t('grammar_title')),
+    el('p', { class: 'section-sub' }, t('grammar_sub'))),
   el('div', { class: 'doc-layout' }, el('aside', { class: 'doc-aside' }, el('div', { class: 'toc-sticky' }, el('strong', {}, 'Contents'), toc)), content),
 );

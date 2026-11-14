@@ -136,6 +136,14 @@ await call(progress, { method: 'PUT', cookie: `hianlao_session=${cookieFrom(awai
 r = await call(leaderboard, { query: { limit: '10' } });
 ok(r.payload.entries.length === 2 && r.payload.entries[0].username === 'champ' && r.payload.entries[0].xp === 500, 'leaderboard sorted by xp desc');
 
+r = await call(leaderboard, { query: { limit: '10', period: 'week' } });
+ok(r.payload.period === 'week' && r.payload.entries.length === 2, 'weekly leaderboard (?period=week) works');
+
+r = await call(progress, { method: 'PUT', cookie: `hianlao_session=${token2}`, body: { progress: { xp: 200, done: {}, streak: 1, lastVisit: '2026-11-14', goal: 50, reviews: { u1l1: { due: 1, iv: 2 }, bogus: { due: 1, iv: 1 } } } } });
+ok(r.statusCode === 200 && r.payload.progress.goal === 50 && r.payload.progress.reviews.u1l1?.iv === 2 && !('bogus' in r.payload.progress.reviews), 'goal + SRS reviews validated on PUT');
+r = await call(progress, { method: 'PUT', cookie: `hianlao_session=${token2}`, body: { progress: { xp: 5, goal: 99999, reviews: {} } } });
+ok(r.payload.progress.goal === 20, 'invalid goal falls back to default 20');
+
 r = await call(logout, { method: 'POST', cookie: `hianlao_session=${token2}` });
 ok(r.statusCode === 200, 'logout ok');
 r = await call(me, { cookie: `hianlao_session=${token2}` });

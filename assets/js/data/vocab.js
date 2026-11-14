@@ -19,6 +19,7 @@ export const CATEGORIES = {
   colors: 'Colors',
   travel: 'Travel & emergencies',
   emotions: 'Feelings & opinions',
+  work: 'Work & plans',
 };
 
 export const VOCAB = [
@@ -306,6 +307,23 @@ export const VOCAB = [
   { id: 'surprised',   lao: 'ແປລກໃຈ',        tr: 'plak jai',           en: 'surprised', cat: 'emotions' },
   { id: 'food_opinion',lao: 'ຄິດວ່າອາຫາຣລາວແສ່ບ', tr: 'khit wa ahan Lao saep', en: 'I think Lao food is delicious', cat: 'emotions' },
   { id: 'rain_plan',   lao: 'ຖ້າພນຕກກັໄມ່ໄປ',  tr: 'tha fon tok kho mai pai', en: "If it rains, we won't go", cat: 'emotions' },
+
+  // ---- Work & plans ----
+  { id: 'meeting',     lao: 'ປຣະຊຸມ',          tr: 'prachum',        en: 'meeting', cat: 'work' },
+  { id: 'boss',        lao: 'ເຈ້ານາຢ',         tr: 'jao nai',        en: 'boss', cat: 'work' },
+  { id: 'late',        lao: 'ສາຢ',            tr: 'sai',            en: 'late', cat: 'work' },
+  { id: 'appointment', lao: 'ນັດຫມາຢ',         tr: 'nat mai',        en: 'appointment', cat: 'work' },
+  { id: 'plan',        lao: 'ແຜນ',            tr: 'phaen',          en: 'plan', cat: 'work' },
+  { id: 'plan_v',      lao: 'ວາງແຜນ',          tr: 'wang phaen',     en: 'to plan', cat: 'work' },
+  { id: 'busy',        lao: 'ຢຸ່ງ',           tr: 'yung',           en: 'busy', cat: 'work' },
+  { id: 'free_time',   lao: 'ວ່າງ',           tr: 'wang',           en: 'free (time)', cat: 'work' },
+  { id: 'email',       lao: 'ອີເມລ',           tr: 'i-mel',          en: 'email', cat: 'work' },
+  { id: 'letter',      lao: 'ຈດຫມາຢ',         tr: 'jot mai',        en: 'letter', cat: 'work' },
+  { id: 'message',     lao: 'ຂ້ອຄວາມ',        tr: 'kho khwam',      en: 'message', cat: 'work' },
+  { id: 'call',        lao: 'ໂທຣ',            tr: 'tho',            en: 'to call (phone)', cat: 'work' },
+  { id: 'computer',    lao: 'ຄອມພິວເຕອຣ໌',     tr: 'khom phi tueat', en: 'computer', cat: 'work' },
+  { id: 'cafe_phrase', lao: 'ພບກັນທີ່ຣ້ານກາ',    tr: 'phoep kan thi ran ka', en: 'See you at the café', cat: 'work' },
+  { id: 'call_me',     lao: 'ໂທຣຫາຉັນໄດ້ບ່',    tr: 'tho ha chan dai bo?',   en: 'Can you call me?', cat: 'work' },
 
 ];
 

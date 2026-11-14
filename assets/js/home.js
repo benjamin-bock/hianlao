@@ -1,4 +1,5 @@
 import { el, renderShell, speakBtn } from './main.js';
+import { t } from './ui.js';
 import { getState, totalDone } from './store.js';
 import { VOCAB } from './data/vocab.js';
 import { UNITS, LESSON_BY_ID } from './data/units.js';
@@ -12,13 +13,13 @@ const lessonsTotal = Object.keys(LESSON_BY_ID).length;
 
 const hero = el('section', { class: 'hero' },
   el('div', { class: 'hero-text' },
-    el('p', { class: 'hero-kicker' }, 'Free · Open-source · For the Lao diaspora 🌏'),
+    el('p', { class: 'hero-kicker' }, t('hero_kicker')),
     el('h1', { html: 'Learn Lao, the language<br>of <span class="lao accent">ລ້ານຊ້າງ</span> (a million elephants)' }),
     el('p', { class: 'hero-sub' }, 'HianLao (<span class="lao">ເຣີຢນລາວ</span> — "learn Lao") is a Duolingo-style learning site that is 100% free and open-source. Lessons, grammar bible, vocabulary with audio, and Lao culture — no subscription, ever.'),
     el('div', { class: 'hero-ctas' },
       el('a', { class: 'btn btn-primary btn-lg', href: state.xp > 0 || totalDone() > 0 ? 'learn.html' : 'lesson.html?id=u1l1' },
-        totalDone() > 0 ? 'Continue learning →' : 'Start lesson 1 — it\'s free →'),
-      el('a', { class: 'btn btn-ghost btn-lg', href: 'culture.html' }, 'Explore Lao culture'),
+        totalDone() > 0 ? t('cta_continue') : t('cta_start')),
+      el('a', { class: 'btn btn-ghost btn-lg', href: 'culture.html' }, t('cta_culture')),
     ),
     el('div', { class: 'hero-stats' },
       el('div', { class: 'stat' }, el('strong', {}, `${VOCAB.length}+`), el('span', {}, 'words & phrases')),
@@ -39,15 +40,15 @@ const hero = el('section', { class: 'hero' },
 );
 
 const features = el('section', { class: 'features' },
-  el('h2', {}, 'What you get'),
+  el('h2', {}, t('features_title')),
   el('div', { class: 'feature-grid' },
-    feature('🎯', 'Duolingo-style lessons', '24 bite-size lessons in 8 units: multiple choice, typing, matching, listening, word tiles and speaking practice. XP, hearts and streaks keep you motivated.'),
-    feature('🔊', 'Audio & voice', 'Press 🔊 on any word to hear it (Lao voice when your device has one), and try the microphone exercises to practice speaking.'),
-    feature('📖', 'Grammar bible', 'From the Lao script and its 6 tones to sentence structure, particles, classifiers and questions — explained simply, with Lao examples.'),
-    feature('🧺', 'Words & phrases', 'A searchable dictionary of 200+ words and real-life phrases, sorted by theme: greetings, food, family, travel…'),
-    feature('🇱🇦', 'Culture', 'Festivals (Pi Mai!), food, etiquette, the Mekong, and why the diaspora keeps the language alive.'),
-    feature('👤', 'Free accounts & sync', 'Create a free account to sync XP, streaks and completed lessons across all your devices, and climb the 🏆 leaderboard. No account? No problem — progress stays on your device.'),
-    feature('💚', 'Free & open-source', 'No paywall, no ads. The code is on GitHub under MIT — contribute a lesson or a word!'),
+    feature('🎯', t('feat_lessons'), '24 bite-size lessons in 8 units: multiple choice, typing, matching, listening, word tiles and speaking practice. XP, hearts and streaks keep you motivated.'),
+    feature('🔊', t('feat_audio'), 'Press 🔊 on any word to hear it (Lao voice when your device has one), and try the microphone exercises to practice speaking.'),
+    feature('📖', t('feat_grammar'), 'From the Lao script and its 6 tones to sentence structure, particles, classifiers and questions — explained simply, with Lao examples.'),
+    feature('🧺', t('feat_words'), 'A searchable dictionary of 200+ words and real-life phrases, sorted by theme: greetings, food, family, travel…'),
+    feature('🇱🇦', t('feat_culture'), 'Festivals (Pi Mai!), food, etiquette, the Mekong, and why the diaspora keeps the language alive.'),
+    feature('👤', t('feat_account'), 'Create a free account to sync XP, streaks and completed lessons across all your devices, and climb the 🏆 leaderboard. No account? No problem — progress stays on your device.'),
+    feature('💚', t('feat_free'), 'No paywall, no ads. The code is on GitHub under MIT — contribute a lesson or a word!'),
   ),
 );
 
@@ -59,7 +60,7 @@ function feature(icon, title, text) {
 }
 
 const pathPreview = el('section', { class: 'path-preview' },
-  el('h2', {}, 'The learning path'),
+  el('h2', {}, t('path_title')),
   el('p', { class: 'section-sub' }, '8 units, from "ສະບາດີ" to full sentences.'),
   el('div', { class: 'units-preview' },
     UNITS.map(u => el('a', {
@@ -68,7 +69,7 @@ const pathPreview = el('section', { class: 'path-preview' },
       style: `--unit-color:${u.color}`,
     }, el('span', { class: 'unit-icon' }, u.icon), el('span', { class: 'unit-title' }, `${u.num}. ${u.title}`)))
   ),
-  el('a', { class: 'btn btn-primary', href: 'learn.html' }, 'Open the path →'),
+  el('a', { class: 'btn btn-primary', href: 'learn.html' }, t('open_path')),
 );
 
 const cta = el('section', { class: 'cta card' },

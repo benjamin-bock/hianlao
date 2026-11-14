@@ -24,9 +24,9 @@ ok(VOCAB.every(v => hasLao(v.lao)), 'every lao field contains Lao script');
 ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');
 
 console.log('Units & lessons:');
-ok(UNITS.length === 10, `${UNITS.length} units`);
+ok(UNITS.length === 11, `${UNITS.length} units`);
 const lessonCount = Object.keys(LESSON_BY_ID).length;
-ok(lessonCount === 30, `${lessonCount} lessons`);
+ok(lessonCount === 33, `${lessonCount} lessons`);
 const unitErrors = validateUnits();
 ok(unitErrors.length === 0, `validateUnits() clean${unitErrors.length ? ': ' + unitErrors.join('; ') : ''}`);
 ok(UNITS.every(u => u.lessons.every(l => l.exercises.length >= 4)), 'every lesson has >=4 exercises');
@@ -40,7 +40,7 @@ ok(CULTURE.length >= 7, `${CULTURE.length} culture sections`);
 CULTURE.forEach(c => ok(!c.img || existsSync(join(root, 'assets/img', c.img)), `culture img exists: ${c.img || '(none)'}`));
 
 console.log('Pages & assets:');
-const pages = ['index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html', 'culture.html', 'account.html'];
+const pages = ['index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html', 'culture.html', 'account.html', 'review.html'];
 for (const p of pages) {
   ok(existsSync(join(root, p)), `${p} exists`);
   const html = readFileSync(join(root, p), 'utf8');

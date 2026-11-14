@@ -1,0 +1,8 @@
+{
+  "appId": "ai.hianlao.app",
+  "appName": "HianLao",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": { "androidScheme": "https" },
+  "ios": { "contentInset": "always" }
+}

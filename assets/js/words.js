@@ -1,4 +1,5 @@
 import { el, renderShell, speakBtn } from './main.js';
+import { t } from './ui.js';
 import { VOCAB, CATEGORIES } from './data/vocab.js';
 
 renderShell('words');
@@ -60,8 +61,8 @@ function render() {
 
 app.append(
   el('div', { class: 'page-head' },
-    el('h1', {}, 'Words & phrases'),
-    el('p', { class: 'section-sub' }, 'A searchable Lao–English dictionary. Press 🔊 to hear every word (Lao voice when your device has one).')),
+    el('h1', {}, t('words_title')),
+    el('p', { class: 'section-sub' }, t('words_sub'))),
   search, chips, count, grid,
 );
 

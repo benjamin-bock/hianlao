@@ -1,4 +1,5 @@
 import { el, renderShell } from './main.js';
+import { t } from './ui.js';
 import { CULTURE } from './data/culture.js';
 
 renderShell('culture');
@@ -19,7 +20,7 @@ function renderBlock(b) {
 }
 
 app.append(el('div', { class: 'page-head' },
-  el('h1', {}, 'Lao culture 🇱🇦'),
+  el('h1', {}, t('culture_title')),
   el('p', { class: 'section-sub' }, 'The stories behind the language: the land, the festivals, the food, the etiquette — and why the diaspora keeps Lao alive. <span class="lao">ວັດນຘຣຣມລາວ</span>.'),
 ));
 

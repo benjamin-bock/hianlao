@@ -416,6 +416,43 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'u11', num: 11, icon: '💼', color: '#0ea5e9',
+    title: 'Work & plans', desc: 'Meetings, appointments, calls and making plans.',
+    lessons: [
+      {
+        id: 'u11l1', title: 'At work', blurb: 'Bosses, meetings and being busy.',
+        exercises: [
+          mc('work', ['sleep', 'eat', 'walk']),
+          typeEx('boss'),
+          mc('meeting', ['market', 'school', 'hospital'], 'en2lao'),
+          listen('busy', ['free_time', 'late', 'fun']),
+          typeEx('late'),
+          match(['work', 'boss', 'meeting', 'busy', 'late', 'learn']),
+        ],
+      },
+      {
+        id: 'u11l2', title: 'Making plans', blurb: 'Plans, appointments and meeting at the café.',
+        exercises: [
+          mc('plan', ['food', 'money', 'house']),
+          tiles('ວາງແຜນ', ['ວາງ', 'ແຜນ'], 'to plan', 'wang phaen'),
+          mc('appointment', ['plan', 'late', 'busy'], 'en2lao'),
+          listen('free_time', ['busy', 'sick', 'tired']),
+          tiles('ພບກັນທີ່ຣ້ານກາ', ['ພບກັນ', 'ທີ່', 'ຣ້ານກາ'], 'See you at the café', 'phoep kan thi ran ka'),
+        ],
+      },
+      {
+        id: 'u11l3', title: 'Calls & messages', blurb: 'Phone calls, emails and messages.',
+        exercises: [
+          mc('call', ['write', 'read', 'eat']),
+          typeEx('message'),
+          listen('email', ['letter', 'phone', 'computer']),
+          tiles('ໂທຣຫາຉັນໄດ້ບ່', ['ໂທຣ', 'ຫາ', 'ຉັນ', 'ໄດ້', 'ບ່'], 'Can you call me?', 'tho ha chan dai bo?'),
+          match(['call', 'message', 'email', 'letter', 'phone', 'computer']),
+        ],
+      },
+    ],
+  },
 ];
 
 export const LESSON_BY_ID = {};

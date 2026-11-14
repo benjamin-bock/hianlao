@@ -1,4 +1,5 @@
 import { el, renderShell } from './main.js';
+import { t } from './ui.js';
 import { api, initAuth, getState, getUser, totalDone } from './store.js';
 import { unlockedAchievements, lockedAchievements } from './achievements.js';
 import { UNITS } from './data/units.js';
@@ -106,7 +107,7 @@ function profileCard(u) {
 async function render() {
   app.innerHTML = '';
   const user = getUser() || await initAuth();
-  app.append(el('div', { class: 'page-head' }, el('h1', {}, user ? 'Profile' : 'Account')));
+  app.append(el('div', { class: 'page-head' }, el('h1', {}, user ? t('profile_title') : t('account_title'))));
   app.append(user ? profileCard(user) : authCard());
 }
 
