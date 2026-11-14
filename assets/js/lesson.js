@@ -89,6 +89,10 @@ function renderExercise() {
     el('h2', {}, exTitle(ex)),
     exPrompt(ex) ? el('p', { class: 'exercise-prompt', html: exPrompt(ex) }) : null,
   );
+  if (state.index === 0 && lesson.blurb) {
+    stage.append(el('div', { class: 'card context-card' },
+      el('p', { class: 'context-blurb' }, lesson.blurb)));
+  }
   stage.append(head, exBody(ex));
 }
 
