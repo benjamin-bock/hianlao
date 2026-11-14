@@ -27,7 +27,13 @@ python3 -m http.server 8000
 
 ## 🌐 Deployment
 
-The site is deployed with **GitHub Pages** (see *Settings → Pages*), serving this repository directly — free, no build step, no backend. To deploy your own fork: enable Pages on the `main` branch (root) and it's live at `https://<you>.github.io/hianlao/`.
+The site is a **static site** — it runs anywhere that serves files. Two free options:
+
+**GitHub Pages** — enable *Settings → Pages* on this repo (branch `main`, root `/`, `.nojekyll` is already included). Live at `https://<you>.github.io/hianlao/`.
+
+**Vercel** — zero config: import this repo at [vercel.com/new](https://vercel.com/new) (or run `npx vercel --prod` from the repo root). No build command, no output directory — `vercel.json` only enables clean URLs (`/learn` works alongside `/learn.html`). Every push to `main` auto-deploys; every PR gets a preview URL. The repo must be public, or grant Vercel access to the private repo.
+
+> Accounts/server: **not needed** for the current site — progress (XP, streaks, completed lessons) is stored in the browser's `localStorage`. If we later add accounts, cross-device sync or leaderboards, we can add Vercel serverless functions (`api/`) + a database, with a graceful fallback to localStorage when offline.
 
 ## 🗂️ Project structure
 
