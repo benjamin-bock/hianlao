@@ -1,0 +1,12 @@
+{
+  "name": "hianlao",
+  "version": "0.1.0",
+  "description": "Free & open-source Duolingo-style website to learn Lao (ພາສາລາວ) — for the Lao diaspora worldwide.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node tests/check-data.mjs && node tests/api.test.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT"
+}

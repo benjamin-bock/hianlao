@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Lao script strokes">
+  <rect width="400" height="300" fill="#f7f4ea"/>
+  <circle cx="330" cy="60" r="26" fill="#ffc800"/>
+  <!-- flowing strokes suggesting Lao script -->
+  <g fill="none" stroke="#002868" stroke-width="9" stroke-linecap="round">
+    <path d="M60 210 Q60 150 100 150 Q140 150 140 190 Q140 225 105 225"/>
+    <path d="M165 225 Q165 160 205 160 Q245 160 245 200 Q245 228 215 228"/>
+    <path d="M265 150 Q305 150 305 190 Q305 228 270 228 Q250 228 250 205"/>
+  </g>
+  <g fill="none" stroke="#ce1126" stroke-width="8" stroke-linecap="round">
+    <path d="M85 120 Q120 100 155 118"/>
+    <path d="M225 105 Q260 90 295 108"/>
+  </g>
+  <!-- tone marks -->
+  <g fill="#ffc800">
+    <path d="M100 70 l0 22 M92 78 l16 0" stroke="#ffc800" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <circle cx="205" cy="70" r="8"/>
+    <path d="M300 62 l14 14 M314 62 l-14 14" stroke="#ffc800" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <rect x="40" y="248" width="320" height="10" rx="5" fill="#e5e0d5"/>
+</svg>
