@@ -1,11 +1,12 @@
 // Minimal Upstash Redis (Vercel KV) REST client.
-// Env vars (set in Vercel project settings, e.g. auto-injected by the Upstash integration):
-//   KV_REST_API_URL, KV_REST_API_TOKEN
+// Env vars (auto-injected when the Upstash storage is connected to the Vercel project):
+//   Vercel KV style:        KV_REST_API_URL, KV_REST_API_TOKEN
+//   Upstash-native style:   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
 // When unset, kvEnabled=false and the API runs in "local-only" mode (401 for auth,
 // empty leaderboard) so the static site keeps working without any backend.
 
-const URL_ = process.env.KV_REST_API_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN;
+const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 export const kvEnabled = Boolean(URL_ && TOKEN);
 
