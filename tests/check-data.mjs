@@ -51,7 +51,7 @@ for (const p of pages) {
   }
 }
 // every script module referenced by pages parses & its local imports exist
-for (const js of ['main.js', 'home.js', 'learn.js', 'lesson.js', 'words.js', 'grammarpage.js', 'culturepage.js', 'store.js', 'speech.js']) {
+for (const js of ['main.js', 'home.js', 'learn.js', 'lesson.js', 'words.js', 'grammarpage.js', 'culturepage.js', 'store.js', 'speech.js', 'fx.js']) {
   const f = join(root, 'assets/js', js);
   ok(existsSync(f), `assets/js/${js} exists`);
   const src = readFileSync(f, 'utf8');

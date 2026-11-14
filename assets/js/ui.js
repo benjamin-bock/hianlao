@@ -2,6 +2,7 @@
 // theme applies instantly via [data-theme] on <html>.
 const dict = {
   en: {
+    tap_answer: 'Tap your answer',
     nav_home: 'Home', nav_learn: 'Learn', nav_words: 'Words', nav_grammar: 'Grammar', nav_culture: 'Culture', nav_review: 'Review',
     sign_in: 'Sign in',
     hero_kicker: 'Free · Open-source · For the Lao diaspora 🌏',
@@ -21,6 +22,7 @@ const dict = {
     check: 'CHECK', cont: 'CONTINUE', done_title: 'Lesson complete!', fail_title: 'Out of hearts!', next_lesson: 'Next lesson →', back_path: 'Back to path', replay: '↻ Replay', try_again: '↻ Try again',
   },
   fr: {
+    tap_answer: 'Touche ta réponse',
     nav_home: 'Accueil', nav_learn: 'Apprendre', nav_words: 'Mots', nav_grammar: 'Grammaire', nav_culture: 'Culture', nav_review: 'Révision',
     sign_in: 'Connexion',
     hero_kicker: 'Gratuit · Open-source · Pour la diaspora lao 🌏',
@@ -40,6 +42,7 @@ const dict = {
     check: 'VÉRIFIER', cont: 'CONTINUER', done_title: 'Leçon terminée !', fail_title: 'Plus de vies !', next_lesson: 'Leçon suivante →', back_path: 'Retour au parcours', replay: '↻ Rejouer', try_again: '↻ Réessayer',
   },
   la: {
+    tap_answer: 'เลือกคำตอบของคุณ',
     nav_home: 'ບ້ານ', nav_learn: 'ເຣີຢນ', nav_words: 'ຄຳ', nav_grammar: 'ໄວຢາກຣນ໌', nav_culture: 'ວັດນຘຣຣມ', nav_review: 'ທບທວນ',
     sign_in: 'ເຂ້າສູ່ຣະບບ',
     hero_kicker: 'ຟຣີ · Open-source · ສຳຫຣັບຊາວລາວທັ່ວໂລກ 🌏',
