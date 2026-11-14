@@ -20,6 +20,7 @@ export const CATEGORIES = {
   travel: 'Travel & emergencies',
   emotions: 'Feelings & opinions',
   work: 'Work & plans',
+  proverbs: 'Proverbs & sayings',
 };
 
 export const VOCAB = [
@@ -325,6 +326,16 @@ export const VOCAB = [
   { id: 'cafe_phrase', lao: 'ພບກັນທີ່ຣ້ານກາ',    tr: 'phoep kan thi ran ka', en: 'See you at the café', cat: 'work' },
   { id: 'call_me',     lao: 'ໂທຣຫາຉັນໄດ້ບ່',    tr: 'tho ha chan dai bo?',   en: 'Can you call me?', cat: 'work' },
 
+  // ---- Proverbs & sayings ----
+  { id: 'pv_scoop',    lao: 'ນ້ຳຂຶ້ໃຫ້ຣີບຕັກ', tr: 'nam khuen hai rep tak', en: 'When the water rises, scoop quickly — seize the opportunity!', cat: 'proverbs', note: 'Proverb: grab the good moment while it lasts.' },
+  { id: 'pv_slow',     lao: 'ຊ້າໆ ໄດ້ພຣ້າເລ່ມງາມ', tr: 'cha cha dai phra lem ngam', en: 'Slowly you get a beautiful blade — slow and steady wins the race.', cat: 'proverbs', note: 'Proverb: patience gives quality.' },
+  { id: 'pv_effort',   lao: 'ຄວາມພຢາຢາມອຢູ່ທີ່ໄຫນ ຄວາມສຳເຣັຈອຢູ່ທີ່ນັ່ນ', tr: 'khwam phayayam yu thi nai, khwam samret yu thi nan', en: 'Where there is effort, there is success.', cat: 'proverbs', note: 'Proverb: perfect for language learners!' },
+  { id: 'water_rises', lao: 'ນ້ຳຂຶ້', tr: 'nam khuen', en: 'the water rises', cat: 'proverbs' },
+  { id: 'scoop',       lao: 'ຕັກ', tr: 'tak', en: 'to scoop (with a ladle)', cat: 'proverbs' },
+  { id: 'blade',       lao: 'ພຣ້າ', tr: 'phra', en: 'blade (of a knife)', cat: 'proverbs', note: "Looks like ປລາ (pla, fish) — different initial!" },
+  { id: 'effort',      lao: 'ຄວາມພຢາຢາມອ', tr: 'khwam phayayam', en: 'effort', cat: 'proverbs' },
+  { id: 'success',     lao: 'ຄວາມສຳເຣັຈອ', tr: 'khwam samret', en: 'success', cat: 'proverbs' },
+  { id: 'where_q',     lao: 'ຢູ່ທີ່ໄຫນ', tr: 'thi nai', en: 'where', cat: 'proverbs' },
 ];
 
 export const VOCAB_BY_ID = Object.fromEntries(VOCAB.map(v => [v.id, v]));

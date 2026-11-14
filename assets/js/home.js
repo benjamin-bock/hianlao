@@ -42,7 +42,7 @@ const hero = el('section', { class: 'hero' },
 const features = el('section', { class: 'features' },
   el('h2', {}, t('features_title')),
   el('div', { class: 'feature-grid' },
-    feature('🎯', t('feat_lessons'), '24 bite-size lessons in 8 units: multiple choice, typing, matching, listening, word tiles and speaking practice. XP, hearts and streaks keep you motivated.'),
+    feature('🎯', t('feat_lessons'), '36 bite-size lessons in 12 units: multiple choice, typing, matching, listening, word tiles and speaking practice. XP, hearts and streaks keep you motivated.'),
     feature('🔊', t('feat_audio'), 'Press 🔊 on any word to hear it (Lao voice when your device has one), and try the microphone exercises to practice speaking.'),
     feature('📖', t('feat_grammar'), 'From the Lao script and its 6 tones to sentence structure, particles, classifiers and questions — explained simply, with Lao examples.'),
     feature('🧺', t('feat_words'), 'A searchable dictionary of 200+ words and real-life phrases, sorted by theme: greetings, food, family, travel…'),
@@ -61,7 +61,7 @@ function feature(icon, title, text) {
 
 const pathPreview = el('section', { class: 'path-preview' },
   el('h2', {}, t('path_title')),
-  el('p', { class: 'section-sub' }, '8 units, from "ສະບາດີ" to full sentences.'),
+  el('p', { class: 'section-sub' }, `${UNITS.length} units, from "ສະບາດີ" to full sentences — and proverbs.`),
   el('div', { class: 'units-preview' },
     UNITS.map(u => el('a', {
       class: 'unit-chip',

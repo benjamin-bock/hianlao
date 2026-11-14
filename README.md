@@ -6,7 +6,7 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the who
 
 ## ✨ What's inside
 
-- **🎯 Learning path** — 8 units / 24 bite-size lessons with Duolingo-style exercises: multiple choice, typing, matching pairs, **listening** (🔊 text-to-speech), **word tiles**, and **speaking practice** (🎤 microphone). XP ⚡, hearts ❤️ and daily streaks 🔥 keep you motivated.
+- **🎯 Learning path** — 12 units / 36 bite-size lessons with Duolingo-style exercises: multiple choice, typing, matching pairs, **listening** (🔊 text-to-speech), **word tiles**, and **speaking practice** (🎤 microphone) — including Unit 12 with famous Lao **proverbs in context** 💬. XP ⚡, hearts ❤️ and daily streaks 🔥 keep you motivated.
 - **📖 Grammar bible** — the Lao script, the 6 tones, sentence structure, verb particles, negation, questions, classifiers, politeness, telling time, ordering food, directions… explained simply, always with Lao script + transliteration + English.
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
@@ -115,7 +115,7 @@ The site is **content-driven**, so non-developers can contribute too:
 
 5. Open a pull request 🎉
 
-Ideas: more units (travel, work, proverbs), example dialogues, a quiz mode, Lao dialect notes (Luang Prabang, Isan), community links, translations of the UI into Lao or French.
+Ideas: example dialogues, a quiz mode, Lao dialect notes (Luang Prabang, Isan), community links, full Lao/French translations of the long grammar & culture texts.
 
 ## 🧪 Tests
 

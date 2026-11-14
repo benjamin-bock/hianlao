@@ -24,9 +24,9 @@ ok(VOCAB.every(v => hasLao(v.lao)), 'every lao field contains Lao script');
 ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');
 
 console.log('Units & lessons:');
-ok(UNITS.length === 11, `${UNITS.length} units`);
+ok(UNITS.length === 12, `${UNITS.length} units`);
 const lessonCount = Object.keys(LESSON_BY_ID).length;
-ok(lessonCount === 33, `${lessonCount} lessons`);
+ok(lessonCount === 36, `${lessonCount} lessons`);
 const unitErrors = validateUnits();
 ok(unitErrors.length === 0, `validateUnits() clean${unitErrors.length ? ': ' + unitErrors.join('; ') : ''}`);
 ok(UNITS.every(u => u.lessons.every(l => l.exercises.length >= 4)), 'every lesson has >=4 exercises');

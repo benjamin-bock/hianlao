@@ -453,6 +453,49 @@ export const UNITS = [
       },
     ],
   },
+  {
+    id: 'u12', num: 12, icon: '💬', color: '#d946ef',
+    title: 'Proverbs & wisdom', desc: 'Famous Lao sayings — learned in the situations where you hear them.',
+    lessons: [
+      {
+        id: 'u12l1', title: 'Seize the moment', blurb: 'During Pi Mai the Mekong rises fast. Grandma laughs: "When the water rises, scoop quickly" — grab the good moment while it lasts!',
+        exercises: [
+          mc('pv_scoop', ['pv_slow', 'pv_effort', 'success']),
+          tiles(V.pv_scoop.lao, ['ນ້ຳຂຶ້', 'ໃຫ້', 'ຣີບ', 'ຕັກ'], 'When the water rises, scoop quickly', 'nam khuen hai rep tak'),
+          listen('pv_scoop', ['pv_slow', 'pv_effort', 'water_rises']),
+          mc('water_rises', ['fish', 'rice', 'house']),
+          typeEx('scoop', 'en2lao'),
+          match(['pv_scoop', 'pv_slow', 'pv_effort', 'water_rises', 'scoop', 'effort']),
+          speak('water_rises'),
+        ],
+      },
+      {
+        id: 'u12l2', title: 'Slow and steady', blurb: 'Grandpa sharpens his knife for a long time. "Slowly you get a beautiful blade," he smiles — patience makes quality.',
+        exercises: [
+          mc('pv_slow', ['pv_scoop', 'pv_effort', 'blade']),
+          listen('pv_slow', ['pv_scoop', 'pv_effort', 'blade']),
+          tiles(V.pv_slow.lao, ['ຊ້າໆ ', 'ໄດ້', 'ພຣ້າ', 'ເລ່ມ', 'ງາມ'], 'Slowly you get a beautiful blade', 'cha cha dai phra lem ngam'),
+          mc('blade', ['fish', 'rice', 'water'], 'en2lao'),
+          typeEx('slow'),
+          match(['pv_slow', 'blade', 'slow', 'beautiful', 'effort', 'pv_effort']),
+          speak('pv_slow'),
+        ],
+      },
+      {
+        id: 'u12l3', title: 'Effort & success', blurb: 'Exam tomorrow! Mum says: "Where there is effort, there is success." You have been studying hard — you have got this!',
+        exercises: [
+          mc('pv_effort', ['pv_scoop', 'pv_slow', 'success']),
+          tiles(V.pv_effort.lao, ['ຄວາມພຢາຢາມອ', 'ຢູ່ທີ່ໄຫນ', ' ຄວາມສຳເຣັຈອ', 'ຢູ່ທີ່ນັ່ນ'], 'Where there is effort, there is success', 'khwam phayayam yu thi nai, khwam samret yu thi nan'),
+          listen('pv_effort', ['pv_scoop', 'pv_slow', 'where_q']),
+          typeEx('effort', 'en2lao'),
+          mc('success', ['blade', 'fish', 'water']),
+          mc('where_q', ['here', 'there', 'now']),
+          match(['pv_effort', 'effort', 'success', 'where_q', 'pv_scoop', 'pv_slow']),
+          speak('pv_effort'),
+        ],
+      },
+    ],
+  },
 ];
 
 export const LESSON_BY_ID = {};
