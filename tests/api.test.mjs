@@ -55,6 +55,7 @@ const { default: me } = await import('../api/auth/me.js');
 const { default: progress } = await import('../api/progress.js');
 const { default: leaderboard } = await import('../api/leaderboard.js');
 const { hashPassword, verifyPassword, validateUsername, validatePassword, validateProgress, mergeProgress } = await import('../api/_lib/auth.js');
+const { default: tts } = await import('../api/tts.js');
 
 // ---- mock req/res ----
 function mockReq({ method = 'GET', body: b, cookie = '', origin = 'https://hianlao.test', query = {} } = {}) {
@@ -152,6 +153,12 @@ ok(r.payload.user === null, 'session destroyed after logout');
 // same-origin guard
 r = await call(health, { origin: 'https://evil.example' });
 ok(r.statusCode === 403, 'cross-origin request rejected');
+
+// tts endpoint: id validation + graceful "not configured" when no Azure key
+r = await call(tts, { query: { id: 'hello' } });
+ok(r.statusCode === 503 && r.payload.ok === false, 'tts returns 503 when not configured');
+let res = await call(tts, {}); // no id param
+ok(res.statusCode === 404 && res.payload.ok === false, 'tts rejects unknown/missing id');
 
 kvServer.close();
 console.log(`\nAPI TESTS PASSED ✔ (${passed} assertions)`);

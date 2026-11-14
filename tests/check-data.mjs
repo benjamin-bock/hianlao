@@ -39,6 +39,19 @@ ok(new Set(GRAMMAR.map(g => g.id)).size === GRAMMAR.length, 'grammar ids unique'
 ok(CULTURE.length >= 7, `${CULTURE.length} culture sections`);
 CULTURE.forEach(c => ok(!c.img || existsSync(join(root, 'assets/img', c.img)), `culture img exists: ${c.img || '(none)'}`));
 
+console.log('Audio (assets/audio + manifest):');
+ok(existsSync(join(root, 'assets/js/audio-manifest.js')), 'assets/js/audio-manifest.js exists');
+const { AUDIO_FILES } = await import('../assets/js/audio-manifest.js');
+const idSet = new Set(ids);
+for (const id of AUDIO_FILES) {
+  ok(idSet.has(id), `manifest id "${id}" is a vocab id`);
+  const f = join(root, 'assets/audio', `${id}.mp3`);
+  ok(existsSync(f), `audio file exists: assets/audio/${id}.mp3`);
+}
+for (const v of VOCAB.filter(x => x.audio)) {
+  ok(existsSync(join(root, 'assets/audio', v.audio)), `audio file exists for explicit audio prop: ${v.audio}`);
+}
+
 console.log('Pages & assets:');
 const pages = ['index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html', 'culture.html', 'account.html', 'review.html'];
 for (const p of pages) {
