@@ -26,6 +26,8 @@ if (!lesson) {
   throw new Error(`unknown lesson ${lessonId}`);
 }
 
+document.title = `${lesson.title} — HianLao`;
+
 const XP_PER_CORRECT = 10;
 const state = {
   index: 0,
