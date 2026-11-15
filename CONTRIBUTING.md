@@ -30,7 +30,7 @@ Pick any item, open an issue first if you want to discuss the approach. Ordered 
 | 👥 **Friend leaderboards** | medium | needs Upstash KV schema (`friends:<name>`) + new `api/` endpoints; global leaderboard already exists |
 | 🔔 **Streak push notifications** | medium/high | PWA push needs VAPID keys + a Vercel cron to send; **won't work on plain GitHub Pages** (static only) |
 | 🌐 **Full EN/FR/LAO i18n of long texts** | high (content) | `grammar.js` / `culture.js` paragraphs are English-only today; UI strings are already EN/FR/LAO in `ui.js` |
-| 🎙️ **Recorded audio from native speakers** | medium | keep it freely licensed (CC BY / CC BY-SA) and credit speakers in `ATTRIBUTION.md` |
+| 🎙️ **Recorded audio from native speakers** | medium | the pipeline exists (`npm run audio` generates neural Lao MP3s into `assets/audio/`; `api/tts.js` covers new ids on Vercel) — real human recordings are still welcome: drop `<vocab-id>.mp3` there, freely licensed (CC BY / CC BY-SA) and credit speakers in `ATTRIBUTION.md` |
 | 🗺️ **Dialect notes** (Luang Prabang, Isan…) | low | a culture/grammar section |
 | 💬 **More dialogue units** | low | like unit 13, chaining existing phrases |
 

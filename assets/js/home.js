@@ -1,6 +1,7 @@
 import { el, renderShell, speakBtn } from './main.js';
 import { t } from './ui.js';
 import { getState, totalDone } from './store.js';
+import { VOCAB_BY_ID } from './data/vocab.js';
 import { VOCAB } from './data/vocab.js';
 import { UNITS, LESSON_BY_ID } from './data/units.js';
 import { GRAMMAR } from './data/grammar.js';
@@ -34,7 +35,7 @@ const hero = el('section', { class: 'hero' },
       el('div', { class: 'word-lao lao' }, 'ສະບາດີ'),
       el('div', { class: 'word-tr' }, 'sa-ba-dii'),
       el('div', { class: 'word-en' }, 'Hello'),
-      speakBtn({ lao: 'ສະບາດີ', tr: 'sa-ba-dii', en: 'Hello' }),
+      speakBtn({ ...VOCAB_BY_ID.hello }),
     ),
   ),
 );

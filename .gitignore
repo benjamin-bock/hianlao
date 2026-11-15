@@ -10,3 +10,6 @@
 # editors
 .idea/
 .vscode/
+
+# local tts generation venv (scripts/generate-audio.mjs)
+.tts-venv/

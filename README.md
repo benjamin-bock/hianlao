@@ -10,7 +10,7 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the who
 - **📖 Grammar bible** — the Lao script, the 6 tones, sentence structure, verb particles, negation, questions, classifiers, politeness, telling time, ordering food, directions… explained simply, always with Lao script + transliteration + English.
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
-- **🔊 Voice** — listening exercises use your browser's Lao voice when available (`lo-LA`); speaking exercises use the Web Speech API where supported, with graceful fallbacks.
+- **🔊 Voice (native-quality audio)** — every word plays a neural Lao MP3 (Microsoft's native `lo-LA` voices, generated once and served as static files — offline-friendly, free, no API at runtime), falling back to `/api/tts` on the Vercel backend, then to the browser's Lao voice, then to the transliteration. Speaking exercises use the Web Speech API where supported. See `assets/audio/README.md`.
 - **📱 PWA / mobile app** — the site is already an installable Progressive Web App (manifest + service worker + icons): works offline, "Add to Home Screen" on Android & iOS. See the *Mobile app* section below for store publishing costs.
 - **🌙 Dark theme, 🌐 EN/FR/LAO UI, 🎯 daily XP goal, 🔁 spaced-repetition review, 🏆 weekly & all-time leaderboards** — all in the header / Learn page.
 - **👤 Accounts & sync** — free username/password accounts on Vercel (serverless `api/` + Upstash KV): progress synced across devices, 🏆 leaderboard, 🏅 achievement badges. Without a backend the site still works fully offline (localStorage).
@@ -91,7 +91,11 @@ assets/css/main.css the design
 assets/img/*.svg    original illustrations (no external assets)
 assets/js/main.js   shared header/footer/nav + helpers
 assets/js/store.js  progress in localStorage (XP, streak, hearts, done lessons)
-assets/js/speech.js TTS (lo-LA) + speech recognition helpers
+assets/js/speech.js TTS + audio-file player + speech recognition helpers
+assets/js/audio-manifest.js generated list of available audio files (npm run audio)
+assets/audio/*.mp3  native-quality Lao audio (generate with npm run audio — see assets/audio/README.md)
+scripts/generate-audio.mjs one-time native-voice audio generator (keyless; edge-tts or Azure)
+.github/workflows/generate-audio.yml regenerate audio in the cloud (Actions tab — opens a PR)
 assets/js/lesson.js the exercise engine
 assets/js/data/     ALL CONTENT LIVES HERE:
   vocab.js          word/phrase dataset (add words here!)

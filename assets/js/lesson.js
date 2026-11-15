@@ -6,7 +6,7 @@ import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
 import { addXp, markDone, isDone, getState, scheduleReview } from './store.js';
 import { unlockedAchievements } from './achievements.js';
-import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice } from './speech.js';
+import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
 import { sfx, buzz, shake, pop, pulse, xpFly, confettiBurst } from './fx.js';
 
 const params = new URLSearchParams(location.search);
@@ -275,7 +275,7 @@ function renderListen(ex) {
   body.append(
     el('div', { class: 'big-word card listen-card' },
       play,
-      hasLaoVoice()
+      (hasNativeAudio(answer) || hasLaoVoice())
         ? el('p', { class: 'muted' }, '▶ Press play and listen')
         : el('p', { class: 'muted' }, '▶ Your browser has no Lao voice — we will say the transliteration: ' + answer.tr)),
   );
