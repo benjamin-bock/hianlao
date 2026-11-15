@@ -6,7 +6,7 @@ import { getWeakWords } from './store.js';
 renderShell('words');
 
 const app = document.getElementById('app');
-const search = el('input', { class: 'search-input', type: 'search', placeholder: 'Search Lao, transliteration or English… (e.g. "rice", "khao", ຂ້າວ)', autocomplete: 'off' });
+const search = el('input', { class: 'search-input', type: 'search', placeholder: t('words_search'), autocomplete: 'off' });
 
 const chips = el('div', { class: 'chips' });
 const grid = el('div', { class: 'word-grid' });
@@ -27,7 +27,7 @@ function chip(label, key) {
 }
 
 chips.append(
-  chip(`All (${VOCAB.length})`, 'all'),
+  chip(t('words_all').replace('{x}', VOCAB.length), 'all'),
   ...Object.entries(CATEGORIES).map(([k, label]) => chip(label, k)),
 );
 
@@ -42,10 +42,14 @@ function matches(v) {
 
 function render() {
   const list = VOCAB.filter(matches);
-  count.textContent = `${list.length} word${list.length === 1 ? '' : 's'}${activeCat !== 'all' ? ` in “${CATEGORIES[activeCat]}”` : ''}${query ? ` matching “${query}”` : ''}`;
+  const base = list.length === 1 ? t('words_count_one') : t('words_count_many');
+  let line = base.replace('{x}', list.length);
+  if (activeCat !== 'all') line += t('words_in').replace('{y}', CATEGORIES[activeCat]);
+  if (query) line += t('words_matching').replace('{y}', query);
+  count.textContent = line;
   grid.innerHTML = '';
   if (!list.length) {
-    grid.append(el('div', { class: 'empty card' }, 'No words found. Try another search — or add this word on GitHub! ✏️'));
+    grid.append(el('div', { class: 'empty card' }, t('words_empty')));
     return;
   }
   grid.append(...list.map(v => el('div', { class: 'word-card card' },
