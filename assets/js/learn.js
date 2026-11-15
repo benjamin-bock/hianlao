@@ -1,5 +1,5 @@
 import { el, renderShell } from './main.js';
-import { t } from './ui.js';
+import { t, pf } from './ui.js';
 import { UNITS } from './data/units.js';
 import { VOCAB_BY_ID } from './data/vocab.js';
 import { isDone, totalDone, api, getUser, getState, setGoal, getDueReviews, getWeakWords } from './store.js';
@@ -28,7 +28,7 @@ app.append(
 const goalState0 = getState();
 const goalFill = el('div', { class: 'goal-fill' });
 const goalLabel = el('span', { class: 'muted' }, '');
-const goalSel = el('select', { 'aria-label': 'Daily goal' },
+const goalSel = el('select', { 'aria-label': t('goal_select') },
   [10, 20, 50, 100].map(g => el('option', { value: String(g) }, `⚡ ${g} XP`)));
 goalSel.value = String(goalState0.goal || 20);
 function renderGoal() {
@@ -69,8 +69,8 @@ UNITS.forEach((unit, ui) => {
     el('div', { class: 'unit-header', style: `--unit-color:${unit.color}` },
       el('div', { class: 'unit-badge', style: `--unit-color:${unit.color}` }, unit.icon),
       el('div', {},
-        el('h2', {}, `Unit ${unit.num} — ${unit.title}`),
-        el('p', { class: 'unit-desc' }, unit.desc)),
+        el('h2', {}, t('unit_n').replace('{x}', unit.num).replace('{y}', pf(unit, 'title'))),
+        el('p', { class: 'unit-desc' }, pf(unit, 'desc'))),
     ),
     el('div', { class: 'lessons-path' },
       unit.lessons.map(l => {
@@ -85,8 +85,8 @@ UNITS.forEach((unit, ui) => {
         },
           el('div', { class: 'lesson-circle' }, done ? '✓' : unlocked ? '▶' : '🔒'),
           el('div', { class: 'lesson-meta' },
-            el('strong', {}, l.title),
-            el('span', {}, `${l.exercises.length} exercises`)),
+            el('strong', {}, pf(l, 'title')),
+            el('span', {}, t('n_exercises').replace('{x}', l.exercises.length))),
         );
         if (!unlocked) node.addEventListener('click', e => e.preventDefault());
         return node;
@@ -99,14 +99,14 @@ UNITS.forEach((unit, ui) => {
 if (firstUndone >= 0) {
   const next = allLessons[firstUndone];
   app.append(el('div', { class: 'sticky-cta' },
-    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ ${t('next_cta')}: ${next.title}`)));
+    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ ${t('next_cta')}: ${pf(next, 'title')}`)));
 }
 
 // Leaderboard (only when the backend is available and the user is signed in).
 async function leaderboardCard() {
   const card = el('section', { class: 'card leaderboard-card' },
     el('h2', {}, t('lb_title')),
-    el('p', { class: 'muted' }, 'Top learners by XP — sign in to appear here!'),
+    el('p', { class: 'muted' }, t('lb_sub')),
   );
   const list = el('ol', { class: 'leaderboard-list' });
   const tabs = el('div', { class: 'mode-tabs' });
@@ -118,7 +118,7 @@ async function leaderboardCard() {
   card.append(tabs, list);
   app.append(card);
   if (!api.available) {
-    list.append(el('li', { class: 'muted' }, 'Backend offline — leaderboard unavailable. The site still works fully as a guest!'));
+    list.append(el('li', { class: 'muted' }, t('lb_offline')));
     return;
   }
   if (!getUser()) {
@@ -131,7 +131,7 @@ async function loadLb() {
   const list = document.querySelector('.leaderboard-list');
   const entries = await api.leaderboard(10, lbPeriod);
   list.innerHTML = '';
-  if (!entries.length) { list.append(el('li', { class: 'muted' }, 'No scores yet — be the first! Complete a lesson to get on the board.')); return; }
+  if (!entries.length) { list.append(el('li', { class: 'muted' }, t('lb_empty'))); return; }
   entries.forEach((e2, i) => {
     const me = getUser() && e2.username === getUser().username.toLowerCase();
     list.append(el('li', { class: me ? 'me' : '' },

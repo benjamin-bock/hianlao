@@ -1,5 +1,5 @@
 import { el, renderShell } from './main.js';
-import { t } from './ui.js';
+import { t, pf } from './ui.js';
 import { getDueReviews, getUpcomingReviews } from './store.js';
 import { LESSON_BY_ID } from './data/units.js';
 
@@ -22,7 +22,7 @@ function lessonRow(l, dueNow) {
   },
     el('div', { class: 'lesson-circle', style: '--unit-color:#8b5cf6' }, dueNow ? '🔁' : '⏳'),
     el('div', { class: 'lesson-meta' },
-      el('strong', {}, meta ? meta.title : l.id),
+      el('strong', {}, meta ? pf(meta, 'title') : l.id),
       el('span', {}, dueNow ? t('review_start') : new Date(l.due).toLocaleString())));
 }
 

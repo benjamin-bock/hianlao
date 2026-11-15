@@ -1,7 +1,7 @@
 // HianLao lesson engine: renders one exercise at a time, hearts, XP, feedback,
 // and a summary screen. Exercises come from data/units.js.
 import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
-import { t } from './ui.js';
+import { t, pf, def } from './ui.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
 import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview, getWeakWords, addWeakWord, relieveWeakWord } from './store.js';
@@ -39,13 +39,13 @@ const app = document.getElementById('app');
 
 if (!lesson) {
   app.append(el('div', { class: 'card error-card' },
-    el('h1', {}, 'Lesson not found'),
-    el('p', {}, `No lesson with id "${lessonId}".`),
-    el('a', { class: 'btn btn-primary', href: 'learn.html' }, 'Back to the path')));
+    el('h1', {}, t('lesson_not_found')),
+    el('p', {}, t('lesson_not_found_sub').replace('{x}', lessonId)),
+    el('a', { class: 'btn btn-primary', href: 'learn.html' }, t('back_path'))));
   throw new Error(`unknown lesson ${lessonId}`);
 }
 
-document.title = `${lesson.title} — HianLao`;
+document.title = `${pf(lesson, 'title')} — HianLao`;
 
 const XP_PER_CORRECT = 10;
 const PRACTICE_XP = 5;
@@ -105,11 +105,12 @@ const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, t('chec
 const tapHint = () => el('span', { class: 'action-hint' }, t('tap_answer'));
 
 function feedbackBanner(ok, correctText, explain) {
+  const xp = state.practiceMode ? PRACTICE_XP : XP_PER_CORRECT;
   return el('div', { class: `feedback ${ok ? 'ok' : 'bad'}` },
     el('div', { class: 'feedback-icon' }, ok ? '🎉' : '💡'),
     el('div', {},
-      el('strong', {}, ok ? pick(['Awesome!', 'Correct!', 'ແຊບ! (Sep — tasty! The best Lao compliment)', 'Well done!']) : 'Not quite'),
-      !ok ? el('p', { html: `Correct answer: <b>${correctText}</b>` }) : el('p', {}, pick(['+10 XP', 'Keep it up!', 'You\'re on fire 🔥'])),
+      el('strong', {}, ok ? pick(t('fb_ok_variants').split('|')) : t('fb_bad')),
+      !ok ? el('p', { html: t('fb_correct_answer').replace('{x}', correctText) }) : el('p', {}, `+${xp} XP · ${pick(t('fb_praise').split('|'))}`),
       (!ok && explain) ? el('p', { class: 'feedback-note' }, explain) : null,
     ),
     el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, t('cont')));
@@ -150,10 +151,11 @@ function renderExercise() {
     el('h2', {}, exTitle(ex)),
     exPrompt(ex) ? el('p', { class: 'exercise-prompt', html: exPrompt(ex) }) : null,
   );
-  if (!state.practiceMode && !state.blurbShown && lesson.blurb) {
+  const blurb = pf(lesson, 'blurb');
+  if (!state.practiceMode && !state.blurbShown && blurb) {
     state.blurbShown = true;
     stage.append(el('div', { class: 'card context-card' },
-      el('p', { class: 'context-blurb' }, lesson.blurb)));
+      el('p', { class: 'context-blurb' }, blurb)));
   }
   if (state.practiceMode) {
     stage.append(el('div', { class: 'retry-note' }, '🛠️ ' + t('practice_mode')));
@@ -165,23 +167,22 @@ function renderExercise() {
 
 function exTitle(ex) {
   switch (ex.type) {
-    case 'mc': return ex.dir === 'lao2en' ? 'What does this mean?' : 'Which one is…?';
-    case 'type': return ex.dir === 'lao2en' ? 'Translate to English' : 'Write in Lao';
-    case 'match': return 'Match the pairs';
-    case 'listen': return '🔊 Listen and choose';
-    case 'tiles': return 'Build the sentence';
-    case 'speak': return '🎤 Say it out loud';
-    default: return 'Exercise';
+    case 'mc': return ex.dir === 'lao2en' ? t('ex_mc_lao2en') : t('ex_mc_en2lao');
+    case 'type': return ex.dir === 'lao2en' ? t('ex_type_lao2en') : t('ex_type_en2lao');
+    case 'match': return t('ex_match');
+    case 'listen': return t('ex_listen');
+    case 'tiles': return t('ex_tiles');
+    case 'speak': return t('ex_speak');
+    default: return t('ex_generic');
   }
 }
 
 function exPrompt(ex) {
-  if (ex.type === 'mc' && ex.dir === 'en2lao') return `Select the Lao for: <b>${V[ex.answer].en}</b>`;
+  if (ex.type === 'mc' && ex.dir === 'en2lao') return t('prompt_mc_en2lao').replace('{x}', def(V[ex.answer]));
   if (ex.type === 'type' && ex.dir === 'lao2en') return null;
-  if (ex.type === 'type' && ex.dir === 'en2lao') return `Type the Lao for: <b>${V[ex.id].en}</b> (Lao script or transliteration accepted)`;
-  if (ex.type === 'listen') return 'Press play, then choose what you heard.';
-  if (ex.type === 'tiles') return `Translate: <b>${ex.en}</b>`;
-  if (ex.type === 'speak') return null;
+  if (ex.type === 'type' && ex.dir === 'en2lao') return t('prompt_type_en2lao').replace('{x}', def(V[ex.id]));
+  if (ex.type === 'listen') return t('prompt_listen');
+  if (ex.type === 'tiles') return t('prompt_tiles').replace('{x}', pf(ex, 'en'));
   return null;
 }
 
@@ -204,18 +205,19 @@ function renderMc(ex) {
     body.append(
       el('div', { class: 'big-word card' },
         el('div', { class: 'word-lao lao' }, V[ex.answer].lao),
-        el('div', { class: 'word-tr' }, V[ex.answer].tr),
+        el('div', { class: 'word-romanization' }, V[ex.answer].romanization),
         speakBtn(V[ex.answer])),
     );
   } else {
     body.append(
-      el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, V[ex.answer].en)),
+      el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, def(V[ex.answer]))),
     );
   }
   const order = shuffle(ex.ids);
   const opts = el('div', { class: 'options' }, order.map(id => {
     const c = el('button', { class: 'option-card' },
-      ex.dir === 'lao2en' ? el('span', {}, V[id].en) : el('span', { class: 'lao' }, V[id].lao));
+      ex.dir === 'lao2en' ? el('span', {}, def(V[id])) : el('div', { class: 'opt-col' },
+        el('span', { class: 'lao' }, V[id].lao), el('span', { class: 'opt-sub' }, V[id].romanization)));
     c.dataset.id = id;
     c.addEventListener('click', () => {
       if (state.answered) return;
@@ -227,7 +229,7 @@ function renderMc(ex) {
         else if (x === c) x.classList.add('wrong');
       });
       sfx('click');
-      resolveAnswer(id === ex.answer, `${a.lao} — ${a.tr} — ${a.en}`);
+      resolveAnswer(id === ex.answer, `${a.lao} — ${a.romanization} — ${def(a)}`);
     });
     return c;
   }));
@@ -242,12 +244,12 @@ function renderType(ex) {
   if (ex.dir === 'lao2en') {
     body.append(el('div', { class: 'big-word card' },
       el('div', { class: 'word-lao lao' }, item.lao),
-      el('div', { class: 'word-tr' }, item.tr),
+      el('div', { class: 'word-romanization' }, item.romanization),
       speakBtn(item)));
   } else {
-    body.append(el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, item.en)));
+    body.append(el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, def(item))));
   }
-  const input = el('input', { class: 'type-input', type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', placeholder: ex.dir === 'lao2en' ? 'Type the English…' : 'Type in Lao or transliteration…' });
+  const input = el('input', { class: 'type-input', type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', placeholder: ex.dir === 'lao2en' ? t('ph_type_en') : t('ph_type_lao') });
   body.append(el('div', { class: 'type-row' }, input));
   const btn = checkBtn();
   btn.disabled = true;
@@ -257,11 +259,13 @@ function renderType(ex) {
     const val = normalize(input.value);
     if (!val) return;
     let ok;
-    if (ex.dir === 'lao2en') ok = val === normalize(item.en) || normalize(item.en).includes(val) && val.length >= 3;
-    else ok = val === normalize(item.lao) || val === normalize(item.tr);
+    if (ex.dir === 'lao2en') {
+      const meanings = [item.en, item.fr].filter(Boolean).map(normalize);
+      ok = meanings.some(m => val === m || (m.includes(val) && val.length >= 3));
+    } else ok = val === normalize(item.lao) || val === normalize(item.romanization);
     state.answered = true;
     if (!ok) shake(input);
-    resolveAnswer(ok, ex.dir === 'lao2en' ? item.en : `${item.lao} (${item.tr})`);
+    resolveAnswer(ok, ex.dir === 'lao2en' ? def(item) : `${item.lao} (${item.romanization})`);
   };
   btn.addEventListener('click', submit);
   input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
@@ -276,7 +280,7 @@ function renderMatch(ex) {
   const right = shuffle(items);
   let selLeft = null, selRight = null, matched = new Set();
   const hint = el('p', { class: 'action-hint' }, '');
-  const updateHint = () => { hint.textContent = `${matched.size}/${items.length} matched — match every Lao word with its English meaning.`; };
+  const updateHint = () => { hint.textContent = t('hint_match').replace('{x}', matched.size).replace('{y}', items.length); };
   updateHint();
   const body = el('div', { class: 'match-grid' },
     el('div', { class: 'match-col' }, left.map(v => matchBtn(v, 'lao'))),
@@ -284,7 +288,11 @@ function renderMatch(ex) {
   );
   function matchBtn(v, side) {
     const b = el('button', { class: 'option-card match-card' },
-      side === 'lao' ? el('span', { class: 'lao' }, v.lao) : el('span', {}, v.en));
+      side === 'lao'
+        ? el('div', { class: 'opt-col' },
+          el('span', { class: 'lao' }, v.lao), el('span', { class: 'opt-sub' }, v.romanization))
+        : el('span', {}, def(v)));
+    b.dataset.id = v.id;
     b.addEventListener('click', () => {
       if (state.answered || matched.has(v.id)) return;
       if (side === 'lao') { selLeft = selLeft === b ? null : b; }
@@ -293,8 +301,8 @@ function renderMatch(ex) {
       if (selLeft) selLeft.classList.add('selected');
       if (selRight) selRight.classList.add('selected');
       if (selLeft && selRight) {
-        const l = left.find(x => x.lao === selLeft.textContent);
-        const r = right.find(x => x.en === selRight.textContent);
+        const l = left.find(x => x.id === selLeft.dataset.id);
+        const r = right.find(x => x.id === selRight.dataset.id);
         if (l && r && l.id === r.id) {
           matched.add(l.id);
           selLeft.classList.add('matched'); selRight.classList.add('matched');
@@ -323,18 +331,18 @@ function renderMatch(ex) {
 function renderListen(ex) {
   const answer = V[ex.answer];
   const body = el('div', {});
-  const play = el('button', { class: 'play-btn', title: 'Play audio', 'aria-label': 'Play audio' }, '🔊');
+  const play = el('button', { class: 'play-btn', title: t('title_play_audio'), 'aria-label': t('title_play_audio') }, '🔊');
   play.addEventListener('click', () => { speakItem(answer); play.classList.add('playing'); setTimeout(() => play.classList.remove('playing'), 1200); });
   body.append(
     el('div', { class: 'big-word card listen-card' },
       play,
       (hasNativeAudio(answer) || hasLaoVoice())
-        ? el('p', { class: 'muted' }, '▶ Press play and listen')
-        : el('p', { class: 'muted' }, '▶ Your browser has no Lao voice — we will say the transliteration: ' + answer.tr)),
+        ? el('p', { class: 'muted' }, t('listen_play'))
+        : el('p', { class: 'muted', html: t('listen_novoice').replace('{x}', answer.romanization) })),
   );
   const cards = shuffle(ex.ids);
   const opts = el('div', { class: 'options' }, cards.map(id => {
-    const c = el('button', { class: 'option-card' }, el('span', {}, V[id].en));
+    const c = el('button', { class: 'option-card' }, el('span', {}, def(V[id])));
     c.dataset.id = id;
     c.addEventListener('click', () => {
       if (state.answered) return;
@@ -345,7 +353,7 @@ function renderListen(ex) {
         else if (x === c) x.classList.add('wrong');
       });
       sfx('click');
-      resolveAnswer(id === ex.answer, `${answer.lao} — ${answer.tr} — ${answer.en}`);
+      resolveAnswer(id === ex.answer, `${answer.lao} — ${answer.romanization} — ${def(answer)}`);
     });
     return c;
   }));
@@ -357,7 +365,7 @@ function renderListen(ex) {
 
 function renderTiles(ex) {
   const bank = el('div', { class: 'tile-bank' });
-  const answerArea = el('div', { class: 'tile-answer' }, el('span', { class: 'muted' }, 'Tap the words in order…'));
+  const answerArea = el('div', { class: 'tile-answer' }, el('span', { class: 'muted' }, t('ph_tiles')));
   const chosen = [];
   const btn = checkBtn();
   btn.disabled = true;
@@ -366,7 +374,7 @@ function renderTiles(ex) {
     state.answered = true;
     const ok = chosen.join('') === ex.lao;
     if (!ok) shake(answerArea);
-    resolveAnswer(ok, `${ex.lao} — ${ex.tr}`);
+    resolveAnswer(ok, `${ex.lao} — ${ex.romanization}`);
   };
   function renderBank() {
     bank.innerHTML = '';
@@ -384,7 +392,7 @@ function renderTiles(ex) {
   }
   function renderAnswer() {
     answerArea.innerHTML = '';
-    if (!chosen.length) answerArea.append(el('span', { class: 'muted' }, 'Tap the words in order…'));
+    if (!chosen.length) answerArea.append(el('span', { class: 'muted' }, t('ph_tiles')));
     chosen.forEach((w, i) => {
       const t = el('button', { class: 'tile chosen' }, w);
       t.addEventListener('click', () => {
@@ -399,8 +407,7 @@ function renderTiles(ex) {
   renderAll();
   const body = el('div', { class: 'tiles-wrap' },
     el('div', { class: 'big-word card' },
-      el('div', { class: 'word-en-lg' }, ex.en),
-      el('div', { class: 'word-tr' }, ex.tr)),
+      el('div', { class: 'word-en-lg' }, pf(ex, 'en'))),
     answerArea, bank);
   btn.addEventListener('click', submit);
   setActionBar(el('span', { class: 'action-spacer' }), btn);
@@ -412,50 +419,50 @@ function renderSpeak(ex) {
   const body = el('div', { class: 'speak-wrap' },
     el('div', { class: 'big-word card' },
       el('div', { class: 'word-lao lao' }, item.lao),
-      el('div', { class: 'word-tr' }, item.tr),
-      el('div', { class: 'word-en' }, item.en),
+      el('div', { class: 'word-romanization' }, item.romanization),
+      el('div', { class: 'word-en' }, def(item)),
       speakBtn(item)),
   );
   const status = el('p', { class: 'muted speak-status' }, '');
   if (canRecognize()) {
-    const mic = el('button', { class: 'btn btn-mic btn-lg' }, '🎤 Tap and speak');
+    const mic = el('button', { class: 'btn btn-mic btn-lg' }, t('speak_tap'));
     mic.addEventListener('click', async () => {
       mic.disabled = true;
-      status.textContent = 'Listening… say it now 🎤';
+      status.textContent = t('speak_listening');
       const transcript = await recognize({ lang: 'lo-LA' });
       mic.disabled = false;
       if (state.answered) return;
       if (transcript === null) {
-        status.textContent = 'Did not catch that — try again, or press "I said it".';
+        status.textContent = t('speak_missed');
         return;
       }
-      status.textContent = `Heard: "${transcript}"`;
+      status.textContent = t('speak_heard').replace('{x}', transcript);
       state.answered = true;
-      resolveAnswer(speechMatches(transcript, item), `${item.lao} — ${item.tr}`);
+      resolveAnswer(speechMatches(transcript, item), `${item.lao} — ${item.romanization}`);
     });
     body.append(mic, status);
-    const skip = el('button', { class: 'btn btn-ghost' }, "No mic? I said it ✔");
+    const skip = el('button', { class: 'btn btn-ghost' }, t('speak_said'));
     skip.addEventListener('click', () => {
       if (state.answered) return;
       state.answered = true;
-      status.textContent = 'Great — keep speaking out loud! 🗣️';
-      resolveAnswer(true, `${item.lao} — ${item.tr}`);
+      status.textContent = t('speak_listening');
+      resolveAnswer(true, `${item.lao} — ${item.romanization}`);
     });
     body.append(skip);
   } else {
     body.append(
-      el('p', { class: 'muted' }, 'This browser cannot use the microphone. Listen with 🔊, repeat out loud, then tap below.'),
+      el('p', { class: 'muted' }, t('speak_nomic')),
       status,
     );
-    const said = el('button', { class: 'btn btn-primary btn-lg' }, 'I said it out loud ✔');
+    const said = el('button', { class: 'btn btn-primary btn-lg' }, t('speak_said_loud'));
     said.addEventListener('click', () => {
       if (state.answered) return;
       state.answered = true;
-      resolveAnswer(true, `${item.lao} — ${item.tr}`);
+      resolveAnswer(true, `${item.lao} — ${item.romanization}`);
     });
     body.append(said);
   }
-  setActionBar(el('span', { class: 'action-spacer' }), el('span', { class: 'action-hint' }, 'Speaking practice'));
+  setActionBar(el('span', { class: 'action-spacer' }), el('span', { class: 'action-hint' }, t('speak_hint')));
   return body;
 }
 
@@ -509,7 +516,7 @@ function resolveAnswer(ok, correctText) {
     shake(heartsEl);
   }
   if (state.hearts <= 0) {
-    banner.querySelector('.btn-continue').textContent = 'SEE RESULT';
+    banner.querySelector('.btn-continue').textContent = t('see_result');
   }
 }
 
@@ -540,12 +547,12 @@ function summaryScreen() {
   stage.append(el('div', { class: 'summary card' },
     icon,
     el('h1', {}, t('done_title')),
-    el('p', { class: 'lao summary-lao' }, 'ທຳໄດ້ດີມາກ!'),
-    el('p', {}, `${lesson.title} — ${state.correct}/${total} correct (${acc}%)`),
+    el('p', { class: 'summary-lao', html: t('summary_lao') }),
+    el('p', {}, t('summary_line').replace('{title}', pf(lesson, 'title')).replace('{x}', state.correct).replace('{y}', total).replace('{z}', acc)),
     el('div', { class: 'summary-stats' },
-      el('div', { class: 'stat' }, el('strong', {}, `+${state.xpEarned}`), el('span', {}, '⚡ XP earned')),
-      el('div', { class: 'stat' }, el('strong', {}, `${acc}%`), el('span', {}, 'accuracy')),
-      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, 'total XP')),
+      el('div', { class: 'stat' }, el('strong', {}, `+${state.xpEarned}`), el('span', {}, t('stat_xp'))),
+      el('div', { class: 'stat' }, el('strong', {}, `${acc}%`), el('span', {}, t('stat_acc'))),
+      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, t('stat_total_xp'))),
     ),
     el('div', { class: 'summary-actions' },
       nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
@@ -557,7 +564,7 @@ function summaryScreen() {
       const badges = unlockedAchievements();
       if (!badges.length) return null;
       return el('div', { class: 'summary-badges' },
-        el('h3', {}, '🏅 Achievements'),
+        el('h3', {}, t('summary_achievements')),
         el('div', { class: 'badge-grid' }, badges.slice(-6).map(a =>
           el('div', { class: 'badge-card' }, el('span', { class: 'badge-icon' }, a.icon), el('div', {}, el('strong', {}, a.name), el('p', {}, a.desc))))));
     })()
@@ -595,7 +602,7 @@ function practiceDoneScreen() {
     el('p', {}, t('practice_done_sub')),
     el('div', { class: 'summary-stats' },
       el('div', { class: 'stat' }, el('strong', {}, `+${state.practiceXp}`), el('span', {}, '⚡ XP earned')),
-      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, 'total XP')),
+      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, t('stat_total_xp'))),
     ),
     el('div', { class: 'summary-actions' },
       nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
@@ -611,10 +618,10 @@ function failScreen() {
   stage.append(el('div', { class: 'summary card fail' },
     el('div', { class: 'summary-icon' }, '💔'),
     el('h1', {}, t('fail_title')),
-    el('p', { html: `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">ບໍ່ເປັນຫຍັງ</span> <i>(baw pen nyang)</i> — "no worries". Try again!` }),
+    el('p', { html: t('fail_sub').replace('{x}', state.correct).replace('{y}', lesson.exercises.length) }),
     el('div', { class: 'summary-actions' },
       el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${lesson.id}` }, t('try_again')),
-      el('a', { class: 'btn btn-ghost', href: 'learn.html' }, 'Back to path'))));
+      el('a', { class: 'btn btn-ghost', href: 'learn.html' }, t('back_path')))));
   shake(stage);
 }
 

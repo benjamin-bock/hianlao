@@ -1,12 +1,13 @@
 import { el, renderShell, speakBtn } from './main.js';
-import { t } from './ui.js';
-import { VOCAB, VOCAB_BY_ID, CATEGORIES } from './data/vocab.js';
+import { t, def, noteOf } from './ui.js';
+import { VOCAB, VOCAB_BY_ID, CATEGORIES, CATEGORIES_FR } from './data/vocab.js';
+import { getLang } from './ui.js';
 import { getWeakWords } from './store.js';
 
 renderShell('words');
 
 const app = document.getElementById('app');
-const search = el('input', { class: 'search-input', type: 'search', placeholder: 'Search Lao, transliteration or English… (e.g. "rice", "khao", ຂ້າວ)', autocomplete: 'off' });
+const search = el('input', { class: 'search-input', type: 'search', placeholder: t('words_search'), autocomplete: 'off' });
 
 const chips = el('div', { class: 'chips' });
 const grid = el('div', { class: 'word-grid' });
@@ -27,8 +28,8 @@ function chip(label, key) {
 }
 
 chips.append(
-  chip(`All (${VOCAB.length})`, 'all'),
-  ...Object.entries(CATEGORIES).map(([k, label]) => chip(label, k)),
+  chip(t('words_all').replace('{x}', VOCAB.length), 'all'),
+  ...Object.entries(CATEGORIES).map(([k, label]) => chip(getLang() === 'fr' ? (CATEGORIES_FR[k] || label) : label, k)),
 );
 
 search.addEventListener('input', () => { query = search.value; render(); });
@@ -37,26 +38,30 @@ function matches(v) {
   if (activeCat !== 'all' && v.cat !== activeCat) return false;
   if (!query) return true;
   const q = query.toLowerCase().trim();
-  return v.lao.includes(query.trim()) || v.tr.toLowerCase().includes(q) || v.en.toLowerCase().includes(q);
+  return v.lao.includes(query.trim()) || v.romanization.toLowerCase().includes(q) || v.en.toLowerCase().includes(q) || (v.fr || '').toLowerCase().includes(q);
 }
 
 function render() {
   const list = VOCAB.filter(matches);
-  count.textContent = `${list.length} word${list.length === 1 ? '' : 's'}${activeCat !== 'all' ? ` in “${CATEGORIES[activeCat]}”` : ''}${query ? ` matching “${query}”` : ''}`;
+  const base = list.length === 1 ? t('words_count_one') : t('words_count_many');
+  let line = base.replace('{x}', list.length);
+  if (activeCat !== 'all') line += t('words_in').replace('{y}', getLang() === 'fr' ? (CATEGORIES_FR[activeCat] || CATEGORIES[activeCat]) : CATEGORIES[activeCat]);
+  if (query) line += t('words_matching').replace('{y}', query);
+  count.textContent = line;
   grid.innerHTML = '';
   if (!list.length) {
-    grid.append(el('div', { class: 'empty card' }, 'No words found. Try another search — or add this word on GitHub! ✏️'));
+    grid.append(el('div', { class: 'empty card' }, t('words_empty')));
     return;
   }
   grid.append(...list.map(v => el('div', { class: 'word-card card' },
     el('div', { class: 'word-card-top' },
       el('div', {},
         el('div', { class: 'word-lao lao' }, v.lao),
-        el('div', { class: 'word-tr' }, v.tr),
-        el('div', { class: 'word-en' }, v.en)),
+        el('div', { class: 'word-romanization' }, v.romanization),
+        el('div', { class: 'word-en' }, def(v))),
       speakBtn(v)),
-    v.note ? el('div', { class: 'word-note' }, v.note) : null,
-    el('div', { class: 'word-cat' }, CATEGORIES[v.cat] || v.cat),
+    v.note ? el('div', { class: 'word-note' }, noteOf(v)) : null,
+    el('div', { class: 'word-cat' }, getLang() === 'fr' ? (CATEGORIES_FR[v.cat] || v.cat) : (CATEGORIES[v.cat] || v.cat)),
   )));
 }
 
@@ -81,11 +86,11 @@ function weakSection() {
         el('div', { class: 'word-card-top' },
           el('div', {},
             el('div', { class: 'word-lao lao' }, v.lao),
-            el('div', { class: 'word-tr' }, v.tr),
-            el('div', { class: 'word-en' }, v.en)),
+            el('div', { class: 'word-romanization' }, v.romanization),
+            el('div', { class: 'word-en' }, def(v))),
           speakBtn(v)),
         el('div', { class: 'weak-count' }, `🔥 ×${w.n}`),
-        v.note ? el('div', { class: 'word-note' }, v.note) : null);
+        v.note ? el('div', { class: 'word-note' }, noteOf(v)) : null);
     })),
     el('a', { class: 'btn btn-primary weak-drill', href: 'lesson.html?id=__weak' }, `⚡ ${t('weak_practice')}`),
   );

@@ -1,0 +1,282 @@
+hello | greetings | ສະບາຍດີ | sa-bai-dii | Hello
+how_are_you | greetings | ສະບາຍດີບໍ | sa-bai-dii baw? | How are you?
+fine | greetings | ສະບາຍດີ | sa-bai-dii | I'm fine / well
+goodbye | greetings | ລາກ່ອນ | la khon | Goodbye
+bye | greetings | ບາຢດີ | bai dii | Bye (casual)
+thanks | greetings | ຂອບໃຈ | khop jai | Thank you
+thanks_a_lot | greetings | ຂອບໃຈຫລາຢໆ | khop jai lai lai | Thank you very much
+welcome | greetings | ໄມ່ເປັນຫຢັງ | mai pen nyang | You're welcome
+sorry | greetings | ຂອໂທສ | kho thot | Sorry / excuse me
+yes | greetings | ໃຊ່ | jai | Yes
+no | greetings | ໄມ່ | mai | No / not
+ok_q | greetings | ໄດ້ບ່ | dai bo? | OK? / Can I…?
+name_q | greetings | ເຈ້າຊື່ອອະໄຣ | jao chue nyang? | What is your name?
+name_a | greetings | ຂ່ອຢຊື່ອ… | khoi chue… | My name is…
+nice_meet | greetings | ຢິນດີທີ່ໄດ້ພບເຈ້າ | yin di thi dai phoep jao | Nice to meet you
+see_you | greetings | ພບກັນໃຫມ່ | phoep kan mai | See you again
+good_morning | greetings | ສະບາຍດີຕອນເຊ້າ | sa-bai-dii ton sao | Good morning
+good_night | greetings | ຣາຕຣີສະບາຍດີ | ratri sa-bai-dii | Good night
+good_luck | greetings | ໂຊຄດີ | chok dii | Good luck
+i | basics | ຂ່ອຢ | khoi | I (informal)
+you | basics | ເຈ້າ | jao | you (polite)
+he_she | basics | ເຂາ | khao | he / she / they
+we | basics | ເຣາ | rao | we
+be | basics | ເປັນ | pen | to be
+have | basics | ມີ | mi | to have
+not_have | basics | ໄມ່ມີ | mai mi | don't have
+can | basics | ໄດ້ | dai | can / able to
+ing | basics | ກຳລັງ | kamlang | -ing (in progress)
+past | basics | ແລ້ວ | laew | already (past)
+future | basics | ຈະ | ja | will (future)
+what | basics | ອະໄຣ | nyang | what
+where | basics | ໃສ | sai | where
+when | basics | ເມື່ອໄຫຣ່ | meua dai | when
+why | basics | ເປັນອະໄຣ | pen nyang | why
+how | basics | ອຢ່າງໄຣ | jang | how
+who | basics | ໃຄຣ | phu dai | who
+and | basics | ແລະ | lae | and
+but | basics | ແຕ່ | tae | but
+or | basics | ຫຣືອ | ru | or
+with | basics | ກັບ | kap | with
+because | basics | ເພຣາະວ່າ | pho wa | because
+if | basics | ຖ້າ | tha | if
+of | basics | ຂອງ | khong | of / belonging to
+only | basics | ແຄ່ | tao | only
+also | basics | ກັ | kho | also / too
+to | basics | ຖຶງ | thung | to
+at | basics | ອຢູ່ | yu | at / to be located
+from | basics | ຈາກ | jak | from
+please | basics | ກຣຸນາ | ka-ru-na | please
+this | basics | ອັນນີ້ | an ni | this
+that | basics | ອັນນັ້ນ | an nan | that
+n1 | numbers | ຫນຶ່ງ | neung | 1 (one)
+n2 | numbers | ສອງ | song | 2 (two)
+n3 | numbers | ສາມ | sam | 3 (three)
+n4 | numbers | ສີ່ | si | 4 (four)
+n5 | numbers | ຫ້າ | ha | 5 (five)
+n6 | numbers | ຫກ | hok | 6 (six)
+n7 | numbers | ເຈັດ | jet | 7 (seven)
+n8 | numbers | ແປດ | paet | 8 (eight)
+n9 | numbers | ເກ້າ | kao | 9 (nine)
+n10 | numbers | ສິບ | sip | 10 (ten)
+n11 | numbers | ສິບເອັດ | sip et | 11 (eleven)
+n20 | numbers | ຢີ່ສິບ | yi sip | 20 (twenty)
+n100 | numbers | ຣ້ອຢ | loi | 100 (one hundred)
+n1000 | numbers | ພັນ | phan | 1,000 (one thousand)
+n10000 | numbers | ແສນ | muen | 10,000
+n1m | numbers | ລ້ານ | lan | 1,000,000 (one million)
+person | family | ຄນ | khon | person (classifier for people)
+family | family | ຄຣອບຄຣັວ | khop khua | family
+father | family | ພ່ອ | pho | father
+mother | family | ແມ່ | mae | mother
+older_sib | family | ພີ່ | phi | older sibling
+younger_sib | family | ນ້ອງ | nong | younger sibling
+child | family | ເດັກ | dek | child
+baby | family | ເດັກນ້ອຢ | dek noi | baby
+friend | family | ເພື່ອນ | peuan | friend
+teacher | family | ຄຣູ | khru | teacher
+student | family | ນັກເຣີຢນ | nak rian | student
+man | family | ຜູ້ | phu | man / male
+woman | family | ຫຍິງ | ying | woman / female
+lao_person | family | ຄນລາວ | khon Lao | Lao person
+eat | verbs | ກິນ | kin | to eat
+drink | verbs | ດື່ມ | dun | to drink
+go | verbs | ໄປ | pai | to go
+come | verbs | ມາ | ma | to come
+speak | verbs | ພູດ | phut | to speak / say
+listen | verbs | ຟັງ | fang | to listen
+read | verbs | ອ່ານ | aan | to read
+write | verbs | ເຂີຢນ | khian | to write
+see | verbs | ເຫັນ | hen | to see / look
+think | verbs | ຄິດ | khit | to think
+learn | verbs | ເຣີຢນ | hian | to learn / study  (hian Lao = learn Lao!)
+work | verbs | ທຳງານ | het viak | to work
+buy | verbs | ສື້ອ | seu | to buy
+sell | verbs | ຂາຢ | khai | to sell
+give | verbs | ໃຫ້ | hai | to give
+take | verbs | ເອາ | ao | to take / want
+like | verbs | ຊອບ | mak | to like
+love | verbs | ຣັກ | hak | to love
+want | verbs | ອຢາກ | yaak | to want
+understand | verbs | ເຂ້າໃຈ | khao jai | to understand
+not_understand | verbs | ໄມ່ເຂ້າໃຈ | mai khao jai | don't understand
+sit | verbs | ນັ່ງ | nang | to sit
+stand | verbs | ຢືນ | yun | to stand
+walk | verbs | ເດິນ | deen | to walk
+sleep | verbs | ນອນ | non | to sleep
+open | verbs | ເປິດ | peert | to open
+close | verbs | ປິດ | pit | to close
+meet | verbs | ພບ | phoep | to meet
+good | adjectives | ດີ | dii | good
+bad | adjectives | ໄມ່ດີ | mai dii | not good / bad
+beautiful | adjectives | ງາມ | ngam | beautiful
+tasty | adjectives | ແສ່ບ | saep | delicious
+spicy | adjectives | ເຜັດ | pet | spicy
+sweet | adjectives | ຫວານ | wan | sweet
+sour | adjectives | ເປຣີ້ຢວ | som | sour
+salty | adjectives | ເຄັມ | khem | salty
+big | adjectives | ໃຫຍ່ | yai | big
+small | adjectives | ເລັກ | noi | small
+new | adjectives | ໃຫມ່ | mai | new
+old | adjectives | ເກ່າ | kao | old (thing)
+cold | adjectives | ຫນາວ | nao | cold
+happy | adjectives | ມີຄວາມສຸຂ | mi khwam suk | happy
+tired | adjectives | ເຫນື່ອຢ | nueai | tired
+cheap | adjectives | ຖູກ | thuk | cheap
+expensive | adjectives | ແພງ | phaeng | expensive
+slow | adjectives | ຊ້າ | cha | slow
+near | adjectives | ໃກລ້ | klai | near
+cute | adjectives | ນ່າຣັກ | na rak | cute / lovely
+hungry | adjectives | ຮິວ | hiao | hungry
+rice | food | ຂ້າວ | khao | rice
+sticky_rice | food | ຂ້າວເຫນີຢວ | khao niao | sticky rice (the staple of Laos)
+noodles | food | ຂ້າວເປີຢກເສ້ນ | khao piak sen | khao piak sen (Lao noodle soup)
+larb | food | ລາບ | larb | larb (famous minced-meat salad)
+papaya_salad | food | ຕຳຫມາກຫຸ່ງ | tam mak hoong | tam mak hoong (spicy papaya salad)
+mok_pa | food | ຫມກປລາ | mok pa | mok pa (fish steamed in banana leaf)
+grilled_chicken | food | ໄກ່ຢ່າງ | gai yang | grilled chicken
+baguette | food | ຂ້າວຈີ່ | khao jii | khao jii (Lao baguette sandwich)
+sausage | food | ໄສ້ອັ່ວ | sai oua | sai oua (Lao herb sausage)
+water | food | ນ້ຳ | nam | water
+juice | food | ນ້ຳຜລໄມ້ | nam mak mai | fruit juice
+food | food | ອາຫາຣ | ahan | food / meal
+breakfast | food | ອາຫາຣເຊ້າ | ahan sao | breakfast
+dinner | food | ອາຫາຣຄ່ຳ | ahan kham | dinner
+vegetable | food | ຜັກ | phak | vegetable
+egg | food | ໄຂ່ | kai | egg
+meat | food | ເນື້ອ | nuea | meat
+fish | food | ປລາ | pla | fish
+chicken | food | ໄກ່ | gai | chicken
+fruit | food | ຜລໄມ້ | mak mai | fruit
+snack | food | ຂນມ | khanom | snack / dessert
+speak_lao_q | phrases | ພູດພາສາລາວໄດ້ບ່ | phut phasa Lao dai bo? | Can you speak Lao?
+not_understand_p | phrases | ໄມ່ເຂ້າໃຈ | mai khao jai | I don't understand
+speak_slow | phrases | ພູດຊ້າໆ ໄດ້ບ່ | phut cha cha dai bo? | Please speak slowly
+love_you | phrases | ຂ່ອຢຣັກເຈ້າ | khoi hak jao | I love you
+how_much_this | phrases | ອັນນີ້ເທ່າໄຫຣ່ | an ni thao dai? | How much is this?
+bill_please | phrases | ເກັບເງິນໄດ້ບ່ | kep ngoen dai bo? | The bill, please
+not_spicy | phrases | ໄມ່ກິນເຜັດ | mai kin pet | I don't eat spicy food
+one_noodles | phrases | ຂ້າວເປີຢກເສ້ນຫນຶ່ງຊາມ | khao piak sen neung cham | One bowl of noodles, please
+where_toilet | phrases | ຫ້ອງນ້ຳອຢູ່ໃສ | hong nam yu sai? | Where is the toilet?
+i_am_lao | phrases | ເປັນຄນລາວ | pen khon Lao | I am Lao
+learning_lao | phrases | ກຳລັງເຣີຢນພາສາລາວ | kamlang hian phasa Lao | I am learning Lao
+see_you_tomorrow | phrases | ພບກັນພຣຸ່ງນີ້ | phoep kan phuk ni | See you tomorrow
+eaten_q | phrases | ກິນຂ້າວແລ້ວບ່ | kin khao laew bo? | Have you eaten yet? (a classic Lao greeting)
+house | places | ບ້ານ | baan | house / home
+room | places | ຫ້ອງ | hong | room
+school | places | ໂຣງເຣີຢນ | rong hian | school
+hospital | places | ໂຣງພຢາບາລ | rong pha ya baan | hospital
+market | places | ຕລາດ | talat | market
+temple | places | ວັດ | wat | temple (wat)
+country | places | ປຣະເທສ | pathet | country
+laos | places | ປຣະເທສລາວ | Pathet Lao | Laos
+lao_lang | places | ພາສາລາວ | phasa Lao | Lao language
+english | places | ພາສາອັງກຣສ | phasa ang krit | English language
+road | places | ຖນນ | thanon | road / street
+car | places | ຣຖ | rot | car
+bicycle | places | ຈັກຣຢານ | jak kra yan | bicycle
+boat | places | ເຣືອ | ruea | boat
+plane | places | ເຣືອບິນ | ruea bin | airplane
+airport | places | ສນາມບິນ | sanaam bin | airport
+hotel | places | ໂຣງແຣມ | rong haam | hotel / guesthouse
+toilet | places | ຫ້ອງນ້ຳ | hong nam | toilet / bathroom
+shop | places | ຣ້ານຄ້າ | ran kha | shop
+mekong | places | ແມ່ນ້ຳໂຂງ | mae nam khong | Mekong river
+mountain | places | ພູ | phu | mountain
+ticket | places | ຕັ໋ວ | tua | ticket
+money | places | ເງິນ | ngoen | money
+kip | places | ກີບ | kip | kip (Lao currency)
+price | places | ຣາຄາ | rakha | price
+how_much | places | ເທ່າໄຫຣ່ | thao dai? | how much?
+day | time | ວັນ | wan | day
+today | time | ວັນນີ້ | mue ni | today
+yesterday | time | ເມື່ອວານ | muea wan | yesterday
+tomorrow | time | ພຣຸ່ງນີ້ | phuk ni | tomorrow
+morning | time | ເຊ້າ | sao | morning
+evening | time | ຄ່ຳ | kham | evening
+night | time | ຄືນ | khuen | night
+now | time | ຕອນນີ້ | ton ni | now
+hour | time | ຊັ່ວໂມງ | chua mong | hour / o'clock
+minute | time | ນາທີ | nathi | minute
+once | time | ຫນຶ່ງຄຣັ້ງ | neung khrang | once
+again | time | ອີກຄຣັ້ງ | ik khrang | once more / again
+left | directions | ສ້າຢ | sai | left
+right | directions | ຂວາ | khwa | right
+straight | directions | ຕຣງ | trong | straight
+turn | directions | ເລີ້ຢວ | leow | to turn
+on | directions | ບນ | bon | on / above
+under | directions | ໃຕ້ | tai | under / below
+inside | directions | ໃນ | nai | in / inside
+outside | directions | ນອກ | nok | outside
+here | directions | ທີ່ນີ່ | thi ni | here
+there | directions | ທີ່ນັ່ນ | thi nan | there
+red | colors | ແດງ | daeng | red
+blue | colors | ນ້ຳເງິນ | nam nguen | blue
+green | colors | ເຂີຢວ | khiao | green
+yellow | colors | ເຫລືອງ | lueang | yellow
+black | colors | ດຳ | dam | black
+white | colors | ຂາວ | khao | white
+orange | colors | ສ້ມ | som | orange
+brown | colors | ນ້ຳຕາລ | nam tan | brown
+pink | colors | ຊມພູ | chom phu | pink
+doctor | basics | ຫມອ | mor | doctor
+milk | food | ນມ | nom | milk
+hear | verbs | ໄດ້ຢິນ | dai yin | to hear
+run | verbs | ວິ່ງ | wing | to run
+taxi | travel | ຣຖແທັກສີ່ | rot taxi | taxi
+passport | travel | ຫນັງສືອເດິນທາງ | nangseu deun thang | passport
+help | travel | ຊ່ວຢເຫລືອ | chuai luea | to help
+help_bang | travel | ຊ່ວຢດ້ວຢ | chuai duai | Help!
+lost | travel | ຫາຢ | hai | lost
+lost_way | travel | ຫລງທາງ | lang thang | to get lost
+sick | travel | ປ່ວຢ | puai | sick
+medicine | travel | ຢາ | ya | medicine
+pharmacy | travel | ຣ້ານຂາຢຢາ | ran khai ya | pharmacy
+police | travel | ຕຳຣວຈ | tamruat | police
+phone | travel | ໂທຣສັພທ໌ | tholaphap | phone
+room_q | travel | ຂອຫ້ອງຫນຶ່ງ | khor hong neung | I would like one room
+exchange | travel | ທີ່ແລກເງິນ | thi laek ngoen | money exchange
+how_to_wat | travel | ໄປວັດຢັງໄງ | pai wat jang? | How do I get to the temple?
+where_market | travel | ຕລາດອຢູ່ໃສ | talat yu sai? | Where is the market?
+think_that | emotions | ຄິດວ່າ | khit wa | to think that
+afraid | emotions | ກລັວ | klua | afraid
+angry | emotions | ໂກຣຘ | krot | angry
+sad | emotions | ເສີຢໃຈ | sia jai | sad
+miss | emotions | ຄິດຖຶງ | khit thung | to miss (someone)
+bored | emotions | ເບື່ອ | beau | bored
+lonely | emotions | ເຫງາ | ngao | lonely
+hope | emotions | ຫວັງ | wang | to hope
+dream | emotions | ພັນ | fan | to dream
+fun | emotions | ສນຸກ | sanuk | fun
+interesting | emotions | ນ່າສນໃຈ | na sanai | interesting
+important | emotions | ສຳຄັຍ | samkhan | important
+difficult | emotions | ຢາກ | yak | difficult
+easy | emotions | ງ່າຢ | ngai | easy
+possible | emotions | ເປັນໄປໄດ້ | pen pai dai | possible
+surprised | emotions | ແປລກໃຈ | plak jai | surprised
+food_opinion | emotions | ຄິດວ່າອາຫາຣລາວແສ່ບ | khit wa ahan Lao saep | I think Lao food is delicious
+rain_plan | emotions | ຖ້າພນຕກກັໄມ່ໄປ | tha fon tok kho mai pai | If it rains, we won't go
+meeting | work | ປຣະຊຸມ | prachum | meeting
+boss | work | ເຈ້ານາຢ | jao nai | boss
+late | work | ສາຢ | sai | late
+appointment | work | ນັດຫມາຢ | nat mai | appointment
+plan | work | ແຜນ | phaen | plan
+plan_v | work | ວາງແຜນ | wang phaen | to plan
+busy | work | ຢຸ່ງ | yung | busy
+free_time | work | ວ່າງ | wang | free (time)
+email | work | ອີເມລ | i-mel | email
+letter | work | ຈດຫມາຢ | jot mai | letter
+message | work | ຂ້ອຄວາມ | kho khwam | message
+call | work | ໂທຣ | tho | to call (phone)
+computer | work | ຄອມພິວເຕອຣ໌ | khom phi tueat | computer
+cafe_phrase | work | ພບກັນທີ່ຣ້ານກາ | phoep kan thi ran ka | See you at the café
+call_me | work | ໂທຣຫາຉັນໄດ້ບ່ | tho ha chan dai bo? | Can you call me?
+pv_scoop | proverbs | ນ້ຳຂຶ້ໃຫ້ຣີບຕັກ | nam khuen hai rep tak | When the water rises, scoop quickly — seize the opportunity!
+pv_slow | proverbs | ຊ້າໆ ໄດ້ພຣ້າເລ່ມງາມ | cha cha dai phra lem ngam | Slowly you get a beautiful blade — slow and steady wins the race.
+pv_effort | proverbs | ຄວາມພຢາຢາມອຢູ່ທີ່ໄຫນ ຄວາມສຳເຣັຈອຢູ່ທີ່ນັ່ນ | khwam phayayam yu thi nai, khwam samret yu thi nan | Where there is effort, there is success.
+water_rises | proverbs | ນ້ຳຂຶ້ | nam khuen | the water rises
+scoop | proverbs | ຕັກ | tak | to scoop (with a ladle)
+blade | proverbs | ພຣ້າ | phra | blade (of a knife)
+effort | proverbs | ຄວາມພຢາຢາມອ | khwam phayayam | effort
+success | proverbs | ຄວາມສຳເຣັຈອ | khwam samret | success
+where_q | proverbs | ຢູ່ທີ່ໄຫນ | thi nai | where
