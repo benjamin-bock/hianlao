@@ -6,7 +6,7 @@ import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
 import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview, getWeakWords, addWeakWord, relieveWeakWord } from './store.js';
 import { unlockedAchievements } from './achievements.js';
-import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
+import { speakItem, canRecognize, recognize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
 import { sfx, buzz, shake, pop, pulse, xpFly, confettiBurst } from './fx.js';
 
 const params = new URLSearchParams(location.search);
@@ -101,8 +101,17 @@ function setActionBar(...nodes) {
   actionInner.append(...nodes);
 }
 
-const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, t('check'));
 const tapHint = () => el('span', { class: 'action-hint' }, t('tap_answer'));
+
+// ---------- word-bank helpers ----------
+// Word-bank translation = tile taps only, no keyboard. The answer checks itself
+// the moment all required tiles are placed (one beat so the last tile lands).
+function maybeAutoSubmit(target, chosen, evaluate) {
+  if (state.answered || chosen.length !== target) return;
+  state.answered = true;
+  stage.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  setTimeout(evaluate, 260);
+}
 
 function feedbackBanner(ok, correctText, explain) {
   const xp = state.practiceMode ? PRACTICE_XP : XP_PER_CORRECT;
@@ -189,7 +198,7 @@ function exPrompt(ex) {
 function exBody(ex) {
   switch (ex.type) {
     case 'mc': return renderMc(ex);
-    case 'type': return renderType(ex);
+    case 'type': return renderBank(ex);
     case 'match': return renderMatch(ex);
     case 'listen': return renderListen(ex);
     case 'tiles': return renderTiles(ex);
@@ -238,40 +247,113 @@ function renderMc(ex) {
   return body;
 }
 
-function renderType(ex) {
+// Shared word-bank UI: tapped tiles hop into the answer strip and back. As
+// soon as `required` tiles are placed the answer validates itself — no CHECK
+// step. Tokens are {lao, roman} (Lao side) or {text} (Latin side);
+// Lao tiles always show their karaoke romanization.
+function buildBank(bankTokens, required, evaluate) {
+  const bank = el('div', { class: 'tile-bank' });
+  const answerArea = el('div', { class: 'tile-answer' }, el('span', { class: 'muted' }, t('ph_tiles')));
+  const chosen = [];
+
+  function tileLabel(tok) {
+    const b = el('button', { class: 'tile' });
+    if (tok.lao != null) {
+      b.append(el('span', { class: 'lao' }, tok.lao.trim()));
+      if (tok.roman) b.append(el('span', { class: 'opt-sub' }, tok.roman));
+    } else {
+      b.append(el('span', {}, tok.text));
+    }
+    return b;
+  }
+  function renderChosen() {
+    answerArea.innerHTML = '';
+    if (!chosen.length) return answerArea.append(el('span', { class: 'muted' }, t('ph_tiles')));
+    chosen.forEach((tok, i) => {
+      const b = tileLabel(tok);
+      b.classList.add('chosen');
+      b.addEventListener('click', () => {
+        if (state.answered) return;
+        chosen.splice(i, 1);
+        tok.el.hidden = false;
+        sfx('click');
+        renderChosen();
+      });
+      answerArea.append(b);
+    });
+  }
+  shuffle(bankTokens).forEach(tok => {
+    const b = tileLabel(tok);
+    tok.el = b;
+    b.addEventListener('click', () => {
+      if (state.answered || tok.el.hidden) return;
+      tok.el.hidden = true;
+      chosen.push(tok);
+      sfx('click');
+      renderChosen();
+      maybeAutoSubmit(required, chosen, () => evaluate(chosen));
+    });
+    bank.append(b);
+  });
+  renderChosen();
+  return el('div', { class: 'tiles-wrap' }, answerArea, bank);
+}
+
+// 'type' exercises are word banks now, not keyboards: assemble the translation
+// by tapping tiles, Duolingo-style. Lao tiles show romanization, so learners
+// who can't read the script yet can still work entirely by sound/sight.
+function renderBank(ex) {
   const item = V[ex.id];
-  const body = el('div', { class: 'type-wrap' });
-  if (ex.dir === 'lao2en') {
-    body.append(el('div', { class: 'big-word card' },
+  const head = ex.dir === 'lao2en'
+    ? el('div', { class: 'big-word card' },
       el('div', { class: 'word-lao lao' }, item.lao),
       el('div', { class: 'word-romanization' }, item.romanization),
-      speakBtn(item)));
-  } else {
-    body.append(el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, def(item))));
+      speakBtn(item))
+    : el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, def(item)));
+  const stripPunct = s => s.replace(/[.,!?;:"«»“”()]/g, '');
+  const target = ex.dir === 'en2lao'
+    ? [{ lao: item.lao, roman: item.romanization }]
+    : stripPunct(def(item)).trim().split(/\s+/).map(w => ({ text: w })).filter(x => x.text);
+  // Distractor tiles: same category first so the bank stays believable.
+  const others = shuffle(Object.values(V).filter(x => x.id !== item.id));
+  const pool = [...others.filter(x => x.cat === item.cat), ...others];
+  const seen = new Set(target.map(x => x.lao != null ? x.lao.trim() : x.text.toLowerCase()));
+  const distractors = [];
+  for (const x of pool) {
+    if (distractors.length >= 4) break;
+    const tok = ex.dir === 'en2lao'
+      ? { lao: x.lao, roman: x.romanization }
+      : { text: stripPunct(def(x)).trim().split(/\s+/)[0] };
+    const key = tok.lao != null ? tok.lao.trim() : (tok.text || '').toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    distractors.push(tok);
   }
-  const input = el('input', { class: 'type-input', type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', placeholder: ex.dir === 'lao2en' ? t('ph_type_en') : t('ph_type_lao') });
-  body.append(el('div', { class: 'type-row' }, input));
-  const btn = checkBtn();
-  btn.disabled = true;
-  input.addEventListener('input', () => { btn.disabled = !input.value.trim(); });
-  const submit = () => {
-    if (state.answered) return;
-    const val = normalize(input.value);
-    if (!val) return;
-    let ok;
-    if (ex.dir === 'lao2en') {
-      const meanings = [item.en, item.fr].filter(Boolean).map(normalize);
-      ok = meanings.some(m => val === m || (m.includes(val) && val.length >= 3));
-    } else ok = val === normalize(item.lao) || val === normalize(item.romanization);
-    state.answered = true;
-    if (!ok) shake(input);
-    resolveAnswer(ok, ex.dir === 'lao2en' ? def(item) : `${item.lao} (${item.romanization})`);
-  };
-  btn.addEventListener('click', submit);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
-  setActionBar(el('span', { class: 'action-spacer' }), btn);
-  setTimeout(() => input.focus(), 50);
-  return body;
+  const unit = buildBank([...target, ...distractors], target.length, chosen => {
+    const got = chosen.map(x => x.lao != null ? x.lao : x.text.toLowerCase()).join('').replace(/\s+/g, '');
+    const want = target.map(x => x.lao != null ? x.lao : x.text.toLowerCase()).join('').replace(/\s+/g, '');
+    const ok = got === want;
+    if (!ok) shake(unit.querySelector('.tile-answer'));
+    resolveAnswer(ok, `${item.lao} — ${item.romanization} — ${def(item)}`);
+  });
+  setActionBar(tapHint());
+  return el('div', { class: 'tiles-wrap' }, head, unit);
+}
+
+// Sentence assembly ("build the sentence"): the bank holds exactly the pieces
+// of the sentence, each with its karaoke romanization. Auto-submits when every
+// tile is placed; order still matters.
+function renderTiles(ex) {
+  const tokens = ex.words.map((w, i) => ({ lao: w, roman: ex.wordRoman?.[i] || '' }));
+  const unit = buildBank(tokens, ex.words.length, chosen => {
+    const ok = chosen.map(t => t.lao).join('').replace(/\s+/g, '') === ex.lao.replace(/\s+/g, '');
+    if (!ok) shake(unit.querySelector('.tile-answer'));
+    resolveAnswer(ok, `${ex.lao} — ${ex.romanization}`);
+  });
+  setActionBar(tapHint());
+  return el('div', { class: 'tiles-wrap' },
+    el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, pf(ex, 'en'))),
+    unit);
 }
 
 function renderMatch(ex) {
@@ -360,57 +442,6 @@ function renderListen(ex) {
   body.append(opts);
   setActionBar(tapHint());
   setTimeout(() => speakItem(answer), 400);
-  return body;
-}
-
-function renderTiles(ex) {
-  const bank = el('div', { class: 'tile-bank' });
-  const answerArea = el('div', { class: 'tile-answer' }, el('span', { class: 'muted' }, t('ph_tiles')));
-  const chosen = [];
-  const btn = checkBtn();
-  btn.disabled = true;
-  const submit = () => {
-    if (state.answered || !chosen.length) return;
-    state.answered = true;
-    const ok = chosen.join('') === ex.lao;
-    if (!ok) shake(answerArea);
-    resolveAnswer(ok, `${ex.lao} — ${ex.romanization}`);
-  };
-  function renderBank() {
-    bank.innerHTML = '';
-    shuffle(ex.words.filter(w => !chosen.includes(w) || ex.words.filter(x => x === w).length > chosen.filter(x => x === w).length))
-      .forEach(w => {
-        const t = el('button', { class: 'tile' }, w);
-        t.addEventListener('click', () => {
-          if (state.answered) return;
-          chosen.push(w);
-          sfx('click');
-          renderAll();
-        });
-        bank.append(t);
-      });
-  }
-  function renderAnswer() {
-    answerArea.innerHTML = '';
-    if (!chosen.length) answerArea.append(el('span', { class: 'muted' }, t('ph_tiles')));
-    chosen.forEach((w, i) => {
-      const t = el('button', { class: 'tile chosen' }, w);
-      t.addEventListener('click', () => {
-        if (state.answered) return;
-        chosen.splice(i, 1);
-        renderAll();
-      });
-      answerArea.append(t);
-    });
-  }
-  function renderAll() { renderBank(); renderAnswer(); btn.disabled = state.answered || chosen.length === 0; }
-  renderAll();
-  const body = el('div', { class: 'tiles-wrap' },
-    el('div', { class: 'big-word card' },
-      el('div', { class: 'word-en-lg' }, pf(ex, 'en'))),
-    answerArea, bank);
-  btn.addEventListener('click', submit);
-  setActionBar(el('span', { class: 'action-spacer' }), btn);
   return body;
 }
 

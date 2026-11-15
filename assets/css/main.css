@@ -258,7 +258,7 @@ body.in-lesson #header, body.in-lesson #footer { display: none; }
 .feedback p { margin: 0; }
 .feedback .btn-continue { margin-left: auto; }
 
-.type-wrap .type-row { margin-top: .5rem; }
+.tile .opt-sub { margin-top: .1rem; font-size: .72rem; line-height: 1.15; }
 .type-input {
   width: 100%; font-size: 1.2rem; padding: .9rem 1rem; border-radius: 14px;
   border: 2px solid var(--line); border-bottom-width: 4px; font-family: var(--font), var(--lao-font);
