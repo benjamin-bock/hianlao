@@ -1,5 +1,5 @@
 import { el, renderShell } from './main.js';
-import { t } from './ui.js';
+import { t, pf } from './ui.js';
 import { UNITS } from './data/units.js';
 import { VOCAB_BY_ID } from './data/vocab.js';
 import { isDone, totalDone, api, getUser, getState, setGoal, getDueReviews, getWeakWords } from './store.js';
@@ -69,8 +69,8 @@ UNITS.forEach((unit, ui) => {
     el('div', { class: 'unit-header', style: `--unit-color:${unit.color}` },
       el('div', { class: 'unit-badge', style: `--unit-color:${unit.color}` }, unit.icon),
       el('div', {},
-        el('h2', {}, t('unit_n').replace('{x}', unit.num).replace('{y}', unit.title)),
-        el('p', { class: 'unit-desc' }, unit.desc)),
+        el('h2', {}, t('unit_n').replace('{x}', unit.num).replace('{y}', pf(unit, 'title'))),
+        el('p', { class: 'unit-desc' }, pf(unit, 'desc'))),
     ),
     el('div', { class: 'lessons-path' },
       unit.lessons.map(l => {
@@ -85,7 +85,7 @@ UNITS.forEach((unit, ui) => {
         },
           el('div', { class: 'lesson-circle' }, done ? '✓' : unlocked ? '▶' : '🔒'),
           el('div', { class: 'lesson-meta' },
-            el('strong', {}, l.title),
+            el('strong', {}, pf(l, 'title')),
             el('span', {}, t('n_exercises').replace('{x}', l.exercises.length))),
         );
         if (!unlocked) node.addEventListener('click', e => e.preventDefault());
@@ -99,7 +99,7 @@ UNITS.forEach((unit, ui) => {
 if (firstUndone >= 0) {
   const next = allLessons[firstUndone];
   app.append(el('div', { class: 'sticky-cta' },
-    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ ${t('next_cta')}: ${next.title}`)));
+    el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${next.id}` }, `▶ ${t('next_cta')}: ${pf(next, 'title')}`)));
 }
 
 // Leaderboard (only when the backend is available and the user is signed in).

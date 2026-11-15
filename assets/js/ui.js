@@ -104,11 +104,11 @@ const dict = {
     next_cta: 'Continuer', lb_title: '🏆 Classement', lb_all: 'Depuis le début', lb_week: 'Cette semaine', lb_signin: 'Connecte-toi ou crée un compte gratuit', lb_join: 'pour rejoindre le classement.', lb_empty: 'Pas encore de points — sois le premier !',
     goal_title: '🎯 Objectif du jour', goal_today: 'XP aujourd’hui',
     review_title: 'Révision', review_sub: 'Répétition espacée : les leçons à revoir', review_due: 'À revoir maintenant', review_upcoming: 'À venir', review_none: 'Rien à revoir pour l’instant — bravo ! 🎉', review_start: 'Réviser →',
-    words_title: 'Mots et phrases', words_sub: 'Un petit dictionnaire lao–anglais, avec recherche. Appuie sur 🔊 pour écouter chaque mot.',
-    words_search: 'Rechercher en lao, en romanisation ou en anglais… (ex. « rice », « khao », ເຂົ້າ)',
+    words_title: 'Mots et phrases', words_sub: 'Un petit dictionnaire lao–français, avec recherche. Appuie sur 🔊 pour écouter chaque mot.',
+    words_search: 'Rechercher en lao, en romanisation, en français ou en anglais… (ex. « riz », « khao », ເຂົ້າ)',
     words_all: 'Tous ({x})', words_count_one: '{x} mot', words_count_many: '{x} mots', words_in: ' dans « {y} »', words_matching: ' correspondant à « {y} »',
     words_empty: 'Aucun mot trouvé. Essaie une autre recherche — ou propose ce mot sur GitHub ! ✏️',
-    grammar_title: 'Bible de grammaire 📖', grammar_sub: 'La grammaire du lao expliquée simplement : écriture lao, romanisation et anglais.', grammar_toc: 'Sommaire',
+    grammar_title: 'Bible de grammaire 📖', grammar_sub: 'La grammaire du lao expliquée simplement : écriture lao, romanisation et français.', grammar_toc: 'Sommaire',
     culture_title: 'Culture lao 🇱🇦', culture_sub: 'Les histoires derrière la langue : le pays, les fêtes, la cuisine, l’étiquette — et ce qui maintient le lao bien vivant dans la diaspora. <span class="lao">ວັດທະນະທຳລາວ</span> <span class="lao-roman">wat-ta-na-tham Lao</span>.',
     account_title: 'Compte', profile_title: 'Profil',
     check: 'VÉRIFIER', cont: 'CONTINUER', done_title: 'Leçon terminée !', fail_title: 'Plus de vies !', next_lesson: 'Leçon suivante →', back_path: 'Retour au parcours', replay: '↻ Refaire', try_again: '↻ Réessayer',
@@ -140,14 +140,14 @@ const dict = {
     member_since: 'Membre depuis {x} · @{u} · synchronisé avec ton compte ✔', stat_streak: 'jours d’affilée', stat_lessons_n: 'leçons',
     lesson_not_found: 'Leçon introuvable', lesson_not_found_sub: 'Aucune leçon avec l’identifiant « {x} ».',
     ex_mc_lao2en: 'Que signifie ce mot ?', ex_mc_en2lao: 'Lequel est-ce ?',
-    ex_type_lao2en: 'Traduis en anglais', ex_type_en2lao: 'Écris en lao',
+    ex_type_lao2en: 'Traduis en français', ex_type_en2lao: 'Écris en lao',
     ex_match: 'Relie les paires', ex_listen: '🔊 Écoute et choisis', ex_tiles: 'Reconstruis la phrase', ex_speak: '🎤 Dis-le à voix haute', ex_generic: 'Exercice',
     prompt_mc_en2lao: 'Choisis le lao pour : <b>{x}</b>',
     prompt_type_en2lao: 'Écris en lao : <b>{x}</b> (écriture lao ou romanisation, au choix)',
     prompt_listen: 'Appuie sur lecture, puis choisis ce que tu as entendu.',
     prompt_tiles: 'Traduis : <b>{x}</b>',
-    ph_type_en: 'Tape en anglais…', ph_type_lao: 'Tape en lao ou en romanisation…', ph_tiles: 'Touche les mots dans l’ordre…',
-    hint_match: '{x}/{y} reliées — relie chaque mot lao à son sens anglais.',
+    ph_type_en: 'Tape la traduction…', ph_type_lao: 'Tape en lao ou en romanisation…', ph_tiles: 'Touche les mots dans l’ordre…',
+    hint_match: '{x}/{y} reliées — relie chaque mot lao à sa traduction.',
     listen_play: '▶ Appuie sur lecture et écoute', listen_novoice: '▶ Ton navigateur n’a pas de voix lao — on dira la romanisation : {x}', title_play_audio: 'Lecture audio',
     speak_tap: '🎤 Appuie et parle', speak_listening: 'J’écoute… dis-le maintenant 🎤', speak_missed: 'Rien capté — réessaie, ou appuie sur « Je l’ai dit ».',
     speak_heard: 'Entendu : « {x} »', speak_said: 'Pas de micro ? Je l’ai dit ✔', speak_nomic: 'Ton navigateur ne peut pas utiliser le micro. Écoute avec 🔊, répète à voix haute, puis appuie ci-dessous.',
@@ -168,7 +168,7 @@ const dict = {
     feat_lessons_desc: 'ບົດຮຽນສັ້ນ 39 ບົດ ໃນ 13 ໜ່ວຍ: ເລືອກຄຳຕອບ, ພິມ, ຈັບຄູ່, ຟັງ, ຕໍ່ຄຳ ແລະ ຝຶກເວົ້າ. XP, ຫົວໃຈ ແລະ ວັນຝຶກຕໍ່ເນື່ອງ ຊ່ວຍໃຫ້ມີແຮງຈູງໃຈ.',
     feat_audio_desc: 'ກົດ 🔊 ເພື່ອຟັງຄຳສັບແຕ່ລະຄຳ (ມີສຽງລາວ ຖ້າເຄື່ອງຂອງທ່ານຮອງຮັບ), ແຖມໄມໄວ້ໝັ້ນໃຈ. ຝຶກຊ້ຳເລີຍ!',
     feat_grammar_desc: 'ຈາກຕົວອັກສອນລາວ ແລະ ໂທນສຽງ 6 ໂທນ ຈົນເຖິງໂຄງປະໂຫຍກ, ຄຳເວົ້າຫຼິ້ນໆ ແຕ່ຈຳເປັນ.',
-    feat_words_desc: 'ພຈະນຸກົມຄຳສັບ ແລະ ວາລີການໃຊ້ຈິງ 200+ ຄຳ, ຈັດຕາມຫົວຂໍ້: ຄຳທັກທາຍ, ອາຫານ, ຄອບຄົວ, ການເດີນທາງ… ພ້ອມຄຳອ່ານສຽງ ຊອກຫາໄດ້.',
+    feat_words_desc: 'ພຈະນານຸກົມຄຳສັບ ແລະ ວາລີການໃຊ້ຈິງ 200+ ຄຳ, ຈັດຕາມຫົວຂໍ້: ຄຳທັກທາຍ, ອາຫານ, ຄອບຄົວ, ການເດີນທາງ… ພ້ອມຄຳອ່ານສຽງ ຊອກຫາໄດ້.',
     feat_culture_desc: 'ບຸນປະເພນີ (ບຸນປີໃໝ່!), ອາຫານ, ສັມມາດຕະຖານປະພຶດ, ແມ່ນ້ຳຂອງ ແລະ ເຫດຜົນທີ່ຊາວລາວນອກປະເທດຍັງຮັກພາສາລາວ ຈົນຈະພັກ.',
     feat_account_desc: 'ສ້າງບັນຊີຟຣີ ເພື່ອຊິງ XP, ວັນຝຶກ ແລະ ບົດຮຽນທີ່ຮຽນແລ້ວ ໄປທຸກເຄື່ອງ ພ້ອມທັງໄຂທາຕະລາງຄະແນນ 🏆. ບໍ່ມີບັນຊີກໍ່ບໍ່ເປັນຫຍັງ — ຂໍ້ມູນຢູ່ໃນເຄື່ອງຂອງທ່ານເອງ.',
     feat_free_desc: 'ບໍ່ມີກຳແພງ, ບໍ່ມີໂຄສະນາ. ໂຄດຢູ່ GitHub ພາຍໃຕ້ MIT — ຮ່ວມເຮັດບົດຮຽນ ຫຼື ເພີ່ມຄຳສັບໃໝ່ໄດ້ເລີຍ!',
@@ -180,7 +180,7 @@ const dict = {
     next_cta: 'ຕໍ່ໄປ', lb_title: '🏆 ຕາຕະລາງຄະແນນ', lb_all: 'ທັງໝົດ', lb_week: 'ອາທິດນີ້', lb_signin: 'ເຂົ້າສູ່ລະບົບ ຫຼື ສ້າງບັນຊີຟຣີ', lb_join: 'ເພື່ອເຂົ້າຮ່ວມຕາຕະລາງຄະແນນ.', lb_empty: 'ຍັງບໍ່ມີຄະແນນ — ທ່ານແມ່ນຄົນທຳອິດ!',
     goal_title: '🎯 ເປົ້າໝາຍປະຈຳວັນ', goal_today: 'XP ມື້ນີ້',
     review_title: 'ທົບທວນ', review_sub: 'ທົບທວນຕາມຊ່ອງເວລາ: ບົດຮຽນທີ່ຕ້ອງທົບທວນ', review_due: 'ຕ້ອງທົບທວນດຽວນີ້', review_upcoming: 'ຈະມາຮອດ', review_none: 'ຕອນນີ້ບໍ່ມີຫຍັງຕ້ອງທົບທວນ — ເຮັດໄດ້ດີຫຼາຍ! 🎉', review_start: 'ທົບທວນດຽວນີ້ →',
-    words_title: 'ຄຳສັບ ແລະ ວາລີ', words_sub: 'ພຈະນຸກົມລາວ–ອັງກິດ ຊອກຫາໄດ້. ກົດ 🔊 ເພື່ອຟັງຄຳສັບແຕ່ລະຄຳ.',
+    words_title: 'ຄຳສັບ ແລະ ວາລີ', words_sub: 'ພຈະນານຸກົມລາວ–ອັງກິດ ຊອກຫາໄດ້. ກົດ 🔊 ເພື່ອຟັງຄຳສັບແຕ່ລະຄຳ.',
     words_search: 'ຊອກຫາ ຄຳລາວ, ຄຳອ່ານສຽງ ຫຼື ຄຳອັງກິດ… (ເຊັ່ນ "rice", "khao", ເຂົ້າ)',
     words_all: 'ທັງໝົດ ({x})', words_count_one: '{x} ຄຳ', words_count_many: '{x} ຄຳ', words_in: ' ໃນ «{y}»', words_matching: ' ກົງກັບ «{y}»',
     words_empty: 'ບໍ່ພົບຄຳສັບ. ລອງຄຳອື່ນເບິ່ງແດ່ — ຫຼື ເພີ່ມຄຳນີ້ໃສ່ GitHub! ✏️',
@@ -223,7 +223,7 @@ const dict = {
     prompt_listen: 'ກົດຫຼິ້ນ ແລ້ວເລືອກສິ່ງທີ່ຟັງໄດ້.',
     prompt_tiles: 'ແປ: <b>{x}</b>',
     ph_type_en: 'ພິມເປັນອັງກິດ…', ph_type_lao: 'ພິມເປັນລາວ ຫຼື ຄຳອ່ານສຽງ…', ph_tiles: 'ກົດຄຳຕາມລຳດັບ…',
-    hint_match: 'ຈັບຄູ່ໄດ້ {x}/{y} — ຈັບຄຳລາວທຸກຄຳກັບຄວາມໝາຍອັງກິດ.',
+    hint_match: 'ຈັບຄູ່ໄດ້ {x}/{y} — ຈັບຄຳລາວທຸກຄຳກັບຄວາມໝາຍຂອງມັນ.',
     listen_play: '▶ ກົດຫຼິ້ນ ແລ້ວຟັງ', listen_novoice: '▶ ບາວເຊີນີ້ບໍ່ມີສຽງລາວ — ຈະພູດຄຳອ່ານສຽງໃຫ້ຟັງ: {x}', title_play_audio: 'ຫຼິ້ນສຽງ',
     speak_tap: '🎤 ກົດ ແລ້ວພູດ', speak_listening: 'ກຳລັງຟັງ… ພູດດຽວນີ້ 🎤', speak_missed: 'ບໍ່ໄດ້ຍິນຊັດ — ລອງໃໝ່ ຫຼື ກົດ "ຂ້ອຍພູດແລ້ວ".',
     speak_heard: 'ໄດ້ຍິນ: "{x}"', speak_said: 'ບໍ່ມີແຖມໄມ? ຂ້ອຍພູດແລ້ວ ✔', speak_nomic: 'ບາວເຊີນີ້ໃຊ້ແຖມໄມໄດ້ບໍ່. ຟັງດ້ວຍ 🔊, ພູດຕາມ ແລ້ວກົດລຸ່ມນີ້.',
@@ -240,6 +240,26 @@ export const LANGS = { en: 'EN', fr: 'FR', la: 'LA' };
 
 export function t(key) {
   return (dict[lang] && dict[lang][key]) ?? dict.en[key] ?? key;
+}
+
+// Localized data accessors (French mirrors live beside the English fields as *Fr).
+// pf(obj, 'title') -> obj.titleFr in French mode, else obj.title.
+export function pf(obj, field) {
+  if (!obj) return undefined;
+  if (lang === 'fr') { const v = obj[field + 'Fr']; if (v != null) return v; }
+  return obj[field];
+}
+// def(w) -> the meaning of a vocab entry in the current language (fr falls back to en).
+export function def(w) {
+  if (!w) return undefined;
+  if (lang === 'fr' && w.fr != null) return w.fr;
+  return w.en;
+}
+// noteOf(w) -> the word's note in the current language.
+export function noteOf(w) {
+  if (!w) return undefined;
+  if (lang === 'fr' && w.noteFr != null) return w.noteFr;
+  return w.note;
 }
 export function getLang() { return lang; }
 export function setLang(l) {
