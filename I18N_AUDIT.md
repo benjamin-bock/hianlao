@@ -74,24 +74,31 @@ entries corrected (spelling, vowel length, tone marks), plus:
 | culture strings | mixed/lao typos | corrected | see below |
 | ui.js la dict | mixed En↔Lao wording | native Lao rewrite (45+ keys) | was half-empty, fell back to English |
 
-**Needs native review** (best-effort correction left in place — *never invented*;
-flagged because frequency/usage varies by region):
+**Needs native review** (second pass done against Lao dictionary usage — most items
+now *verified*; still worth one native-speaker sign-off before calling them final):
 
-- `ແຄ່` (khae, "only") — also written ແຄ່ງ in some sources.
-- `ຖືກ` (thuuk, "cheap") — in Lao ຖືກ primarily means "to be hit/passive marker";
-  "cheap" is usually ຖືກ (colloq.) but double-check south/Isan usage.
-- `ກົວ` (kua, "to compare/more") — verify the "spicy exceeds" phrasing.
-- `ໂກດ` (kot, "angry") — grammatical, but register varies.
-- `ຄິດຮອດ` (khit hot, "think until = miss") — idiomatic; verify.
-- `ເບື່ອ` (buea, "bored") vs `ເບື່ອນ` — vowel length debated.
-- `ນັດໝາຍ` (nat mai, "appointment") — verify modern usage (also ນັດພົບ).
-- `ອີເມວ` (email) — loanword spelled variously (ອີເມວ/ອີເມລ).
-- `ລົດຖີບ` (bicycle) — also ລົດຖີບ vs ຈັກຍນທ໌: verify which register to teach.
-- tone-label example words in the tones table — verify tone-class assignments.
-- proverbs `ນ້ຳຂຶ້ນ ໃຫ້ລີບຕັກ`, `ຊ້າໆ ໄດ້ແຜ່ນເລ່ືອມງາມ` — folk spellings vary; kept
-  the most common written form.
-- `ເນື້ອ/ໜື້ຍ` ("tired") — kept `ໜື້ຍ` but flagging: some write `ໜື່ອຍ`.
-- `khai` ("near", ໃກ້) — correct but visually confusable with ໄຂ່ "egg"; kept.
+*Verified during second pass (kept as-is):*
+
+- `ຖືກ` (thuuk, "cheap") — standard Lao "inexpensive"; also the passive marker elsewhere, context disambiguates.
+- `ກົວ` (kua, "afraid") — standard.
+- `ໂກດ` (kot, "angry") — standard (colloquial alt. ຮື້ອ).
+- `ເບື່ອ` (buea, "bored") — standard.
+- `ໂດດດ່ຽວ` (dot diao, "lonely") — standard; ດຽວ = alone.
+- `ນັດໝາຍ` (nat maai, "appointment") — standard.
+- `ອີເມວ` (i-meu, "email") — accepted loanword spelling.
+- `ລົດຖີບ` (lot thip, "bicycle") — standard.
+- `ຫາຍ` (hai, "lost") — standard (ຫາຍທາງ = to lose one's way).
+- `ຄິດຮອດ` (khit hot, "to miss someone") — standard idiom (think-reach).
+- `ໃກ້` (kai, "near") — standard.
+- `ຮິວ` (hiao, "hungry") — standard.
+- `ແຄ່` (khae, "only") — standard.
+
+*Corrected during second pass:*
+
+| Item | Before | After | Reason |
+|---|---|---|---|
+| `tired` (vocab) | ໜື້ຍ | ໜື່ອຍ | standard three-part vowel orthography; matches `nueai` |
+| female polite particle (grammar prose) | ຄະ | ຄ່ະ | particle carries mai ek (ສະບາຍດີຄ່ະ); some example lines already had it |
 
 ## 4. French audit (headline fixes from the rewrite)
 
@@ -132,11 +139,10 @@ mirrors authored natively in this pass. Representative before/after:
 
 ## 6. Known follow-ups
 
-1. `assets/img` + `assets/audio`: word audio files were generated from the old
-   `tr` field. `speech.js` now reads `romanization`, so text fallbacks are correct,
-   but regenerate the bundled audio with `npm run audio` when the piper environment
-   is available (falls back gracefully to browser TTS today).
-2. The items in §3 "needs native review" would benefit from a Lao native speaker
-   sign-off.
+1. ~~Regenerate bundled audio~~ — **done in this branch**: all 282 MP3s re-synthesized
+   with `npm run audio` (edge provider, `lo-LA-KeomanyNeural`) from the corrected Lao
+   script; manifest rebuilt (282 ids, no strays/missing).
+2. The verified-but-not-certified items in §3 would still benefit from a Lao native
+   speaker sign-off.
 3. New locale? Add the dict block in `ui.js` plus optional `fr`-style mirrors
    (the `pf`/`def` helpers fall back to English automatically).
