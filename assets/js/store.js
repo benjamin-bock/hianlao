@@ -114,6 +114,14 @@ export function scheduleReview(lessonId) {
   putSoon();
 }
 
+// Lesson had mistakes: reset it to due tomorrow (repetition beats pride).
+export function scheduleWeakReview(lessonId) {
+  const s = load();
+  s.reviews = { ...(s.reviews || {}), [lessonId]: { due: Date.now() + 86400000, iv: 1 } };
+  save(s);
+  putSoon();
+}
+
 export function getDueReviews() {
   const s = load();
   const now = Date.now();

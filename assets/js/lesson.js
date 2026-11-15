@@ -4,7 +4,7 @@ import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
 import { t } from './ui.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
-import { addXp, markDone, isDone, getState, scheduleReview } from './store.js';
+import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview } from './store.js';
 import { unlockedAchievements } from './achievements.js';
 import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
 import { sfx, buzz, shake, pop, pulse, xpFly, confettiBurst } from './fx.js';
@@ -29,15 +29,24 @@ if (!lesson) {
 document.title = `${lesson.title} — HianLao`;
 
 const XP_PER_CORRECT = 10;
+const PRACTICE_XP = 5;
 const state = {
-  index: 0,
   hearts: 5,
   correct: 0,
   xpEarned: 0,
   answered: false,
   failed: false,
   combo: 0,
+  solved: 0,            // exercises finished (retries included)
+  requeued: 0,          // retries pushed back for spacing
+  missed: new Set(),    // original indexes missed on the first pass
+  practiceMode: false,
+  practiceTotal: 0,
+  practiceXp: 0,
+  blurbShown: false,
 };
+let queue = lesson.exercises.map((ex, i) => ({ ex, origin: i, isRetry: false }));
+let current = null;
 
 // ---------- top bar ----------
 const progressFill = el('div', { class: 'progress-fill' });
@@ -56,7 +65,9 @@ const actionBar = el('div', { class: 'lesson-actionbar' }, actionInner);
 app.append(topbar, stage, actionBar);
 
 function updateTopbar() {
-  progressFill.style.width = `${(state.index / lesson.exercises.length) * 100}%`;
+  const total = lesson.exercises.length + state.requeued;
+  const done = state.practiceMode ? state.practiceTotal - queue.length : state.solved;
+  progressFill.style.width = `${((state.practiceMode ? state.practiceTotal : total) > 0 ? done / (state.practiceMode ? state.practiceTotal : total) : 1) * 100}%`;
   heartsEl.textContent = '❤️'.repeat(Math.max(state.hearts, 0)) + '🖤'.repeat(Math.max(5 - state.hearts, 0));
   const showCombo = state.combo >= 2;
   comboEl.style.display = showCombo ? '' : 'none';
@@ -74,22 +85,37 @@ function setActionBar(...nodes) {
 const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, t('check'));
 const tapHint = () => el('span', { class: 'action-hint' }, t('tap_answer'));
 
-function feedbackBanner(ok, correctText) {
+function feedbackBanner(ok, correctText, explain) {
   return el('div', { class: `feedback ${ok ? 'ok' : 'bad'}` },
     el('div', { class: 'feedback-icon' }, ok ? '🎉' : '💡'),
     el('div', {},
       el('strong', {}, ok ? pick(['Awesome!', 'Correct!', 'ແຊບ! (Sep — tasty! The best Lao compliment)', 'Well done!']) : 'Not quite'),
       !ok ? el('p', { html: `Correct answer: <b>${correctText}</b>` }) : el('p', {}, pick(['+10 XP', 'Keep it up!', 'You\'re on fire 🔥'])),
+      (!ok && explain) ? el('p', { class: 'feedback-note' }, explain) : null,
     ),
     el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, t('cont')));
 }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function currentNote() {
+  const ex = current && current.ex;
+  if (!ex) return null;
+  if (ex.type === 'mc' || ex.type === 'listen') return V[ex.answer]?.note || null;
+  if (ex.type === 'type' || ex.type === 'speak') return V[ex.id]?.note || null;
+  return null;
+}
+
+function comboToast(n) {
+  sfx('combo');
+  buzz([12, 40, 12]);
+  xpFly(`🔥 ×${n} ${t('combo_word')}`, innerWidth / 2, Math.max(innerHeight * 0.2, 90));
+}
+
 function next() {
-  if (state.hearts <= 0) return failScreen();
-  state.index++;
-  if (state.index >= lesson.exercises.length) return summaryScreen();
+  if (!state.practiceMode && state.hearts <= 0) return failScreen();
+  if (!queue.length) return state.practiceMode ? practiceDoneScreen() : summaryScreen();
+  current = queue.shift();
   state.answered = false;
   renderExercise();
 }
@@ -100,14 +126,20 @@ function renderExercise() {
   stage.innerHTML = '';
   setActionBar();
   window.scrollTo(0, 0);
-  const ex = lesson.exercises[state.index];
+  const ex = current.ex;
   const head = el('div', { class: 'exercise-head' },
     el('h2', {}, exTitle(ex)),
     exPrompt(ex) ? el('p', { class: 'exercise-prompt', html: exPrompt(ex) }) : null,
   );
-  if (state.index === 0 && lesson.blurb) {
+  if (!state.practiceMode && !state.blurbShown && lesson.blurb) {
+    state.blurbShown = true;
     stage.append(el('div', { class: 'card context-card' },
       el('p', { class: 'context-blurb' }, lesson.blurb)));
+  }
+  if (state.practiceMode) {
+    stage.append(el('div', { class: 'retry-note' }, '🛠️ ' + t('practice_mode')));
+  } else if (current.isRetry) {
+    stage.append(el('div', { class: 'retry-note' }, '🔁 ' + t('again_note')));
   }
   stage.append(head, exBody(ex));
 }
@@ -414,23 +446,39 @@ function renderSpeak(ex) {
 // banner exists, so CONTINUE can never end up disabled.
 function resolveAnswer(ok, correctText) {
   if (ok) {
-    state.correct++;
-    state.xpEarned += XP_PER_CORRECT;
+    state.solved++;
     state.combo++;
+    if (state.practiceMode) {
+      state.practiceXp += PRACTICE_XP;
+    } else {
+      state.correct++;
+      state.xpEarned += XP_PER_CORRECT;
+    }
   } else {
-    state.hearts = Math.max(0, state.hearts - 1);
     state.combo = 0;
+    if (state.practiceMode) {
+      // Practice: mistakes simply come back until they are fixed.
+      queue.push({ ...current, isRetry: true });
+    } else {
+      state.hearts = Math.max(0, state.hearts - 1);
+      if (current.origin != null) state.missed.add(current.origin);
+      state.requeued++;
+      queue.push({ ...current, isRetry: true });
+    }
+  }
+  if (ok && (state.combo === 3 || state.combo === 5 || state.combo === 8 || state.combo === 12 || state.combo === 16)) {
+    comboToast(state.combo);
   }
   updateTopbar();
   stage.querySelectorAll('.option-card, .tile, input, button').forEach(n => { n.disabled = true; });
-  const banner = feedbackBanner(ok, correctText);
+  const banner = feedbackBanner(ok, correctText, currentNote());
   setActionBar(banner);
   if (ok) {
     sfx('correct');
     buzz([12, 30, 12]);
     pop(stage.querySelector('.option-card.correct') || stage);
     const r = heartsEl.getBoundingClientRect();
-    xpFly(`+${XP_PER_CORRECT} XP`, r.left + r.width / 2, r.top);
+    xpFly(`+${state.practiceMode ? PRACTICE_XP : XP_PER_CORRECT} XP`, r.left + r.width / 2, r.top);
     pulse(document.querySelector('.xp-pill'));
   } else {
     sfx('wrong');
@@ -451,11 +499,12 @@ function nextLessonId() {
 }
 
 function summaryScreen() {
-  const total = lesson.exercises.length;
-  const acc = Math.round((state.correct / total) * 100);
+  const total = state.solved; // includes retries — accuracy reflects real effort
+  const acc = total ? Math.round((state.correct / total) * 100) : 0;
   addXp(state.xpEarned);
   markDone(lesson.id);
   scheduleReview(lesson.id);
+  if (state.missed.size) scheduleWeakReview(lesson.id);
   progressFill.style.width = '100%';
   stage.innerHTML = '';
   setActionBar();
@@ -476,6 +525,7 @@ function summaryScreen() {
     ),
     el('div', { class: 'summary-actions' },
       nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
+      (state.missed.size) ? el('button', { class: 'btn btn-ghost btn-lg', onclick: startPractice }, `${t('practice_mistakes')} (${state.missed.size})`) : null,
       el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, t('back_path')),
       el('a', { class: 'btn btn-ghost', href: `lesson.html?id=${lesson.id}` }, t('replay')),
     ),
@@ -487,6 +537,46 @@ function summaryScreen() {
         el('div', { class: 'badge-grid' }, badges.slice(-6).map(a =>
           el('div', { class: 'badge-card' }, el('span', { class: 'badge-icon' }, a.icon), el('div', {}, el('strong', {}, a.name), el('p', {}, a.desc))))));
     })()
+  ));
+}
+
+// ---------- practice-mistakes loop ----------
+// Duolingo-style: after a lesson, redo until every miss is fixed.
+// No heart loss, small XP per correct answer.
+function startPractice() {
+  state.practiceMode = true;
+  state.practiceTotal = state.missed.size;
+  state.practiceXp = 0;
+  queue = [...state.missed].map(i => ({ ex: lesson.exercises[i], origin: i, isRetry: false }));
+  current = null;
+  stage.innerHTML = '';
+  setActionBar();
+  sfx('click');
+  next();
+}
+
+function practiceDoneScreen() {
+  addXp(state.practiceXp);
+  progressFill.style.width = '100%';
+  stage.innerHTML = '';
+  setActionBar();
+  sfx('fanfare');
+  confettiBurst();
+  const nextId = nextLessonId();
+  const icon = el('div', { class: 'summary-icon' }, '🛠️');
+  pop(icon);
+  stage.append(el('div', { class: 'summary card' },
+    icon,
+    el('h1', {}, t('practice_done_title')),
+    el('p', {}, t('practice_done_sub')),
+    el('div', { class: 'summary-stats' },
+      el('div', { class: 'stat' }, el('strong', {}, `+${state.practiceXp}`), el('span', {}, '⚡ XP earned')),
+      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, 'total XP')),
+    ),
+    el('div', { class: 'summary-actions' },
+      nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
+      el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, t('back_path')),
+    ),
   ));
 }
 
@@ -504,4 +594,4 @@ function failScreen() {
   shake(stage);
 }
 
-renderExercise();
+next(); // kicks off the queue

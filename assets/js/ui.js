@@ -20,6 +20,10 @@ const dict = {
     culture_title: 'Lao culture 🇱🇦', culture_sub: 'The stories behind the language: land, festivals, food, etiquette, diaspora.',
     account_title: 'Account', profile_title: 'Profile',
     check: 'CHECK', cont: 'CONTINUE', done_title: 'Lesson complete!', fail_title: 'Out of hearts!', next_lesson: 'Next lesson →', back_path: 'Back to path', replay: '↻ Replay', try_again: '↻ Try again',
+    again_note: 'One more time — repetition makes it stick!',
+    practice_mistakes: '🔁 Practice mistakes', practice_mode: 'Practice — mistakes on repeat until fixed',
+    practice_done_title: 'Mistakes fixed!', practice_done_sub: 'You worked through every miss — that is how memory is built.',
+    combo_word: 'in a row',
   },
   fr: {
     tap_answer: 'Touche ta réponse',
@@ -40,6 +44,10 @@ const dict = {
     culture_title: 'Culture lao 🇱🇦', culture_sub: 'Les histoires derrière la langue : le pays, les festivals, la nourriture, l’étiquette, la diaspora.',
     account_title: 'Compte', profile_title: 'Profil',
     check: 'VÉRIFIER', cont: 'CONTINUER', done_title: 'Leçon terminée !', fail_title: 'Plus de vies !', next_lesson: 'Leçon suivante →', back_path: 'Retour au parcours', replay: '↻ Rejouer', try_again: '↻ Réessayer',
+    again_note: 'Encore une fois — la répétition ancre la mémoire !',
+    practice_mistakes: '🔁 Refaire les erreurs', practice_mode: 'Entraînement — les erreurs Reviennent jusqu’à correction',
+    practice_done_title: 'Erreurs corrigées !', practice_done_sub: "Tu as retravaillé chaque erreur — c'est ainsi qu'on mémorise.",
+    combo_word: 'd’affilée',
   },
   la: {
     tap_answer: 'เลือกคำตอบของคุณ',
@@ -54,6 +62,10 @@ const dict = {
     words_title: 'ຄຳ & ວລີ', grammar_title: 'ຕຳຣາໄວຢາກຣນ໌ 📖', culture_title: 'ວັດນຘຣຣມລາວ 🇱🇦',
     account_title: 'ບັຍຊີ', profile_title: 'ໂປຣໄຟລ໌',
     check: 'ຕຣວຈສອບ', cont: 'ຕ່ອ', done_title: 'ຈບບທເຣີຢນແລ້ວ!', fail_title: 'ຫັວໃຈຫມດ!', next_lesson: 'ບທຕ່ອໄປ →', back_path: 'ກລັບສູ່ເສ້ນທາງ', replay: '↻ ເລ່ນອີກຄຣັ້ງ', try_again: '↻ ລອງອີກຄຣັ້ງ',
+    again_note: 'ອີກຄຣັ້ງ — ການຝຶກຊ້ຳຊ່ວຍໃຫ້ຈື່ໄດ້ດີ!',
+    practice_mistakes: '🔁 ຝຶກຄືນຂໍ້ຜິດ', practice_mode: 'ຝຶກຊ້ຳ — ຂໍ້ຜິດຈະກັບມາຈົນກວ່າຈະຖືກ',
+    practice_done_title: 'ແກ້ໄຂຂໍ້ຜິດໝົດແລ້ວ!', practice_done_sub: 'ຄຸນໄດ້ຝຶກຊ້ຳທຸກຂໍ້ຜິດແລ້ວ — ນີ້ຄືວິທີຈື່ໃຫ້ຈົນ.',
+    combo_word: 'ຕໍ່ກັນ',
   },
 };
 let lang = 'en';

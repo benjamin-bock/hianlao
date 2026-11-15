@@ -245,6 +245,13 @@ body.in-lesson #header, body.in-lesson #footer { display: none; }
 .feedback.ok { background: #d7ffb8; color: #2c6e03; border: 2px solid #a6e36a; }
 .feedback.bad { background: #ffdfe0; color: #a11; border: 2px solid #ffb3b8; }
 .feedback-icon { font-size: 1.8rem; }
+.feedback-note { margin: .3rem 0 0; font-size: .92rem; color: inherit; opacity: .85; }
+.retry-note {
+  max-width: 720px; margin: 0 auto .9rem; padding: .55rem .9rem;
+  border-radius: 999px; background: #fff3c9; border: 1.5px dashed #e3b53c;
+  color: #7a5c00; font-weight: 700; font-size: .9rem; text-align: center;
+}
+[data-theme="dark"] .retry-note { background: #33290f; border-color: #6b5d1f; color: #e8d48a; }
 .feedback p { margin: 0; }
 .feedback .btn-continue { margin-left: auto; }
 
