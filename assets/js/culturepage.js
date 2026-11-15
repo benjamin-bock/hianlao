@@ -11,7 +11,7 @@ function renderBlock(b) {
     case 'p': return el('p', { html: b.html });
     case 'ex': return el('div', { class: 'ex-row' },
       el('span', { class: 'lao ex-lao' }, b.lao),
-      el('span', { class: 'ex-tr' }, b.tr),
+      el('span', { class: 'ex-romanization' }, b.romanization),
       el('span', { class: 'ex-en' }, b.en));
     case 'list': return el('ul', { class: 'doc-list' }, b.items.map(i => el('li', { html: i })));
     case 'note': return el('div', { class: 'note-box', html: b.html });

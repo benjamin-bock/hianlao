@@ -37,7 +37,7 @@ function matches(v) {
   if (activeCat !== 'all' && v.cat !== activeCat) return false;
   if (!query) return true;
   const q = query.toLowerCase().trim();
-  return v.lao.includes(query.trim()) || v.tr.toLowerCase().includes(q) || v.en.toLowerCase().includes(q);
+  return v.lao.includes(query.trim()) || v.romanization.toLowerCase().includes(q) || v.en.toLowerCase().includes(q);
 }
 
 function render() {
@@ -52,7 +52,7 @@ function render() {
     el('div', { class: 'word-card-top' },
       el('div', {},
         el('div', { class: 'word-lao lao' }, v.lao),
-        el('div', { class: 'word-tr' }, v.tr),
+        el('div', { class: 'word-romanization' }, v.romanization),
         el('div', { class: 'word-en' }, v.en)),
       speakBtn(v)),
     v.note ? el('div', { class: 'word-note' }, v.note) : null,
@@ -81,7 +81,7 @@ function weakSection() {
         el('div', { class: 'word-card-top' },
           el('div', {},
             el('div', { class: 'word-lao lao' }, v.lao),
-            el('div', { class: 'word-tr' }, v.tr),
+            el('div', { class: 'word-romanization' }, v.romanization),
             el('div', { class: 'word-en' }, v.en)),
           speakBtn(v)),
         el('div', { class: 'weak-count' }, `🔥 ×${w.n}`),

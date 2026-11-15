@@ -106,7 +106,7 @@ export async function speakItem(item, rate = 0.85) {
   }
 
   if (hasLaoVoice()) return speak(item.lao, { lang: 'lo-LA', rate });
-  return speak(item.tr, { lang: 'en-US', rate: Math.max(rate, 0.9) });
+  return speak(item.romanization, { lang: 'en-US', rate: Math.max(rate, 0.9) });
 }
 
 export function canRecognize() {
@@ -154,6 +154,6 @@ export function normalize(s) {
 export function speechMatches(transcript, item) {
   if (!transcript) return false;
   const t = normalize(transcript);
-  const targets = [normalize(item.lao), normalize(item.tr)].filter(Boolean);
+  const targets = [normalize(item.lao), normalize(item.romanization)].filter(Boolean);
   return targets.some(x => x && (t.includes(x) || x.includes(t)));
 }

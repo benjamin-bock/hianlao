@@ -204,7 +204,7 @@ function renderMc(ex) {
     body.append(
       el('div', { class: 'big-word card' },
         el('div', { class: 'word-lao lao' }, V[ex.answer].lao),
-        el('div', { class: 'word-tr' }, V[ex.answer].tr),
+        el('div', { class: 'word-romanization' }, V[ex.answer].romanization),
         speakBtn(V[ex.answer])),
     );
   } else {
@@ -227,7 +227,7 @@ function renderMc(ex) {
         else if (x === c) x.classList.add('wrong');
       });
       sfx('click');
-      resolveAnswer(id === ex.answer, `${a.lao} — ${a.tr} — ${a.en}`);
+      resolveAnswer(id === ex.answer, `${a.lao} — ${a.romanization} — ${a.en}`);
     });
     return c;
   }));
@@ -242,7 +242,7 @@ function renderType(ex) {
   if (ex.dir === 'lao2en') {
     body.append(el('div', { class: 'big-word card' },
       el('div', { class: 'word-lao lao' }, item.lao),
-      el('div', { class: 'word-tr' }, item.tr),
+      el('div', { class: 'word-romanization' }, item.romanization),
       speakBtn(item)));
   } else {
     body.append(el('div', { class: 'big-word card' }, el('div', { class: 'word-en-lg' }, item.en)));
@@ -258,10 +258,10 @@ function renderType(ex) {
     if (!val) return;
     let ok;
     if (ex.dir === 'lao2en') ok = val === normalize(item.en) || normalize(item.en).includes(val) && val.length >= 3;
-    else ok = val === normalize(item.lao) || val === normalize(item.tr);
+    else ok = val === normalize(item.lao) || val === normalize(item.romanization);
     state.answered = true;
     if (!ok) shake(input);
-    resolveAnswer(ok, ex.dir === 'lao2en' ? item.en : `${item.lao} (${item.tr})`);
+    resolveAnswer(ok, ex.dir === 'lao2en' ? item.en : `${item.lao} (${item.romanization})`);
   };
   btn.addEventListener('click', submit);
   input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
@@ -330,7 +330,7 @@ function renderListen(ex) {
       play,
       (hasNativeAudio(answer) || hasLaoVoice())
         ? el('p', { class: 'muted' }, '▶ Press play and listen')
-        : el('p', { class: 'muted' }, '▶ Your browser has no Lao voice — we will say the transliteration: ' + answer.tr)),
+        : el('p', { class: 'muted' }, '▶ Your browser has no Lao voice — we will say the transliteration: ' + answer.romanization)),
   );
   const cards = shuffle(ex.ids);
   const opts = el('div', { class: 'options' }, cards.map(id => {
@@ -345,7 +345,7 @@ function renderListen(ex) {
         else if (x === c) x.classList.add('wrong');
       });
       sfx('click');
-      resolveAnswer(id === ex.answer, `${answer.lao} — ${answer.tr} — ${answer.en}`);
+      resolveAnswer(id === ex.answer, `${answer.lao} — ${answer.romanization} — ${answer.en}`);
     });
     return c;
   }));
@@ -366,7 +366,7 @@ function renderTiles(ex) {
     state.answered = true;
     const ok = chosen.join('') === ex.lao;
     if (!ok) shake(answerArea);
-    resolveAnswer(ok, `${ex.lao} — ${ex.tr}`);
+    resolveAnswer(ok, `${ex.lao} — ${ex.romanization}`);
   };
   function renderBank() {
     bank.innerHTML = '';
@@ -400,7 +400,7 @@ function renderTiles(ex) {
   const body = el('div', { class: 'tiles-wrap' },
     el('div', { class: 'big-word card' },
       el('div', { class: 'word-en-lg' }, ex.en),
-      el('div', { class: 'word-tr' }, ex.tr)),
+      el('div', { class: 'word-romanization' }, ex.romanization)),
     answerArea, bank);
   btn.addEventListener('click', submit);
   setActionBar(el('span', { class: 'action-spacer' }), btn);
@@ -412,7 +412,7 @@ function renderSpeak(ex) {
   const body = el('div', { class: 'speak-wrap' },
     el('div', { class: 'big-word card' },
       el('div', { class: 'word-lao lao' }, item.lao),
-      el('div', { class: 'word-tr' }, item.tr),
+      el('div', { class: 'word-romanization' }, item.romanization),
       el('div', { class: 'word-en' }, item.en),
       speakBtn(item)),
   );
@@ -431,7 +431,7 @@ function renderSpeak(ex) {
       }
       status.textContent = `Heard: "${transcript}"`;
       state.answered = true;
-      resolveAnswer(speechMatches(transcript, item), `${item.lao} — ${item.tr}`);
+      resolveAnswer(speechMatches(transcript, item), `${item.lao} — ${item.romanization}`);
     });
     body.append(mic, status);
     const skip = el('button', { class: 'btn btn-ghost' }, "No mic? I said it ✔");
@@ -439,7 +439,7 @@ function renderSpeak(ex) {
       if (state.answered) return;
       state.answered = true;
       status.textContent = 'Great — keep speaking out loud! 🗣️';
-      resolveAnswer(true, `${item.lao} — ${item.tr}`);
+      resolveAnswer(true, `${item.lao} — ${item.romanization}`);
     });
     body.append(skip);
   } else {
@@ -451,7 +451,7 @@ function renderSpeak(ex) {
     said.addEventListener('click', () => {
       if (state.answered) return;
       state.answered = true;
-      resolveAnswer(true, `${item.lao} — ${item.tr}`);
+      resolveAnswer(true, `${item.lao} — ${item.romanization}`);
     });
     body.append(said);
   }

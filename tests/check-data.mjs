@@ -18,7 +18,7 @@ console.log('Vocabulary:');
 ok(VOCAB.length >= 150, `${VOCAB.length} entries (>=150)`);
 const ids = VOCAB.map(v => v.id);
 ok(new Set(ids).size === ids.length, 'ids are unique');
-ok(VOCAB.every(v => v.id && v.lao && v.tr && v.en && CATEGORIES[v.cat]), 'every entry has id, lao, tr, en, valid cat');
+ok(VOCAB.every(v => v.id && v.lao && v.romanization && v.en && CATEGORIES[v.cat]), 'every entry has id, lao, romanization, en, valid cat');
 const hasLao = s => [...String(s)].some(ch => { const c = ch.codePointAt(0); return c >= 0x0E80 && c <= 0x0EFF; });
 ok(VOCAB.every(v => hasLao(v.lao)), 'every lao field contains Lao script');
 ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');

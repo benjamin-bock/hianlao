@@ -26,11 +26,11 @@ function renderBlock(b) {
     case 'p': return el('p', { html: b.html });
     case 'ex': return el('div', { class: 'ex-row' },
       el('span', { class: 'lao ex-lao' }, b.lao),
-      el('span', { class: 'ex-tr' }, b.tr),
+      el('span', { class: 'ex-romanization' }, b.romanization),
       el('span', { class: 'ex-en' }, b.en));
     case 'table': return el('div', { class: 'table-wrap' }, el('table', {},
-      el('thead', {}, el('tr', {}, b.head.map(h => el('th', {}, h)))),
-      el('tbody', {}, b.rows.map(r => el('tr', {}, r.map(c => el('td', { html: wrapLao(c) }))))),
+      el('thead', {}, el('romanization', {}, b.head.map(h => el('th', {}, h)))),
+      el('tbody', {}, b.rows.map(r => el('romanization', {}, r.map(c => el('td', { html: wrapLao(c) }))))),
     ));
     case 'list': return el('ul', { class: 'doc-list' }, b.items.map(i => el('li', { html: i })));
     case 'note': return el('div', { class: 'note-box', html: b.html });

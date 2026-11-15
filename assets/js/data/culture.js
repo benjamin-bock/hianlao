@@ -59,7 +59,7 @@ export const CULTURE = [
     blocks: [
       { t: 'p', html: 'Lao belongs to the <b>Tai language family</b>, and spoken Lao is quite close to Thai — but the scripts, tones and many words are different, and Lao has its own charm. The standard is the <b>Vientiane dialect</b>; other dialects exist in the north (Luang Prabang) and south (Champasak), plus Lao communities in Thailand (Isan).' },
       { t: 'p', html: 'Lao is <b>analytic</b>: no verb conjugations, no plural forms, no genders. Grammar is mostly word order and small particles. Once you learn the tones and the script, everything clicks — and <span class="lao">hian</span> (<i>learn</i>) is exactly what HianLao is for!' },
-      { t: 'ex', lao: 'ເຣີຢນພາສາລາວ', tr: 'hian phasa Lao', en: 'learn the Lao language — HianLao!' },
+      { t: 'ex', lao: 'ເຣີຢນພາສາລາວ', romanization: 'hian phasa Lao', en: 'learn the Lao language — HianLao!' },
     ],
   },
   {

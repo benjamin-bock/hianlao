@@ -2,10 +2,10 @@
 // Exercises are data; the engine in lesson.js renders them and shuffles options at runtime.
 // Exercise shapes:
 //   { type:'mc',     dir:'lao2en'|'en2lao', ids:[4 ids], answer:id }  pick the correct option
-//   { type:'type',   dir:'lao2en'|'en2lao', id }                     type the translation (Lao script or transliteration accepted)
+//   { type:'type',   dir:'lao2en'|'en2lao', id }                     type the translation (Lao script or romanization accepted)
 //   { type:'match',  ids:[5-6 ids] }                                 match Lao <-> English pairs
 //   { type:'listen', ids:[4 ids], answer:id }                        hear the Lao word, pick its meaning (speech synthesis)
-//   { type:'tiles',  lao, words:[tokens], en, tr }                  arrange word tiles to build the Lao sentence
+//   { type:'tiles',  lao, words:[tokens], en, romanization }         arrange word tiles to build the Lao sentence
 //   { type:'speak',  id }                                            say it aloud (SpeechRecognition when available)
 
 import { VOCAB_BY_ID as V } from './vocab.js';
@@ -15,7 +15,7 @@ const typeEx = (id, dir = 'lao2en') => ({ type: 'type', dir, id });
 const match  = (ids) => ({ type: 'match', ids });
 const listen = (answer, distractors) => ({ type: 'listen', ids: [answer, ...distractors], answer });
 const speak  = (id) => ({ type: 'speak', id });
-const tiles  = (lao, words, en, tr) => ({ type: 'tiles', lao, words, en, tr });
+const tiles  = (lao, words, en, romanization) => ({ type: 'tiles', lao, words, en, romanization });
 
 export const UNITS = [
   {
