@@ -4,14 +4,33 @@ import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
 import { t } from './ui.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
-import { addXp, markDone, isDone, getState, scheduleReview } from './store.js';
+import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview, getWeakWords, addWeakWord, relieveWeakWord } from './store.js';
 import { unlockedAchievements } from './achievements.js';
 import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
 import { sfx, buzz, shake, pop, pulse, xpFly, confettiBurst } from './fx.js';
 
 const params = new URLSearchParams(location.search);
 const lessonId = params.get('id') || 'u1l1';
-const lesson = LESSON_BY_ID[lessonId];
+
+// 'Tricky words' drill: a synthetic lesson built from words you missed before.
+function buildWeakLesson() {
+  const ids = getWeakWords().map(w => w.id).filter(id => V[id]);
+  const lessonShell = { id: '__weak', title: t('drill_title'), blurb: t('drill_blurb'), __weak: true };
+  if (!ids.length) return { ...lessonShell, exercises: [] };
+  const all = Object.values(V);
+  const pool = shuffle(ids).slice(0, 8);
+  const exercises = pool.flatMap(id => {
+    const others = shuffle(all.filter(x => x.cat === V[id].cat && x.id !== id)).slice(0, 3).map(x => x.id);
+    return shuffle([
+      { type: 'mc', dir: 'lao2en', ids: [id, ...others], answer: id },
+      { type: 'listen', ids: [id, ...others], answer: id },
+      { type: 'type', dir: 'en2lao', id },
+    ]);
+  });
+  return { ...lessonShell, exercises };
+}
+
+const lesson = lessonId === '__weak' ? buildWeakLesson() : LESSON_BY_ID[lessonId];
 
 renderShell('learn');
 document.body.classList.add('in-lesson');
@@ -26,16 +45,27 @@ if (!lesson) {
   throw new Error(`unknown lesson ${lessonId}`);
 }
 
+document.title = `${lesson.title} — HianLao`;
+
 const XP_PER_CORRECT = 10;
+const PRACTICE_XP = 5;
 const state = {
-  index: 0,
   hearts: 5,
   correct: 0,
   xpEarned: 0,
   answered: false,
   failed: false,
   combo: 0,
+  solved: 0,            // exercises finished (retries included)
+  requeued: 0,          // retries pushed back for spacing
+  missed: new Set(),    // original indexes missed on the first pass
+  practiceMode: false,
+  practiceTotal: 0,
+  practiceXp: 0,
+  blurbShown: false,
 };
+let queue = lesson.exercises.map((ex, i) => ({ ex, origin: i, isRetry: false }));
+let current = null;
 
 // ---------- top bar ----------
 const progressFill = el('div', { class: 'progress-fill' });
@@ -54,7 +84,9 @@ const actionBar = el('div', { class: 'lesson-actionbar' }, actionInner);
 app.append(topbar, stage, actionBar);
 
 function updateTopbar() {
-  progressFill.style.width = `${(state.index / lesson.exercises.length) * 100}%`;
+  const total = lesson.exercises.length + state.requeued;
+  const done = state.practiceMode ? state.practiceTotal - queue.length : state.solved;
+  progressFill.style.width = `${((state.practiceMode ? state.practiceTotal : total) > 0 ? done / (state.practiceMode ? state.practiceTotal : total) : 1) * 100}%`;
   heartsEl.textContent = '❤️'.repeat(Math.max(state.hearts, 0)) + '🖤'.repeat(Math.max(5 - state.hearts, 0));
   const showCombo = state.combo >= 2;
   comboEl.style.display = showCombo ? '' : 'none';
@@ -72,22 +104,37 @@ function setActionBar(...nodes) {
 const checkBtn = () => el('button', { class: 'btn btn-primary btn-lg' }, t('check'));
 const tapHint = () => el('span', { class: 'action-hint' }, t('tap_answer'));
 
-function feedbackBanner(ok, correctText) {
+function feedbackBanner(ok, correctText, explain) {
   return el('div', { class: `feedback ${ok ? 'ok' : 'bad'}` },
     el('div', { class: 'feedback-icon' }, ok ? '🎉' : '💡'),
     el('div', {},
-      el('strong', {}, ok ? pick(['Awesome!', 'Correct!', '\u0ec1\u0eaa\u0ec8\u0e9a! (Delicious = great!)', 'Well done!']) : 'Not quite'),
+      el('strong', {}, ok ? pick(['Awesome!', 'Correct!', 'ແຊບ! (Sep — tasty! The best Lao compliment)', 'Well done!']) : 'Not quite'),
       !ok ? el('p', { html: `Correct answer: <b>${correctText}</b>` }) : el('p', {}, pick(['+10 XP', 'Keep it up!', 'You\'re on fire 🔥'])),
+      (!ok && explain) ? el('p', { class: 'feedback-note' }, explain) : null,
     ),
     el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, t('cont')));
 }
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+function currentNote() {
+  const ex = current && current.ex;
+  if (!ex) return null;
+  if (ex.type === 'mc' || ex.type === 'listen') return V[ex.answer]?.note || null;
+  if (ex.type === 'type' || ex.type === 'speak') return V[ex.id]?.note || null;
+  return null;
+}
+
+function comboToast(n) {
+  sfx('combo');
+  buzz([12, 40, 12]);
+  xpFly(`🔥 ×${n} ${t('combo_word')}`, innerWidth / 2, Math.max(innerHeight * 0.2, 90));
+}
+
 function next() {
-  if (state.hearts <= 0) return failScreen();
-  state.index++;
-  if (state.index >= lesson.exercises.length) return summaryScreen();
+  if (!state.practiceMode && state.hearts <= 0) return failScreen();
+  if (!queue.length) return state.practiceMode ? practiceDoneScreen() : summaryScreen();
+  current = queue.shift();
   state.answered = false;
   renderExercise();
 }
@@ -98,14 +145,20 @@ function renderExercise() {
   stage.innerHTML = '';
   setActionBar();
   window.scrollTo(0, 0);
-  const ex = lesson.exercises[state.index];
+  const ex = current.ex;
   const head = el('div', { class: 'exercise-head' },
     el('h2', {}, exTitle(ex)),
     exPrompt(ex) ? el('p', { class: 'exercise-prompt', html: exPrompt(ex) }) : null,
   );
-  if (state.index === 0 && lesson.blurb) {
+  if (!state.practiceMode && !state.blurbShown && lesson.blurb) {
+    state.blurbShown = true;
     stage.append(el('div', { class: 'card context-card' },
       el('p', { class: 'context-blurb' }, lesson.blurb)));
+  }
+  if (state.practiceMode) {
+    stage.append(el('div', { class: 'retry-note' }, '🛠️ ' + t('practice_mode')));
+  } else if (current.isRetry) {
+    stage.append(el('div', { class: 'retry-note' }, '🔁 ' + t('again_note')));
   }
   stage.append(head, exBody(ex));
 }
@@ -412,23 +465,42 @@ function renderSpeak(ex) {
 // banner exists, so CONTINUE can never end up disabled.
 function resolveAnswer(ok, correctText) {
   if (ok) {
-    state.correct++;
-    state.xpEarned += XP_PER_CORRECT;
+    state.solved++;
     state.combo++;
+    if (state.practiceMode) {
+      state.practiceXp += PRACTICE_XP;
+    } else {
+      state.correct++;
+      state.xpEarned += XP_PER_CORRECT;
+    }
+    const wid = current.ex.answer || current.ex.id;
+    if (wid && (lesson.__weak || state.practiceMode)) relieveWeakWord(wid);
   } else {
-    state.hearts = Math.max(0, state.hearts - 1);
     state.combo = 0;
+    if (state.practiceMode) {
+      // Practice: mistakes simply come back until they are fixed.
+      queue.push({ ...current, isRetry: true });
+    } else {
+      state.hearts = Math.max(0, state.hearts - 1);
+      if (current.origin != null) state.missed.add(current.origin);
+      state.requeued++;
+      addWeakWord(current.ex.answer || current.ex.id);
+      queue.push({ ...current, isRetry: true });
+    }
+  }
+  if (ok && (state.combo === 3 || state.combo === 5 || state.combo === 8 || state.combo === 12 || state.combo === 16)) {
+    comboToast(state.combo);
   }
   updateTopbar();
   stage.querySelectorAll('.option-card, .tile, input, button').forEach(n => { n.disabled = true; });
-  const banner = feedbackBanner(ok, correctText);
+  const banner = feedbackBanner(ok, correctText, currentNote());
   setActionBar(banner);
   if (ok) {
     sfx('correct');
     buzz([12, 30, 12]);
     pop(stage.querySelector('.option-card.correct') || stage);
     const r = heartsEl.getBoundingClientRect();
-    xpFly(`+${XP_PER_CORRECT} XP`, r.left + r.width / 2, r.top);
+    xpFly(`+${state.practiceMode ? PRACTICE_XP : XP_PER_CORRECT} XP`, r.left + r.width / 2, r.top);
     pulse(document.querySelector('.xp-pill'));
   } else {
     sfx('wrong');
@@ -449,11 +521,14 @@ function nextLessonId() {
 }
 
 function summaryScreen() {
-  const total = lesson.exercises.length;
-  const acc = Math.round((state.correct / total) * 100);
+  const total = state.solved; // includes retries — accuracy reflects real effort
+  const acc = total ? Math.round((state.correct / total) * 100) : 0;
   addXp(state.xpEarned);
-  markDone(lesson.id);
-  scheduleReview(lesson.id);
+  if (!lesson.__weak) {
+    markDone(lesson.id);
+    scheduleReview(lesson.id);
+    if (state.missed.size) scheduleWeakReview(lesson.id);
+  }
   progressFill.style.width = '100%';
   stage.innerHTML = '';
   setActionBar();
@@ -465,7 +540,7 @@ function summaryScreen() {
   stage.append(el('div', { class: 'summary card' },
     icon,
     el('h1', {}, t('done_title')),
-    el('p', { class: 'lao summary-lao' }, '\u0e97\u0eb3\u0ec4\u0e94\u0ec9\u0e94\u0eb5\u0ea1\u0eb2\u0e81!'),
+    el('p', { class: 'lao summary-lao' }, 'ທຳໄດ້ດີມາກ!'),
     el('p', {}, `${lesson.title} — ${state.correct}/${total} correct (${acc}%)`),
     el('div', { class: 'summary-stats' },
       el('div', { class: 'stat' }, el('strong', {}, `+${state.xpEarned}`), el('span', {}, '⚡ XP earned')),
@@ -474,6 +549,7 @@ function summaryScreen() {
     ),
     el('div', { class: 'summary-actions' },
       nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
+      (state.missed.size) ? el('button', { class: 'btn btn-ghost btn-lg', onclick: startPractice }, `${t('practice_mistakes')} (${state.missed.size})`) : null,
       el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, t('back_path')),
       el('a', { class: 'btn btn-ghost', href: `lesson.html?id=${lesson.id}` }, t('replay')),
     ),
@@ -488,6 +564,46 @@ function summaryScreen() {
   ));
 }
 
+// ---------- practice-mistakes loop ----------
+// Duolingo-style: after a lesson, redo until every miss is fixed.
+// No heart loss, small XP per correct answer.
+function startPractice() {
+  state.practiceMode = true;
+  state.practiceTotal = state.missed.size;
+  state.practiceXp = 0;
+  queue = [...state.missed].map(i => ({ ex: lesson.exercises[i], origin: i, isRetry: false }));
+  current = null;
+  stage.innerHTML = '';
+  setActionBar();
+  sfx('click');
+  next();
+}
+
+function practiceDoneScreen() {
+  addXp(state.practiceXp);
+  progressFill.style.width = '100%';
+  stage.innerHTML = '';
+  setActionBar();
+  sfx('fanfare');
+  confettiBurst();
+  const nextId = nextLessonId();
+  const icon = el('div', { class: 'summary-icon' }, '🛠️');
+  pop(icon);
+  stage.append(el('div', { class: 'summary card' },
+    icon,
+    el('h1', {}, t('practice_done_title')),
+    el('p', {}, t('practice_done_sub')),
+    el('div', { class: 'summary-stats' },
+      el('div', { class: 'stat' }, el('strong', {}, `+${state.practiceXp}`), el('span', {}, '⚡ XP earned')),
+      el('div', { class: 'stat' }, el('strong', {}, `⚡ ${getState().xp}`), el('span', {}, 'total XP')),
+    ),
+    el('div', { class: 'summary-actions' },
+      nextId ? el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${nextId}` }, t('next_lesson')) : null,
+      el('a', { class: 'btn btn-ghost btn-lg', href: 'learn.html' }, t('back_path')),
+    ),
+  ));
+}
+
 function failScreen() {
   stage.innerHTML = '';
   setActionBar();
@@ -495,11 +611,37 @@ function failScreen() {
   stage.append(el('div', { class: 'summary card fail' },
     el('div', { class: 'summary-icon' }, '💔'),
     el('h1', {}, t('fail_title')),
-    el('p', {}, `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">\u0ec4\u0ea1\u0ec8\u0ec0\u0e9b\u0eb1\u0e99\u0ec4\u0ea3</span> <i>(mai pen rai)</i> — "no worries". Try again!`),
+    el('p', { html: `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">ບໍ່ເປັນຫຍັງ</span> <i>(baw pen nyang)</i> — "no worries". Try again!` }),
     el('div', { class: 'summary-actions' },
       el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${lesson.id}` }, t('try_again')),
       el('a', { class: 'btn btn-ghost', href: 'learn.html' }, 'Back to path'))));
   shake(stage);
 }
 
-renderExercise();
+// Keyboard comfort (desktop): 1-9 pick an option/tile, Enter continues.
+// Tap-to-validate means one keystroke answers — same as a tap.
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (e.key === 'Enter') {
+    const cont = document.querySelector('.lesson-actionbar .btn-continue');
+    const primary = document.querySelector('.summary-actions .btn-primary');
+    if (cont) cont.click();
+    else if (primary) primary.click();
+    return;
+  }
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9) {
+    const tiles = [...document.querySelectorAll('.lesson-stage .tile-bank .tile:not(.chosen):not([disabled])')];
+    const opts = [...document.querySelectorAll('.lesson-stage .option-card:not([disabled])')];
+    const list = tiles.length ? tiles : opts;
+    if (list[n - 1]) list[n - 1].click();
+  }
+});
+
+if (lesson.exercises.length) next(); // kicks off the queue
+else app.append(el('div', { class: 'card error-card' },
+  el('h1', {}, t('weak_empty_title')),
+  el('p', {}, t('weak_empty')),
+  el('a', { class: 'btn btn-primary', href: 'words.html' }, t('nav_words') + ' →')));

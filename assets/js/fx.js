@@ -38,6 +38,7 @@ export function sfx(name) {
       case 'click': tone(520, 0, 0.06, 'triangle', 0.05); break;
       case 'match': tone(990, 0, 0.09, 'triangle', 0.09); break;
       case 'fanfare': [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, 0.24)); break;
+      case 'combo': tone(740, 0, 0.08, 'triangle', 0.12); tone(988, 0.07, 0.1, 'triangle', 0.12); tone(1319, 0.15, 0.18, 'triangle', 0.12); break;
     }
   } catch { /* audio unavailable or blocked — fine */ }
 }
