@@ -1,8 +1,10 @@
 // HianLao service worker: offline-first PWA.
 // - API calls (/api/*) always go to the network.
 // - Navigations: network-first, fallback to cache (then index.html).
-// - Static assets: cache-first, then network (and cache the response).
-const CACHE = 'hianlao-v4';
+// - Core assets (JS/CSS/HTML): network-first, fallback to cache — so updates
+//   reach learners on the very next reload, while offline still works.
+// - Audio: cache-first (immutable generated files).
+const CACHE = 'hianlao-v5';
 const CORE = [
   './', 'index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html',
   'culture.html', 'account.html', 'review.html',
@@ -46,13 +48,30 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  const isAudio = /\.(mp3|m4a|ogg|wav)$/i.test(url.pathname);
+  if (isAudio) {
+    e.respondWith(
+      caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
+        if (r.ok) {
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return r;
+      }))
+    );
+    return;
+  }
+
+  // Everything else: network-first so content updates land on reload.
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => {
-      if (r.ok) {
-        const copy = r.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
-      }
-      return r;
-    }))
+    fetch(e.request)
+      .then((r) => {
+        if (r.ok) {
+          const copy = r.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return r;
+      })
+      .catch(() => caches.match(e.request).then((m) => m || Response.error()))
   );
 });
