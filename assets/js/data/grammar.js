@@ -277,7 +277,7 @@ export const GRAMMAR = [
       { t: "ex", lao: "ຄ່ຳ", romanization: "kham", en: "evening", enFr: "soir" },
       { t: "ex", lao: "ຄືນ", romanization: "khuen", en: "night", enFr: "nuit" },
       { t: "ex", lao: "ມື້ນີ້", romanization: "mue ni", en: "today", enFr: "aujourd'hui" },
-      { t: "ex", lao: "ມື້ອື່ນ", romanization: "mue nyuen", en: "tomorrow", enFr: "demain" },
+      { t: "ex", lao: "ມື້ໜ້າ", romanization: "mue-nao", en: "tomorrow", enFr: "demain" },
     ],
   },
   {

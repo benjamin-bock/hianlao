@@ -4,7 +4,7 @@
 // - Core assets (JS/CSS/HTML): network-first, fallback to cache — so updates
 //   reach learners on the very next reload, while offline still works.
 // - Audio: cache-first (immutable generated files).
-const CACHE = 'hianlao-v7';
+const CACHE = 'hianlao-v8';
 const CORE = [
   './', 'index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html',
   'culture.html', 'account.html', 'review.html',
