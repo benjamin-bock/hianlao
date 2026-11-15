@@ -11,14 +11,14 @@ export const CULTURE = [
         'Official language: <b>Lao</b> (<span class="lao">ພາສາລາວ</span>, <i>phasa Lao</i>)',
         'Script: the <b>Lao script</b>, closely related to Thai but distinct',
         'Religion: <b>Theravada Buddhism</b>, mixed with spirit beliefs (<i>phi</i>)',
-        'Famous for: sticky rice, larb, papaya salad, gentle smiles — <span class="lao">ສບາຢດີ</span>!',
+        'Famous for: sticky rice, larb, papaya salad, gentle smiles — <span class="lao">ສະບາຍດີ</span>!',
       ] },
     ],
   },
   {
     id: 'festivals', icon: '🎆', img: 'festival.svg', title: 'Festivals & celebrations',
     blocks: [
-      { t: 'p', html: '<b>Pi Mai</b> (<span class="lao">ປີໃຫມ່</span>) — the <b>Lao New Year</b> in mid-April — is the biggest festival. For three days, people Splash water on each other for good luck, build sand stupas at temples and visit family. It is joy, water and <span class="lao">ສະບາດີ</span> everywhere.' },
+      { t: 'p', html: '<b>Pi Mai</b> (<span class="lao">ປີໃໝ່</span>) — the <b>Lao New Year</b> in mid-April — is the biggest festival. For three days, people Splash water on each other for good luck, build sand stupas at temples and visit family. It is joy, water and <span class="lao">ສະບາຍດີ</span> everywhere.' },
       { t: 'list', items: [
         '<b>Boun Ok Phansa</b> (<span class="lao">ອອກພຣຣສາ</span>) — end of Buddhist Lent (Oct), celebrated with candle-lit boat processions on the Mekong.',
         '<b>Boun That Luang</b> (<span class="lao">ງານຘາຕຸຫລວງ</span>) — the great golden stupa festival in Vientiane (Nov), with fireworks and fairs.',
@@ -43,7 +43,7 @@ export const CULTURE = [
   {
     id: 'etiquette', icon: '🙏', img: 'greeting.svg', title: 'Etiquette & daily life',
     blocks: [
-      { t: 'p', html: 'The Lao greeting is the <b>nop</b> — hands pressed together like a prayer: raise them to your chest for equals, higher for elders, monks and Buddha images. Say <span class="lao">ສະບາດີ</span> <i>(sa-ba-dii)</i> with a smile.' },
+      { t: 'p', html: 'The Lao greeting is the <b>nop</b> — hands pressed together like a prayer: raise them to your chest for equals, higher for elders, monks and Buddha images. Say <span class="lao">ສະບາຍດີ</span> <i>(sa-bai-dii)</i> with a smile.' },
       { t: 'list', items: [
         'The <b>head is sacred</b>: never touch anyone\'s head (even a child\'s, lovingly).',
         'The <b>feet are low</b>: never point your feet at people or Buddha images; don\'t step over anyone sitting.',

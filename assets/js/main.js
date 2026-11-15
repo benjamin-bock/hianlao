@@ -6,12 +6,12 @@ import { UNITS, LESSON_BY_ID } from './data/units.js';
 import { GRAMMAR } from './data/grammar.js';
 
 export const NAV = [
-  { page: 'home',    href: 'index.html',   key: 'nav_home' },
-  { page: 'learn',   href: 'learn.html',   key: 'nav_learn' },
-  { page: 'review',  href: 'review.html',  key: 'nav_review' },
-  { page: 'words',   href: 'words.html',   key: 'nav_words' },
-  { page: 'grammar', href: 'grammar.html', key: 'nav_grammar' },
-  { page: 'culture', href: 'culture.html', key: 'nav_culture' },
+  { page: 'home',    href: 'index.html',   key: 'nav_home',    icon: '🏠' },
+  { page: 'learn',   href: 'learn.html',   key: 'nav_learn',   icon: '🧠' },
+  { page: 'review',  href: 'review.html',  key: 'nav_review',  icon: '🔁' },
+  { page: 'words',   href: 'words.html',   key: 'nav_words',   icon: '💬' },
+  { page: 'grammar', href: 'grammar.html', key: 'nav_grammar', icon: '📖' },
+  { page: 'culture', href: 'culture.html', key: 'nav_culture', icon: '🇱🇦' },
 ];
 
 export function el(tag, attrs = {}, ...children) {
@@ -73,7 +73,7 @@ export function renderShell(activePage) {
         el('span', { class: 'pill xp-pill', title: 'XP earned' }, `⚡ ${state.xp}`),
         el('span', { class: 'pill streak-pill', title: 'Daily streak' }, `🔥 ${state.streak}`),
         el('a', { id: 'auth-chip', class: 'pill auth-chip', href: 'account.html', title: 'Account & progress sync' },
-          getUser() ? `👤 ${getUser().displayName || getUser().username}` : t('sign_in')),
+          '👤 ', el('span', { class: 'auth-label' }, getUser() ? (getUser().displayName || getUser().username) : t('sign_in'))),
         el('button', { id: 'theme-toggle', class: 'icon-btn', title: 'Toggle dark theme', 'aria-label': 'Toggle dark theme' }, getThemeIcon()),
         el('div', { class: 'lang-switch', role: 'group', 'aria-label': 'Language' },
           Object.entries(LANGS).map(([code, label]) => {
@@ -99,9 +99,21 @@ export function renderShell(activePage) {
       el('div', { class: 'footer-links' },
         NAV.map(n => el('a', { href: n.href }, t(n.key))),
         el('a', { href: 'https://github.com/benjamin-bock/hianlao', target: '_blank', rel: 'noopener' }, 'GitHub ↗')),
-      el('p', { class: 'footer-note' }, `MIT licensed · ${VOCAB.length}+ words · ${Object.keys(LESSON_BY_ID).length} lessons · ${GRAMMAR.length} grammar guides · made with ❤️ for <span class="lao">ຄນລາວ</span> worldwide`),
+      el('p', { class: 'footer-note' }, `MIT licensed · ${VOCAB.length}+ words · ${Object.keys(LESSON_BY_ID).length} lessons · ${GRAMMAR.length} grammar guides · made with ❤️ for `,
+        el('span', { class: 'lao' }, 'ຄົນລາວ'), ' worldwide'),
     ));
   }
+  // Mobile bottom navigation (shown by CSS below 860px, hidden during lessons).
+  const bnav = el('nav', { class: 'bottom-nav', 'aria-label': 'Main menu' },
+    NAV.map(n => el('a', {
+      href: n.href,
+      class: `bn-item${n.page === activePage ? ' active' : ''}`,
+      'aria-current': n.page === activePage ? 'page' : null,
+    },
+      el('span', { class: 'bn-icon', 'aria-hidden': 'true' }, n.icon),
+      el('span', { class: 'bn-label' }, t(n.key)))));
+  document.body.append(bnav);
+
   document.body.classList.add(`page-${activePage}`);
   const themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) themeBtn.addEventListener('click', () => { themeBtn.textContent = getThemeIcon(); toggleTheme(); });
@@ -116,7 +128,8 @@ export function refreshAuthChip() {
   const chip = document.getElementById('auth-chip');
   if (!chip) return;
   const u = getUser();
-  chip.textContent = u ? `👤 ${u.displayName || u.username}` : 'Sign in';
+  chip.innerHTML = '';
+  chip.append('👤 ', el('span', { class: 'auth-label' }, u ? (u.displayName || u.username) : t('sign_in')));
   chip.classList.toggle('signed-in', !!u);
 }
 

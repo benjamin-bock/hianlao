@@ -103,7 +103,7 @@ async function leaderboardCard() {
     return;
   }
   if (!getUser()) {
-    list.append(el('li', { class: 'muted' }, el('a', { href: 'account.html' }, t('lb_signin'))), ' ' + t('lb_join'));
+    list.append(el('li', { class: 'muted' }, el('a', { href: 'account.html' }, t('lb_signin')), ' ' + t('lb_join')));
     return;
   }
   await loadLb();

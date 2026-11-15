@@ -2,7 +2,7 @@
 // - API calls (/api/*) always go to the network.
 // - Navigations: network-first, fallback to cache (then index.html).
 // - Static assets: cache-first, then network (and cache the response).
-const CACHE = 'hianlao-v2';
+const CACHE = 'hianlao-v4';
 const CORE = [
   './', 'index.html', 'learn.html', 'lesson.html', 'words.html', 'grammar.html',
   'culture.html', 'account.html', 'review.html',

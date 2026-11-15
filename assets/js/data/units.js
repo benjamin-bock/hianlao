@@ -40,7 +40,7 @@ export const UNITS = [
           mc('name_q', ['where', 'what', 'who']),
           mc('nice_meet', ['see_you', 'fine', 'goodbye'], 'en2lao'),
           typeEx('how_are_you'),
-          tiles('ສບາຢດີໄຫມ', ['ສບາຢດີ', 'ໄຫມ'], 'How are you?', 'sa-bai-dii mai?'),
+          tiles('ສະບາຍດີບໍ', ['ສະບາຍດີ', 'ບໍ'], 'How are you?', 'sa-bai-dii baw?'),
           listen('fine', ['nice_meet', 'tired', 'hungry']),
           match(['hello', 'goodbye', 'thanks', 'welcome', 'see_you', 'fine']),
         ],

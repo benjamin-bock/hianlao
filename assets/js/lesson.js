@@ -76,7 +76,7 @@ function feedbackBanner(ok, correctText) {
   return el('div', { class: `feedback ${ok ? 'ok' : 'bad'}` },
     el('div', { class: 'feedback-icon' }, ok ? '🎉' : '💡'),
     el('div', {},
-      el('strong', {}, ok ? pick(['Awesome!', 'Correct!', '\u0ec1\u0eaa\u0ec8\u0e9a! (Delicious = great!)', 'Well done!']) : 'Not quite'),
+      el('strong', {}, ok ? pick(['Awesome!', 'Correct!', 'ແຊບ! (Sep — tasty! The best Lao compliment)', 'Well done!']) : 'Not quite'),
       !ok ? el('p', { html: `Correct answer: <b>${correctText}</b>` }) : el('p', {}, pick(['+10 XP', 'Keep it up!', 'You\'re on fire 🔥'])),
     ),
     el('button', { class: 'btn btn-continue btn-lg', onclick: () => next() }, t('cont')));
@@ -465,7 +465,7 @@ function summaryScreen() {
   stage.append(el('div', { class: 'summary card' },
     icon,
     el('h1', {}, t('done_title')),
-    el('p', { class: 'lao summary-lao' }, '\u0e97\u0eb3\u0ec4\u0e94\u0ec9\u0e94\u0eb5\u0ea1\u0eb2\u0e81!'),
+    el('p', { class: 'lao summary-lao' }, 'ທຳໄດ້ດີມາກ!'),
     el('p', {}, `${lesson.title} — ${state.correct}/${total} correct (${acc}%)`),
     el('div', { class: 'summary-stats' },
       el('div', { class: 'stat' }, el('strong', {}, `+${state.xpEarned}`), el('span', {}, '⚡ XP earned')),
@@ -495,7 +495,7 @@ function failScreen() {
   stage.append(el('div', { class: 'summary card fail' },
     el('div', { class: 'summary-icon' }, '💔'),
     el('h1', {}, t('fail_title')),
-    el('p', {}, `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">\u0ec4\u0ea1\u0ec8\u0ec0\u0e9b\u0eb1\u0e99\u0ec4\u0ea3</span> <i>(mai pen rai)</i> — "no worries". Try again!`),
+    el('p', { html: `You got ${state.correct}/${lesson.exercises.length} correct. In Lao we say: <span class="lao">ບໍ່ເປັນຫຍັງ</span> <i>(baw pen nyang)</i> — "no worries". Try again!` }),
     el('div', { class: 'summary-actions' },
       el('a', { class: 'btn btn-primary btn-lg', href: `lesson.html?id=${lesson.id}` }, t('try_again')),
       el('a', { class: 'btn btn-ghost', href: 'learn.html' }, 'Back to path'))));

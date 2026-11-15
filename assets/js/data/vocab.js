@@ -25,9 +25,9 @@ export const CATEGORIES = {
 
 export const VOCAB = [
   // ---- Greetings & politeness ----
-  { id: 'hello',      lao: 'ສະບາດີ',        tr: 'sa-ba-dii',          en: 'Hello', cat: 'greetings' },
-  { id: 'how_are_you',lao: 'ສບາຢດີໄຫມ',     tr: 'sa-bai-dii mai?',    en: 'How are you?', cat: 'greetings' },
-  { id: 'fine',       lao: 'ສບາຢດີ',        tr: 'sa-bai-dii',         en: "I'm fine / well", cat: 'greetings' },
+  { id: 'hello',      lao: 'ສະບາຍດີ',        tr: 'sa-bai-dii',          en: 'Hello', cat: 'greetings' },
+  { id: 'how_are_you',lao: 'ສະບາຍດີບໍ',     tr: 'sa-bai-dii baw?',    en: 'How are you?', cat: 'greetings' },
+  { id: 'fine',       lao: 'ສະບາຍດີ',        tr: 'sa-bai-dii',         en: "I'm fine / well", cat: 'greetings' },
   { id: 'goodbye',    lao: 'ລາກ່ອນ',        tr: 'la khon',            en: 'Goodbye', cat: 'greetings' },
   { id: 'bye',        lao: 'ບາຢດີ',         tr: 'bai dii',            en: 'Bye (casual)', cat: 'greetings' },
   { id: 'thanks',     lao: 'ຂອບໃຈ',         tr: 'khop jai',           en: 'Thank you', cat: 'greetings' },
@@ -41,8 +41,8 @@ export const VOCAB = [
   { id: 'name_a',     lao: 'ຂ່ອຢຊື່ອ…',     tr: 'khoi chue…',         en: 'My name is…', cat: 'greetings' },
   { id: 'nice_meet',  lao: 'ຢິນດີທີ່ໄດ້ພບເຈ້າ', tr: 'yin di thi dai phoep jao', en: 'Nice to meet you', cat: 'greetings' },
   { id: 'see_you',    lao: 'ພບກັນໃຫມ່',      tr: 'phoep kan mai',      en: 'See you again', cat: 'greetings' },
-  { id: 'good_morning',lao: 'ສະບາດີຕອນເຊ້າ', tr: 'sa-ba-dii ton sao',  en: 'Good morning', cat: 'greetings' },
-  { id: 'good_night', lao: 'ຣາຕຣີສະບາດີ',   tr: 'ratri sa-ba-dii',    en: 'Good night', cat: 'greetings' },
+  { id: 'good_morning',lao: 'ສະບາຍດີຕອນເຊ້າ', tr: 'sa-bai-dii ton sao',  en: 'Good morning', cat: 'greetings' },
+  { id: 'good_night', lao: 'ຣາຕຣີສະບາຍດີ',   tr: 'ratri sa-bai-dii',    en: 'Good night', cat: 'greetings' },
   { id: 'good_luck',  lao: 'ໂຊຄດີ',         tr: 'chok dii',           en: 'Good luck', cat: 'greetings' },
 
   // ---- Essential words ----

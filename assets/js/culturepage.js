@@ -21,7 +21,7 @@ function renderBlock(b) {
 
 app.append(el('div', { class: 'page-head' },
   el('h1', {}, t('culture_title')),
-  el('p', { class: 'section-sub' }, 'The stories behind the language: the land, the festivals, the food, the etiquette — and why the diaspora keeps Lao alive. <span class="lao">ວັດນຘຣຣມລາວ</span>.'),
+  el('p', { class: 'section-sub', html: 'The stories behind the language: the land, the festivals, the food, the etiquette — and why the diaspora keeps Lao alive. <span class="lao">ວັດນຘຣຣມລາວ</span>.' }),
 ));
 
 CULTURE.forEach(c => {
