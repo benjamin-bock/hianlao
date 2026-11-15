@@ -57,8 +57,9 @@ header {
 .brand-logo.small { width: 28px; height: 28px; }
 .brand-name { font-weight: 800; font-size: 1.25rem; letter-spacing: -.02em; }
 .brand-lao { color: var(--lao-red); font-size: 1.05rem; }
-@media (min-width: 1500px) { .brand-lao { display: inline; } }
-@media (max-width: 1499px) { .brand-lao { display: none; } }
+.brand-lao-sub { display: none; color: var(--muted); font-style: italic; font-size: .72rem; margin-left: .3rem; }
+@media (min-width: 1500px) { .brand-lao { display: inline; } .brand-lao-sub { display: inline; } }
+@media (max-width: 1499px) { .brand-lao { display: none; } .brand-lao-sub { display: none; } }
 .nav { display: flex; gap: .25rem; margin-left: auto; flex-wrap: wrap; }
 .nav-link {
   text-decoration: none; color: var(--muted); font-weight: 700; font-size: .95rem;
@@ -138,7 +139,9 @@ body { -webkit-tap-highlight-color: transparent; }
 .hero-art img { width: 100%; max-width: 340px; }
 .hero-word-card { position: relative; display: inline-block; margin-top: 1rem; min-width: 220px; text-align: left; }
 .word-lao { font-size: 2.2rem; line-height: 1.4; color: var(--lao-text); }
-.word-tr { color: var(--muted); font-style: italic; }
+.word-tr, .word-romanization, .lao-roman { color: var(--muted); font-style: italic; }
+.word-romanization { font-size: .85rem; }
+.lao-roman { font-size: .8em; }
 .word-en { font-weight: 700; }
 .word-en-lg { font-size: 1.6rem; font-weight: 800; }
 .hero-word-card .speak-btn { position: absolute; top: .75rem; right: .75rem; }
@@ -341,8 +344,11 @@ body.in-lesson #header, body.in-lesson #footer { display: none; }
   border-radius: 0 10px 10px 0; padding: .55rem .9rem; margin: .5rem 0;
 }
 .ex-lao { font-size: 1.35rem; color: var(--lao-text); }
-.ex-tr { font-style: italic; color: var(--muted); }
+.ex-tr, .ex-romanization { font-style: italic; color: var(--muted); font-size: .85rem; }
 .ex-en { font-weight: 700; }
+/* karaoke sub-line inside option/match cards */
+.opt-col { min-width: 0; }
+.opt-sub { display: block; color: var(--muted); font-style: italic; font-size: .76rem; margin-top: .15rem; line-height: 1.25; }
 .table-wrap { overflow-x: auto; margin: .75rem 0; }
 table { border-collapse: collapse; width: 100%; font-size: .98rem; background: #fff; }
 th, td { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; }

@@ -215,7 +215,8 @@ function renderMc(ex) {
   const order = shuffle(ex.ids);
   const opts = el('div', { class: 'options' }, order.map(id => {
     const c = el('button', { class: 'option-card' },
-      ex.dir === 'lao2en' ? el('span', {}, V[id].en) : el('span', { class: 'lao' }, V[id].lao));
+      ex.dir === 'lao2en' ? el('span', {}, V[id].en) : el('div', { class: 'opt-col' },
+        el('span', { class: 'lao' }, V[id].lao), el('span', { class: 'opt-sub' }, V[id].romanization)));
     c.dataset.id = id;
     c.addEventListener('click', () => {
       if (state.answered) return;
@@ -284,7 +285,11 @@ function renderMatch(ex) {
   );
   function matchBtn(v, side) {
     const b = el('button', { class: 'option-card match-card' },
-      side === 'lao' ? el('span', { class: 'lao' }, v.lao) : el('span', {}, v.en));
+      side === 'lao'
+        ? el('div', { class: 'opt-col' },
+          el('span', { class: 'lao' }, v.lao), el('span', { class: 'opt-sub' }, v.romanization))
+        : el('span', {}, v.en));
+    b.dataset.id = v.id;
     b.addEventListener('click', () => {
       if (state.answered || matched.has(v.id)) return;
       if (side === 'lao') { selLeft = selLeft === b ? null : b; }
@@ -293,8 +298,8 @@ function renderMatch(ex) {
       if (selLeft) selLeft.classList.add('selected');
       if (selRight) selRight.classList.add('selected');
       if (selLeft && selRight) {
-        const l = left.find(x => x.lao === selLeft.textContent);
-        const r = right.find(x => x.en === selRight.textContent);
+        const l = left.find(x => x.id === selLeft.dataset.id);
+        const r = right.find(x => x.id === selRight.dataset.id);
         if (l && r && l.id === r.id) {
           matched.add(l.id);
           selLeft.classList.add('matched'); selRight.classList.add('matched');
@@ -399,8 +404,7 @@ function renderTiles(ex) {
   renderAll();
   const body = el('div', { class: 'tiles-wrap' },
     el('div', { class: 'big-word card' },
-      el('div', { class: 'word-en-lg' }, ex.en),
-      el('div', { class: 'word-romanization' }, ex.romanization)),
+      el('div', { class: 'word-en-lg' }, ex.en)),
     answerArea, bank);
   btn.addEventListener('click', submit);
   setActionBar(el('span', { class: 'action-spacer' }), btn);

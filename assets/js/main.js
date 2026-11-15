@@ -61,7 +61,8 @@ export function renderShell(activePage) {
       el('a', { class: 'brand', href: 'index.html' },
         el('img', { src: 'assets/img/logo.svg', alt: 'HianLao', class: 'brand-logo' }),
         el('span', { class: 'brand-name' }, 'HianLao'),
-        el('span', { class: 'brand-lao lao' }, 'ເຣີຢນລາວ'),
+        el('span', { class: 'brand-lao lao' }, 'ຮຽນລາວ'),
+        el('span', { class: 'brand-lao-sub' }, 'hian lao'),
       ),
       el('nav', { class: 'nav' },
         NAV.map(n => el('a', {
@@ -95,12 +96,13 @@ export function renderShell(activePage) {
         el('div', {},
           el('strong', {}, 'HianLao'),
           el('p', {}, 'Free & open-source Lao learning for the diaspora, everywhere. ',
-            el('span', { class: 'lao' }, 'ເຣີຢນພາສາລາວ ຟຣີ — for everyone.')))),
+            el('span', { class: 'lao' }, 'ຮຽນພາສາລາວ ຟຣີ'),
+            el('span', { class: 'lao-roman' }, ' hian pha-sa Lao'), ' — for everyone.'))),
       el('div', { class: 'footer-links' },
         NAV.map(n => el('a', { href: n.href }, t(n.key))),
         el('a', { href: 'https://github.com/benjamin-bock/hianlao', target: '_blank', rel: 'noopener' }, 'GitHub ↗')),
       el('p', { class: 'footer-note' }, `MIT licensed · ${VOCAB.length}+ words · ${Object.keys(LESSON_BY_ID).length} lessons · ${GRAMMAR.length} grammar guides · made with ❤️ for `,
-        el('span', { class: 'lao' }, 'ຄົນລາວ'), ' worldwide'),
+        el('span', { class: 'lao' }, 'ຄົນລາວ'), ' ', el('span', { class: 'lao-roman' }, 'khon Lao'), ' worldwide'),
     ));
   }
   // Mobile bottom navigation (shown by CSS below 860px, hidden during lessons).
