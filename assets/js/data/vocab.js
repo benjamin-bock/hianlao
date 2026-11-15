@@ -181,7 +181,7 @@ export const VOCAB = [
   { id: 'old',      lao: 'ເກົ່າ',       romanization: 'kao',       en: 'old (thing)', fr: "vieux / ancien (chose)", cat: 'adjectives' },
   { id: 'cold',     lao: 'ໜາວ',      romanization: 'nao',       en: 'cold', fr: "froid", cat: 'adjectives' },
   { id: 'happy',    lao: 'ມີຄວາມສຸກ',   romanization: 'mi khwam suk', en: 'happy', fr: "heureux / content", cat: 'adjectives' },
-  { id: 'tired',    lao: 'ໜື້ຍ',    romanization: 'nueai',     en: 'tired', fr: "fatigué", cat: 'adjectives' },
+  { id: 'tired',    lao: 'ໜື່ອຍ',    romanization: 'nueai',     en: 'tired', fr: "fatigué", cat: 'adjectives' },
   { id: 'cheap',    lao: 'ຖືກ',        romanization: 'thuuk',      en: 'cheap', fr: "pas cher / bon marché", cat: 'adjectives' },
   { id: 'expensive',lao: 'ແພງ',        romanization: 'phaeng',    en: 'expensive', fr: "cher", cat: 'adjectives' },
   { id: 'slow',     lao: 'ຊ້າ',        romanization: 'cha',       en: 'slow', fr: "lent", cat: 'adjectives' },
