@@ -1,6 +1,7 @@
 import { el, renderShell, speakBtn } from './main.js';
 import { t } from './ui.js';
-import { VOCAB, CATEGORIES } from './data/vocab.js';
+import { VOCAB, VOCAB_BY_ID, CATEGORIES } from './data/vocab.js';
+import { getWeakWords } from './store.js';
 
 renderShell('words');
 
@@ -63,7 +64,31 @@ app.append(
   el('div', { class: 'page-head' },
     el('h1', {}, t('words_title')),
     el('p', { class: 'section-sub' }, t('words_sub'))),
+  weakSection(),
   search, chips, count, grid,
 );
+
+// Words you missed in lessons — the mistake notebook feeds the drill.
+function weakSection() {
+  const weak = getWeakWords().filter(w => VOCAB_BY_ID[w.id]).slice(0, 12);
+  if (!weak.length) return null;
+  return el('section', { class: 'unit-section' },
+    el('h2', {}, `🎯 ${t('weak_title')} (${weak.length})`),
+    el('p', { class: 'section-sub' }, t('weak_sub')),
+    el('div', { class: 'word-grid' }, weak.map(w => {
+      const v = VOCAB_BY_ID[w.id];
+      return el('div', { class: 'word-card card weak-word-card' },
+        el('div', { class: 'word-card-top' },
+          el('div', {},
+            el('div', { class: 'word-lao lao' }, v.lao),
+            el('div', { class: 'word-tr' }, v.tr),
+            el('div', { class: 'word-en' }, v.en)),
+          speakBtn(v)),
+        el('div', { class: 'weak-count' }, `🔥 ×${w.n}`),
+        v.note ? el('div', { class: 'word-note' }, v.note) : null);
+    })),
+    el('a', { class: 'btn btn-primary weak-drill', href: 'lesson.html?id=__weak' }, `⚡ ${t('weak_practice')}`),
+  );
+}
 
 render();

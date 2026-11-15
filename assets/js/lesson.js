@@ -4,14 +4,33 @@ import { el, renderShell, shuffle, laoSpan, speakBtn } from './main.js';
 import { t } from './ui.js';
 import { VOCAB_BY_ID as V } from './data/vocab.js';
 import { LESSON_BY_ID, UNITS } from './data/units.js';
-import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview } from './store.js';
+import { addXp, markDone, isDone, getState, scheduleReview, scheduleWeakReview, getWeakWords, addWeakWord, relieveWeakWord } from './store.js';
 import { unlockedAchievements } from './achievements.js';
 import { speakItem, speak, canRecognize, recognize, normalize, speechMatches, hasLaoVoice, hasNativeAudio } from './speech.js';
 import { sfx, buzz, shake, pop, pulse, xpFly, confettiBurst } from './fx.js';
 
 const params = new URLSearchParams(location.search);
 const lessonId = params.get('id') || 'u1l1';
-const lesson = LESSON_BY_ID[lessonId];
+
+// 'Tricky words' drill: a synthetic lesson built from words you missed before.
+function buildWeakLesson() {
+  const ids = getWeakWords().map(w => w.id).filter(id => V[id]);
+  const lessonShell = { id: '__weak', title: t('drill_title'), blurb: t('drill_blurb'), __weak: true };
+  if (!ids.length) return { ...lessonShell, exercises: [] };
+  const all = Object.values(V);
+  const pool = shuffle(ids).slice(0, 8);
+  const exercises = pool.flatMap(id => {
+    const others = shuffle(all.filter(x => x.cat === V[id].cat && x.id !== id)).slice(0, 3).map(x => x.id);
+    return shuffle([
+      { type: 'mc', dir: 'lao2en', ids: [id, ...others], answer: id },
+      { type: 'listen', ids: [id, ...others], answer: id },
+      { type: 'type', dir: 'en2lao', id },
+    ]);
+  });
+  return { ...lessonShell, exercises };
+}
+
+const lesson = lessonId === '__weak' ? buildWeakLesson() : LESSON_BY_ID[lessonId];
 
 renderShell('learn');
 document.body.classList.add('in-lesson');
@@ -454,6 +473,8 @@ function resolveAnswer(ok, correctText) {
       state.correct++;
       state.xpEarned += XP_PER_CORRECT;
     }
+    const wid = current.ex.answer || current.ex.id;
+    if (wid && (lesson.__weak || state.practiceMode)) relieveWeakWord(wid);
   } else {
     state.combo = 0;
     if (state.practiceMode) {
@@ -463,6 +484,7 @@ function resolveAnswer(ok, correctText) {
       state.hearts = Math.max(0, state.hearts - 1);
       if (current.origin != null) state.missed.add(current.origin);
       state.requeued++;
+      addWeakWord(current.ex.answer || current.ex.id);
       queue.push({ ...current, isRetry: true });
     }
   }
@@ -502,9 +524,11 @@ function summaryScreen() {
   const total = state.solved; // includes retries — accuracy reflects real effort
   const acc = total ? Math.round((state.correct / total) * 100) : 0;
   addXp(state.xpEarned);
-  markDone(lesson.id);
-  scheduleReview(lesson.id);
-  if (state.missed.size) scheduleWeakReview(lesson.id);
+  if (!lesson.__weak) {
+    markDone(lesson.id);
+    scheduleReview(lesson.id);
+    if (state.missed.size) scheduleWeakReview(lesson.id);
+  }
   progressFill.style.width = '100%';
   stage.innerHTML = '';
   setActionBar();
@@ -594,4 +618,8 @@ function failScreen() {
   shake(stage);
 }
 
-next(); // kicks off the queue
+if (lesson.exercises.length) next(); // kicks off the queue
+else app.append(el('div', { class: 'card error-card' },
+  el('h1', {}, t('weak_empty_title')),
+  el('p', {}, t('weak_empty')),
+  el('a', { class: 'btn btn-primary', href: 'words.html' }, t('nav_words') + ' →')));

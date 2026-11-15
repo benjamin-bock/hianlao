@@ -24,6 +24,10 @@ const dict = {
     practice_mistakes: '🔁 Practice mistakes', practice_mode: 'Practice — mistakes on repeat until fixed',
     practice_done_title: 'Mistakes fixed!', practice_done_sub: 'You worked through every miss — that is how memory is built.',
     combo_word: 'in a row',
+    weak_title: 'Tricky words', weak_sub: 'Words you missed in lessons — repeat them until they stick.',
+    weak_practice: 'Drill my tricky words',
+    weak_empty_title: 'No tricky words yet', weak_empty: 'Every word you miss lands here — repeat it until it sticks.',
+    drill_title: 'Tricky words drill', drill_blurb: 'One more pass on the words that got away.',
   },
   fr: {
     tap_answer: 'Touche ta réponse',
@@ -48,6 +52,10 @@ const dict = {
     practice_mistakes: '🔁 Refaire les erreurs', practice_mode: 'Entraînement — les erreurs Reviennent jusqu’à correction',
     practice_done_title: 'Erreurs corrigées !', practice_done_sub: "Tu as retravaillé chaque erreur — c'est ainsi qu'on mémorise.",
     combo_word: 'd’affilée',
+    weak_title: 'Mots difficiles', weak_sub: 'Les mots loupés en leçon — répète-les jusqu’à ce qu’ils restent.',
+    weak_practice: 'Driller mes mots difficiles',
+    weak_empty_title: 'Aucun mot difficile', weak_empty: 'Chaque mot loupé arrive ici — répète-le jusqu’à ce qu’il colle.',
+    drill_title: 'Drill des mots difficiles', drill_blurb: 'Un dernier tour sur les mots qui se sont échappés.',
   },
   la: {
     tap_answer: 'เลือกคำตอบของคุณ',
@@ -66,6 +74,10 @@ const dict = {
     practice_mistakes: '🔁 ຝຶກຄືນຂໍ້ຜິດ', practice_mode: 'ຝຶກຊ້ຳ — ຂໍ້ຜິດຈະກັບມາຈົນກວ່າຈະຖືກ',
     practice_done_title: 'ແກ້ໄຂຂໍ້ຜິດໝົດແລ້ວ!', practice_done_sub: 'ຄຸນໄດ້ຝຶກຊ້ຳທຸກຂໍ້ຜິດແລ້ວ — ນີ້ຄືວິທີຈື່ໃຫ້ຈົນ.',
     combo_word: 'ຕໍ່ກັນ',
+    weak_title: 'ຄຳຍາກ', weak_sub: 'ຄຳທີລືກໃນບທຮນ — ຝຶກຄືນຈນຈື່.',
+    weak_practice: 'ຝຶກຄຳຍາກຂອງຄຸນ',
+    weak_empty_title: 'ຍັງບໍມີຄຳຍາກ', weak_empty: 'ຄຳທີລືກໃນບທຮນຈະມາຢູ່ນີ — ຝຶກຄືນຈນຈື່.',
+    drill_title: 'ຝຶກຄຳຍາກ', drill_blurb: 'ຝຶກຄືນຄຳທີລືກອີກຄຣັ້ງ.',
   },
 };
 let lang = 'en';

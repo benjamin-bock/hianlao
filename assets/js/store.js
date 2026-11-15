@@ -122,6 +122,36 @@ export function scheduleWeakReview(lessonId) {
   putSoon();
 }
 
+// ---- word-level mistake notebook (feeds the tricky-words drill) ----
+export function addWeakWord(id) {
+  if (!id || typeof id !== 'string') return;
+  const s = load();
+  s.weakWords = { ...(s.weakWords || {}) };
+  const prev = s.weakWords[id];
+  s.weakWords[id] = { n: (prev?.n || 0) + 1, at: Date.now() };
+  save(s);
+  putSoon();
+}
+
+// Answered right in a drill or practice: loosen the grip, drop at zero.
+export function relieveWeakWord(id) {
+  if (!id || typeof id !== 'string') return;
+  const s = load();
+  const w = s.weakWords?.[id];
+  if (!w) return;
+  if (w.n <= 1) delete s.weakWords[id];
+  else s.weakWords[id] = { ...w, n: w.n - 1 };
+  save(s);
+  putSoon();
+}
+
+export function getWeakWords() {
+  const s = load();
+  return Object.entries(s.weakWords || {})
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a, b) => b.n - a.n || b.at - a.at);
+}
+
 export function getDueReviews() {
   const s = load();
   const now = Date.now();
