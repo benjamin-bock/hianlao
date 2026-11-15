@@ -10,5 +10,8 @@
     "serve": "python3 -m http.server 8000",
     "dev": "python3 scripts/dev-server.py 8000"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/speed-insights": "^2.1.0"
+  }
 }
