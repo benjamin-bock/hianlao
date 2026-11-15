@@ -224,7 +224,7 @@ export const VOCAB = [
   { id: 'where_toilet',lao: 'ຫ້ອງນ້ຳຢູ່ໃສ', romanization: 'hong nam yuu sai?', en: 'Where is the toilet?', fr: "Où sont les toilettes ?", cat: 'phrases' },
   { id: 'i_am_lao',   lao: 'ເປັນຄົນລາວ',     romanization: 'pen khon Lao', en: 'I am Lao', fr: "Je suis laotien(ne)", cat: 'phrases' },
   { id: 'learning_lao',lao: 'ກຳລັງຮຽນພາສາລາວ', romanization: 'kamlang hian pha-sa Lao', en: 'I am learning Lao', fr: "J’apprends le lao", cat: 'phrases' },
-  { id: 'see_you_tomorrow',lao: 'ພົບກັນມື້ອື່ນ', romanization: 'phop kan mue nyuen', en: 'See you tomorrow', fr: "À demain", cat: 'phrases' },
+  { id: 'see_you_tomorrow',lao: 'ພົບກັນມື້ໜ້າ', romanization: 'phop kan mue-nao', en: 'See you tomorrow', fr: "À demain", cat: 'phrases' },
   { id: 'eaten_q',    lao: 'ກິນເຂົ້າແລ້ວບໍ', romanization: 'kin khao laew baw?', en: 'Have you eaten yet? (a classic Lao greeting)', fr: "Vous avez déjà mangé ? (salutation classique lao)", cat: 'phrases' },
 
   // ---- Places & transport ----
@@ -259,7 +259,7 @@ export const VOCAB = [
   { id: 'day',       lao: 'ວັນ',           romanization: 'wan',       en: 'day', fr: "jour", cat: 'time' },
   { id: 'today',     lao: 'ມື້ນີ້',        romanization: 'mue ni',    en: 'today', fr: "aujourd'hui", cat: 'time' },
   { id: 'yesterday', lao: 'ມື້ວານ',      romanization: 'muea wan',  en: 'yesterday', fr: "hier", cat: 'time' },
-  { id: 'tomorrow',  lao: 'ມື້ອື່ນ',      romanization: 'mue nyuen',   en: 'tomorrow', fr: "demain", cat: 'time' },
+  { id: 'tomorrow',  lao: 'ມື້ໜ້າ',      romanization: 'mue-nao',   en: 'tomorrow', fr: "demain", cat: 'time' },
   { id: 'morning',   lao: 'ເຊົ້າ',         romanization: 'sao',       en: 'morning', fr: "matin", cat: 'time' },
   { id: 'evening',   lao: 'ຄ່ຳ',          romanization: 'kham',      en: 'evening', fr: "soir", cat: 'time' },
   { id: 'night',     lao: 'ຄືນ',          romanization: 'khuen',     en: 'night', fr: "nuit", cat: 'time' },

@@ -146,3 +146,10 @@ mirrors authored natively in this pass. Representative before/after:
    speaker sign-off.
 3. New locale? Add the dict block in `ui.js` plus optional `fr`-style mirrors
    (the `pf`/`def` helpers fall back to English automatically).
+4. Post-audit correction (word-bank exercise pass): `tomorrow` and
+   `see_you_tomorrow` used **ມື້ອື່ນ** (mueun = "the other day", past) with two
+   conflicting romanizations (`phuk ni` / `mue nyuen`). Corrected to
+   **ມື້ໜ້າ** (`mue-nao`) in vocab, the §grammar example and both tiles
+   exercises (u8l3, u13); both audio files re-voiced. Tiles exercises now also
+   carry a per-token `wordRoman` array so every bank tile shows its own
+   karaoke reading (vocab lookup + curated particle table in `units.js`).

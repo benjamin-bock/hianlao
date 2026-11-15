@@ -2,7 +2,7 @@
 // Exercises are data; the engine in lesson.js renders them and shuffles options at runtime.
 // Exercise shapes:
 //   { type:'mc',     dir:'lao2en'|'en2lao', ids:[4 ids], answer:id }  pick the correct option
-//   { type:'type',   dir:'lao2en'|'en2lao', id }                     type the translation (Lao script or romanization accepted)
+//   { type:'type',   dir:'lao2en'|'en2lao', id }                     tap word tiles together to translate (auto-submits when complete)
 //   { type:'match',  ids:[5-6 ids] }                                 match Lao <-> English pairs
 //   { type:'listen', ids:[4 ids], answer:id }                        hear the Lao word, pick its meaning (speech synthesis)
 //   { type:'tiles',  lao, words:[tokens], en, romanization }         arrange word tiles to build the Lao sentence
@@ -15,7 +15,27 @@ const typeEx = (id, dir = 'lao2en') => ({ type: 'type', dir, id });
 const match  = (ids) => ({ type: 'match', ids });
 const listen = (answer, distractors) => ({ type: 'listen', ids: [answer, ...distractors], answer });
 const speak  = (id) => ({ type: 'speak', id });
-const tiles  = (lao, words, en, romanization, enFr) => ({ type: 'tiles', lao, words, en, romanization, enFr });
+// Tiles carry a per-token karaoke romanization so the bank is readable before
+// the learner knows the alphabet. Token romans come from the vocab table when
+// the token exists there, otherwise from this curated particle/compound map
+// (Vientiane pronunciation, site romanization convention).
+const TILE_ROMAN = {
+  'ບໍ': 'baw', 'ຄິດໄລ່': 'khit lai', 'ຄວາບ': 'khuap', 'ຊ້າໆ': 'chaa chaa',
+  'ພົບກັນ': 'phop kan', 'ຂໍ': 'kho', 'ອາຫານລາວ': 'a-han Lao', 'ຝົນຕົກ': 'fon tok',
+  'ບໍ່ໄປ': 'baw pai', 'ວາງ': 'wang', 'ທີ່': 'thi', 'ຮ້ານກາເຟ': 'haan kafe',
+  'ນ້ຳຂຶ້ນ': 'nam khen', 'ລີບ': 'lip', 'ເລ່ືອມ': 'lueam', 'ໃຫ້': 'hai', 'ຕັກ': 'tak',
+  'ຢູ່ທີ່ໃດ': 'yuu thi dai', 'ຢູ່ທີ່ນັ້ນ': 'yuu thi nan', 'ມື້ໜ້າ': 'mue-nao',
+};
+// lao string -> romanization for every single-word vocab entry.
+const BY_LAO = new Map(Object.values(V).filter(x => !/\s/.test(x.lao)).map(x => [x.lao, x.romanization]));
+const tileRomans = words => words.map(w => { const k = w.trim(); return BY_LAO.get(k) ?? TILE_ROMAN[k] ?? ''; });
+const tiles = (lao, words, en, romanization, enFr) => {
+  const wordRoman = tileRomans(words);
+  // Rebuild the sentence romanization from the per-token romans so it can never
+  // drift from them; keep any trailing punctuation of the source sentence.
+  const punct = (/[?!.,…]+$/.exec(romanization) || [''])[0];
+  return { type: 'tiles', lao, words, wordRoman, en, romanization: wordRoman.join(' ') + punct, enFr };
+};
 
 export const UNITS = [
   {
@@ -328,7 +348,7 @@ export const UNITS = [
         id: 'u8l3', title: 'Putting it together', titleFr: "On assemble tout", blurb: 'Build real Lao sentences. You have got this!', blurbFr: "Construis de vraies phrases lao. Tu peux le faire !",
         exercises: [
           tiles('ເປັນຄົນລາວ', ['ເປັນ', 'ຄົນລາວ'], 'I am Lao', 'pen khon Lao', "Je suis laotien(ne)"),
-          tiles('ພົບກັນມື້ອື່ນ', ['ພົບກັນ', 'ມື້ອື່ນ'], 'See you tomorrow', 'phoep kan phuk ni', "À demain"),
+          tiles('ພົບກັນມື້ໜ້າ', ['ພົບກັນ', 'ມື້ໜ້າ'], 'See you tomorrow', 'phop kan mue-nao', "À demain"),
           mc('learning_lao', ['i_am_lao', 'speak_lao_q', 'see_you_tomorrow']),
           tiles('ພົບກັນໃໝ່', ['ພົບກັນ', 'ໃໝ່'], 'See you again', 'phoep kan mai', "À bientôt"),
           speak('nice_meet'),
@@ -532,7 +552,7 @@ export const UNITS = [
           mc('speak_lao_q', ['name_q', 'how_are_you', 'where_toilet']),
           listen('speak_slow', ['speak_lao_q', 'fine', 'nice_meet']),
           tiles('ພູດຊ້າໆໄດ້ບໍ', ['ພູດ', 'ຊ້າໆ', 'ໄດ້', 'ບໍ'], 'Please speak slowly', 'phut chaa chaa dai baw?', "Parlez lentement, s'il vous plaît"),
-          tiles('ພົບກັນມື້ອື່ນ', ['ພົບກັນ', 'ມື້ອື່ນ'], 'See you tomorrow', 'phoep kan phuk ni', "À demain"),
+          tiles('ພົບກັນມື້ໜ້າ', ['ພົບກັນ', 'ມື້ໜ້າ'], 'See you tomorrow', 'phop kan mue-nao', "À demain"),
           mc('learning_lao', ['i_am_lao', 'speak_lao_q', 'see_you_tomorrow']),
           tiles('ກຳລັງຮຽນພາສາລາວ', ['ກຳລັງ', 'ຮຽນ', 'ພາສາລາວ'], 'I am learning Lao', 'kamlang hian pha-sa Lao', "J'apprends le lao"),
           match(['speak_lao_q', 'speak_slow', 'nice_meet', 'see_you', 'learning_lao', 'plan']),
