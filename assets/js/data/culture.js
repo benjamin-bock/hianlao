@@ -5,8 +5,8 @@ export const CULTURE = [
   {
     id: 'laos', icon: '🇱🇦', img: 'stupa.svg', title: 'Laos at a glance',
     blocks: [
-      { t: 'p', html: '<b>Laos</b> (<span class="lao">ປຣະເທສລາວ</span>, <i>Pathet Lao</i>) is a landlocked country in Southeast Asia, bordered by Thailand, Vietnam, Cambodia, Myanmar and China. Its people call it <b>"the land of a million elephants"</b> — the former kingdom of <b>Lan Xang</b> (<span class="lao">ລ້ານຊ້າງ</span>).' },
-      { t: 'p', html: 'The <b>Mekong river</b> (<span class="lao">ແມ່ນ້ຳໂຂງ</span>, <i>mae nam khong</i>) is the country\'s lifeline and border. The capital is <b>Vientiane</b> (<span class="lao">ເວີຢງຈັນທນ໌</span>), and the spiritual heart is <b>Luang Prabang</b> (<span class="lao">ຫລວງພຣະບາງ</span>), a UNESCO city of golden temples. Other wonders: the mysterious <b>Plain of Jars</b> and the <b>Pak Ou caves</b> full of Buddha statues.' },
+      { t: 'p', html: '<b>Laos</b> (<span class="lao">ປະເທດລາວ</span>, <i>Pa-thet Lao</i>) is a landlocked country in Southeast Asia, bordered by Thailand, Vietnam, Cambodia, Myanmar and China. Its people call it <b>"the land of a million elephants"</b> — the former kingdom of <b>Lan Xang</b> (<span class="lao">ລ້ານຊ້າງ</span>).' },
+      { t: 'p', html: 'The <b>Mekong river</b> (<span class="lao">ແມ່ນ້ຳຂອງ</span>, <i>mae nam khong</i>) is the country\'s lifeline and border. The capital is <b>Vientiane</b> (<span class="lao">ວຽງຈັນ <i>(Vieng Chan)</i></span></span>), and the spiritual heart is <b>Luang Prabang</b> (<span class="lao">ຫຼວງພະບາງ</span>), a UNESCO city of golden temples. Other wonders: the mysterious <b>Plain of Jars</b> and the <b>Pak Ou caves</b> full of Buddha statues.' },
       { t: 'list', items: [
         'Official language: <b>Lao</b> (<span class="lao">ພາສາລາວ</span>, <i>phasa Lao</i>)',
         'Script: the <b>Lao script</b>, closely related to Thai but distinct',
@@ -18,11 +18,11 @@ export const CULTURE = [
   {
     id: 'festivals', icon: '🎆', img: 'festival.svg', title: 'Festivals & celebrations',
     blocks: [
-      { t: 'p', html: '<b>Pi Mai</b> (<span class="lao">ປີໃໝ່</span>) — the <b>Lao New Year</b> in mid-April — is the biggest festival. For three days, people Splash water on each other for good luck, build sand stupas at temples and visit family. It is joy, water and <span class="lao">ສະບາຍດີ</span> everywhere.' },
+      { t: 'p', html: '<b>Pi Mai</b> (<span class="lao">ປີໃໝ່</span>) — the <b>Lao New Year</b> in mid-April — is the biggest festival. For three days, people splash water on each other for good luck, build sand stupas at temples and visit family. It is joy, water and <span class="lao">ສະບາຍດີ</span> everywhere.' },
       { t: 'list', items: [
-        '<b>Boun Ok Phansa</b> (<span class="lao">ອອກພຣຣສາ</span>) — end of Buddhist Lent (Oct), celebrated with candle-lit boat processions on the Mekong.',
-        '<b>Boun That Luang</b> (<span class="lao">ງານຘາຕຸຫລວງ</span>) — the great golden stupa festival in Vientiane (Nov), with fireworks and fairs.',
-        '<b>Boun Bang Fai</b> (<span class="lao">ບຸຍບັ້ງໄຟ</span>) — the rocket festival at the start of the rainy season: giant homemade rockets are launched to wake the rain gods.',
+        '<b>Boun Ok Phansa</b> (<span class="lao">ອອກພັນສາ <i>(ok phansa)</i></span></span>) — end of Buddhist Lent (Oct), celebrated with candle-lit boat processions on the Mekong.',
+        '<b>Boun That Luang</b> (<span class="lao">ບຸນທາດຫຼວງ <i>(boun That Luang)</i></span></span>) — the great golden stupa festival in Vientiane (Nov), with fireworks and fairs.',
+        '<b>Boun Bang Fai</b> (<span class="lao">ບຸນບັ້ງໄຟ</span>) — the rocket festival at the start of the rainy season: giant homemade rockets are launched to wake the rain gods.',
         '<b>Visoun / Lao New Year in the diaspora</b>: Lao communities in the US, France, Australia and Canada organize Pi Mai celebrations every April — look for one near you!',
       ] },
     ],
@@ -30,13 +30,13 @@ export const CULTURE = [
   {
     id: 'food', icon: '🍛', img: 'food.svg', title: 'Food & meals',
     blocks: [
-      { t: 'p', html: 'Lao meals are built around <b>sticky rice</b> (<span class="lao">ຂ້າວເຫນີຢວ</span>, <i>khao niao</i>) — eaten with the hands, rolled into small balls and dipped into dishes. The national dish is <b>larb</b> (<span class="lao">ລາບ</span>): a fresh minced-meat salad with lime, fish sauce, herbs and toasted rice powder. <b>Tam mak hoong</b> (<span class="lao">ຕຳຫມາກຫຸ່ງ</span>) is the fiery green papaya salad.' },
+      { t: 'p', html: 'Lao meals are built around <b>sticky rice</b> (<span class="lao">ເຂົ້າໜຽວ</span>, <i>khao niao</i>) — eaten with the hands, rolled into small balls and dipped into dishes. The national dish is <b>larb</b> (<span class="lao">ລາບ</span>): a fresh minced-meat salad with lime, fish sauce, herbs and toasted rice powder. <b>Tam mak hoong</b> (<span class="lao">ຕຳໝາກຮຸ່ງ</span>) is the fiery green papaya salad.' },
       { t: 'list', items: [
-        '<b>Khao piak sen</b> (<span class="lao">ຂ້າວເປີຢກເສ້ນ</span>) — comforting Lao noodle soup.',
-        '<b>Mok pa</b> (<span class="lao">ຫມກປລາ</span>) — fish steamed with herbs in a banana leaf.',
-        '<b>Khao jii</b> (<span class="lao">ຂ້າວຈີ່</span>) — a crusty baguette sandwich: a delicious leftover of the French colonial era.',
-        '<b>Sai oua</b> (<span class="lao">ໄສ້ອັ່ວ</span>) — herbal Lao sausage from Luang Prabang.',
-        'Ask <span class="lao">ກິນຂ້າວແລ້ວບ່</span> (<i>kin khao laew bo?</i>) — "have you eaten?" — it\'s the warmest way to greet someone.',
+        '<b>Khao piak sen</b> (<span class="lao">ເຂົ້າປຽກເສັ້ນ</span>) — comforting Lao noodle soup.',
+        '<b>Mok pa</b> (<span class="lao">ມົກປາ</span>) — fish steamed with herbs in a banana leaf.',
+        '<b>Khao jii</b> (<span class="lao">ເຂົ້າຈີ່</span>) — a crusty baguette sandwich: a delicious leftover of the French colonial era.',
+        '<b>Sai oua</b> (<span class="lao">ໄສ້ອົ່ວ</span>) — herbal Lao sausage from Luang Prabang.',
+        'Ask <span class="lao">ກິນເຂົ້າແລ້ວບໍ</span> (<i>kin khao laew bo?</i>) — "have you eaten?" — it\'s the warmest way to greet someone.',
       ] },
     ],
   },
@@ -50,7 +50,7 @@ export const CULTURE = [
         'Take off your <b>shoes</b> before entering a home or a temple.',
         'Dress modestly at temples: shoulders and knees covered.',
         'Buddha images and monks are deeply respected — never pose silly with them.',
-        'In the morning you may see monks walking barefoot collecting alms (<b>tak bat</b>, <span class="lao">ຕັກບາຕຣ</span>) — a beautiful tradition to witness respectfully.',
+        'In the morning you may see monks walking barefoot collecting alms (<b>tak bat</b>, <span class="lao">ຕັກບາດ</span>) — a beautiful tradition to witness respectfully.',
       ] },
     ],
   },
@@ -58,15 +58,15 @@ export const CULTURE = [
     id: 'language', icon: '🗣️', img: 'script.svg', title: 'The Lao language',
     blocks: [
       { t: 'p', html: 'Lao belongs to the <b>Tai language family</b>, and spoken Lao is quite close to Thai — but the scripts, tones and many words are different, and Lao has its own charm. The standard is the <b>Vientiane dialect</b>; other dialects exist in the north (Luang Prabang) and south (Champasak), plus Lao communities in Thailand (Isan).' },
-      { t: 'p', html: 'Lao is <b>analytic</b>: no verb conjugations, no plural forms, no genders. Grammar is mostly word order and small particles. Once you learn the tones and the script, everything clicks — and <span class="lao">hian</span> (<i>learn</i>) is exactly what HianLao is for!' },
-      { t: 'ex', lao: 'ເຣີຢນພາສາລາວ', romanization: 'hian phasa Lao', en: 'learn the Lao language — HianLao!' },
+      { t: 'p', html: 'Lao is <b>analytic</b>: no verb conjugations, no plural forms, no genders. Grammar is mostly word order and small particles. Once you learn the tones and the script, everything clicks — — <span class="lao">ຮຽນ</span> <i>(hian, "to learn")</i> is exactly what HianLao is for!' },
+      { t: 'ex', lao: 'ຮຽນພາສາລາວ', romanization: 'hian pha-sa Lao', en: 'learn the Lao language — HianLao!' },
     ],
   },
   {
     id: 'diaspora', icon: '🌏', img: 'elephant.svg', title: 'The Lao diaspora',
     blocks: [
       { t: 'p', html: 'After the fall of the Kingdom of Laos in 1975, hundreds of thousands of Lao fled as refugees. Today there are vibrant Lao communities in the <b>United States</b> (California, Minnesota, Texas…), <b>France</b> (Paris, Lyon…), <b>Australia</b>, <b>Canada</b> and beyond.' },
-      { t: 'p', html: 'For second and third generations, Lao is often the <b>heritage language</b>: spoken at home with grandparents, alive at temple festivals and Pi Mai celebrations. HianLao exists so that language stays free and open — no subscriptions, no paywalls — because <b>every Lao child should be able to learn the language of their family</b>: <span class="lao">ພາສາຂອງເຣາ</span> <i>(phasa khong rao)</i>, "our language".' },
+      { t: 'p', html: 'For second and third generations, Lao is often the <b>heritage language</b>: spoken at home with grandparents, alive at temple festivals and Pi Mai celebrations. HianLao exists so that language stays free and open — no subscriptions, no paywalls — because <b>every Lao child should be able to learn the language of their family</b>: <span class="lao">ພາສາຂອງເຮົາ</span> <i>(pha-sa khong hao)</i>, "our language".' },
       { t: 'note', html: 'Know a Lao community event, a good Lao teacher or a resource? Open an issue on GitHub and help us grow the community links!' },
     ],
   },
@@ -75,9 +75,9 @@ export const CULTURE = [
     blocks: [
       { t: 'p', html: 'Lao wisdom in a few words — these sayings are used in everyday life and are a lovely way to sound like a local:' },
       { t: 'list', items: [
-        '<span class="lao">ນ້ຳຂຶ້ໃຫ້ຣີບຕັກ</span> <i>(nam khuen hai rep tak)</i> — "When the water rises, scoop quickly" → <b>seize the opportunity!</b>',
-        '<span class="lao">ຊ້າໆ ໄດ້ພຣ້າເລ່ມງາມ</span> <i>(cha cha dai phra lem ngam)</i> — "Slowly you get a beautiful blade" → <b>slow and steady wins the race</b>.',
-        '<span class="lao">ຄວາມພຢາຢາມອຢູ່ທີ່ໄຫນ ຄວາມສຳເຣັຈອຢູ່ທີ່ນັ່ນ</span> <i>(khwam phayayam yu thi nai, khwam samret yu thi nan)</i> — "Where there is effort, there is success." Perfect for language learning!',
+        '<span class="lao">ນ້ຳຂຶ້ນ ໃຫ້ລີບຕັກ</span> <i>(nam khen hai lip tak)</i> — "When the water rises, scoop quickly" → <b>seize the opportunity!</b>',
+        '<span class="lao">ຊ້າໆ ໄດ້ແຜ່ນເລ່ືອມງາມ</span> <i>(chaa chaa dai phaen lueam ngam)</i> — "Slowly you get a beautiful blade" → <b>slow and steady wins the race</b>.',
+        '<span class="lao">ຄວາມພະຍາຍາມຢູ່ທີ່ໃດ ຄວາມສຳເລັດຢູ່ທີ່ນັ້ນ</span> <i>(khwam pha-nya-nyam yuu thi dai, khwam sam-lat yuu thi nan)</i> — "Where there is effort, there is success." Perfect for language learning!',
       ] },
       { t: 'note', html: 'Know a beautiful Lao proverb? Add it in <code>assets/js/data/culture.js</code> and send a pull request! Practice these three in <a href="learn.html">Unit 12 on the Learn page</a>. 🇱🇦' },
     ],
