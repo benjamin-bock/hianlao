@@ -618,6 +618,28 @@ function failScreen() {
   shake(stage);
 }
 
+// Keyboard comfort (desktop): 1-9 pick an option/tile, Enter continues.
+// Tap-to-validate means one keystroke answers — same as a tap.
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = e.target && e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (e.key === 'Enter') {
+    const cont = document.querySelector('.lesson-actionbar .btn-continue');
+    const primary = document.querySelector('.summary-actions .btn-primary');
+    if (cont) cont.click();
+    else if (primary) primary.click();
+    return;
+  }
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9) {
+    const tiles = [...document.querySelectorAll('.lesson-stage .tile-bank .tile:not(.chosen):not([disabled])')];
+    const opts = [...document.querySelectorAll('.lesson-stage .option-card:not([disabled])')];
+    const list = tiles.length ? tiles : opts;
+    if (list[n - 1]) list[n - 1].click();
+  }
+});
+
 if (lesson.exercises.length) next(); // kicks off the queue
 else app.append(el('div', { class: 'card error-card' },
   el('h1', {}, t('weak_empty_title')),

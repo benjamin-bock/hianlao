@@ -1,7 +1,8 @@
 import { el, renderShell } from './main.js';
 import { t } from './ui.js';
 import { UNITS } from './data/units.js';
-import { isDone, totalDone, api, getUser, getState, setGoal } from './store.js';
+import { VOCAB_BY_ID } from './data/vocab.js';
+import { isDone, totalDone, api, getUser, getState, setGoal, getDueReviews, getWeakWords } from './store.js';
 
 renderShell('learn');
 
@@ -44,6 +45,24 @@ app.append(el('div', { class: 'card goal-card' },
     goalSel,
     el('div', { class: 'goal-bar' }, goalFill),
     goalLabel)));
+
+// Repetition nudges: due reviews and tricky words come first — repetition is key.
+function nudgeCard(cls, icon, count, keyCard, keySub, href, goKey) {
+  return el('a', { class: `card nudge-card ${cls}`, href },
+    el('span', { class: 'nudge-icon' }, icon),
+    el('div', { class: 'nudge-text' },
+      el('strong', {}, `${count} ${t(keyCard)}`),
+      el('span', { class: 'muted' }, t(keySub))),
+    el('span', { class: 'nudge-go' }, `${t(goKey)} →`));
+}
+const dueReviews = getDueReviews().length;
+const weakCount = getWeakWords().filter(w => VOCAB_BY_ID[w.id]).length;
+if (dueReviews || weakCount) {
+  const nudges = el('div', { class: 'nudges' });
+  if (dueReviews) nudges.append(nudgeCard('nudge-review', '🔁', dueReviews, 'learn_due_card', 'learn_due_sub', 'review.html', 'review_now'));
+  if (weakCount) nudges.append(nudgeCard('nudge-weak', '🎯', weakCount, 'learn_weak_card', 'learn_weak_sub', 'lesson.html?id=__weak', 'drill_now'));
+  app.append(nudges);
+}
 
 UNITS.forEach((unit, ui) => {
   const section = el('section', { class: 'unit-section' },

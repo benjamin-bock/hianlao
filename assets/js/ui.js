@@ -28,6 +28,10 @@ const dict = {
     weak_practice: 'Drill my tricky words',
     weak_empty_title: 'No tricky words yet', weak_empty: 'Every word you miss lands here — repeat it until it sticks.',
     drill_title: 'Tricky words drill', drill_blurb: 'One more pass on the words that got away.',
+    learn_due_card: 'lessons due for review', learn_due_sub: 'Spaced repetition is how it sticks — repeat them now.',
+    review_now: 'Review now',
+    learn_weak_card: 'tricky words to repeat', learn_weak_sub: 'You missed these in lessons — a quick drill fixes them.',
+    drill_now: 'Drill',
   },
   fr: {
     tap_answer: 'Touche ta réponse',
@@ -56,6 +60,10 @@ const dict = {
     weak_practice: 'Driller mes mots difficiles',
     weak_empty_title: 'Aucun mot difficile', weak_empty: 'Chaque mot loupé arrive ici — répète-le jusqu’à ce qu’il colle.',
     drill_title: 'Drill des mots difficiles', drill_blurb: 'Un dernier tour sur les mots qui se sont échappés.',
+    learn_due_card: 'leçons à réviser', learn_due_sub: 'La répétition espacée, c’est ce qui fait tenir — refais-les maintenant.',
+    review_now: 'Réviser',
+    learn_weak_card: 'mots difficiles à repasser', learn_weak_sub: 'Tu les as loupés en leçon — un petit drill et c’est réglé.',
+    drill_now: 'Driller',
   },
   la: {
     tap_answer: 'เลือกคำตอบของคุณ',
@@ -78,6 +86,10 @@ const dict = {
     weak_practice: 'ຝຶກຄຳຍາກຂອງຄຸນ',
     weak_empty_title: 'ຍັງບໍມີຄຳຍາກ', weak_empty: 'ຄຳທີລືກໃນບທຮນຈະມາຢູ່ນີ — ຝຶກຄືນຈນຈື່.',
     drill_title: 'ຝຶກຄຳຍາກ', drill_blurb: 'ຝຶກຄືນຄຳທີລືກອີກຄຣັ້ງ.',
+    learn_due_card: 'ບທຮນຕ້ອງທບທວນ', learn_due_sub: 'ການຝຶກຊ້ຳຊ່ວຍຈື່ — ທບທວນຕອນນີ້.',
+    review_now: 'ທບທວນ',
+    learn_weak_card: 'ຄຳຍາກຕ້ອງຝຶກ', learn_weak_sub: 'ຄຸນລືກຄຳນີ້ໃນບທຮນ — ຝຶກຊ້ຳຈະໄດ້.',
+    drill_now: 'ຝຶກ',
   },
 };
 let lang = 'en';
