@@ -15,13 +15,14 @@
 //   drill   — 4-option multiple choice; right auto-advances, wrong re-queues
 //   summary — the run's letters with their post-run bars, mistakes, XP
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT, pickVariant } from '@/lib/i18n';
 import { addXp } from '@/lib/store';
 import { useShell } from '@/components/SiteShell';
 import { speakItem } from '@/lib/speech';
 import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
+import TracePad from '@/components/alphabet/TracePad';
 import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
 import {
   MAX_LV, letterLevel, groupPercent, knownCount, bumpLetter,
@@ -84,7 +85,7 @@ export default function AlphabetPage() {
   const { t, lang } = useT();
   const { pingStats } = useShell();
 
-  const [mode, setMode] = useState<'home' | 'intro' | 'drill' | 'summary'>('home');
+  const [mode, setMode] = useState<'home' | 'intro' | 'write' | 'drill' | 'summary'>('home');
   const [store, setStore] = useState<AlphaStore>({ letters: {}, done: {} });
   const [run, setRun] = useState<Run | null>(null);
   const [introIdx, setIntroIdx] = useState(0);
@@ -93,6 +94,10 @@ export default function AlphabetPage() {
   const [current, setCurrent] = useState<Q | null>(null);
   const [picked, setPicked] = useState<AlphaLetter | null>(null);
   const [mistakes, setMistakes] = useState(0);
+  const [writeStep, setWriteStep] = useState<{ gid: string; n: number; letter: AlphaLetter } | null>(null);
+  // levels snapshot at run start (decides who gets a writing step) + letters already traced this run
+  const startLevels = useRef<AlphaStore>({ letters: {}, done: {} });
+  const written = useRef<Set<string>>(new Set());
 
   useEffect(() => setStore(loadStore()), []);
 
@@ -100,6 +105,8 @@ export default function AlphabetPage() {
 
   function startRun(r: Run) {
     setRun(r);
+    startLevels.current = store;
+    written.current = new Set();
     setMistakes(0);
     setIntroIdx(0);
     setTotalQ(r.drill.length);
@@ -224,10 +231,43 @@ export default function AlphabetPage() {
           ))}
         </div>
         <ShowcaseCard gid={step.gid} n={step.n} letter={letter} note={note} />
-        <button className="btn btn-continue btn-lg" onClick={() => (last ? setMode('drill') : setIntroIdx((i) => i + 1))}>
+        <button
+          className="btn btn-continue btn-lg"
+          onClick={() => {
+            const key = `${step.gid}-${step.n}`;
+            if (run?.bumpable && letterLevel(startLevels.current, step.gid, step.n) === 0 && !written.current.has(key)) {
+              // first time meeting this letter: straight to the writing step
+              written.current.add(key);
+              setWriteStep({ gid: step.gid, n: step.n, letter });
+              setMode('write');
+              return;
+            }
+            if (last) setMode('drill');
+            else setIntroIdx((i) => i + 1);
+          }}
+        >
           {last ? t('cont') : t('alpha_next')}
         </button>
       </>
+    );
+  }
+
+  // ---------- write (trace the new letter) ----------
+  if (mode === 'write' && writeStep) {
+    const moreIntro = introIdx < (run?.intro.length || 0) - 1;
+    return (
+      <TracePad
+        letter={writeStep.letter}
+        onPass={() => {
+          setStore(bumpLetter(store, writeStep.gid, writeStep.n, true));
+          if (moreIntro) {
+            setIntroIdx((i) => i + 1);
+            setMode('intro');
+          } else {
+            setMode('drill');
+          }
+        }}
+      />
     );
   }
 

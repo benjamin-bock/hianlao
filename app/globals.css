@@ -626,6 +626,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   padding: .2rem .6rem; border-radius: 999px; margin-bottom: .5rem;
 }
 
+/* manuscript: trace the glyph over its pale outline */
+.trace-wrap { display: flex; flex-direction: column; align-items: center; }
+.trace-card { padding: 1rem; margin-top: .8rem; transition: border-color .25s; }
+.trace-card.ok { border-color: var(--green); }
+.trace-card.miss { border-color: var(--red); }
+.trace-card canvas { display: block; touch-action: none; }
+.trace-miss { color: var(--red); font-weight: 700; font-size: .85rem; margin-top: .4rem; text-align: center; }
+.trace-hit { color: var(--green-dark); font-weight: 700; font-size: .85rem; margin-top: .4rem; text-align: center; }
+.trace-actions { margin-top: .7rem; }
+
+
 .group-card.done .group-cta { color: var(--green-dark); }
 .practice-mixed { margin: 0 0 1.5rem; }
 .alpha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .8rem; }
