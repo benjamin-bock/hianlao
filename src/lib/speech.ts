@@ -23,7 +23,7 @@ export function ttsSupported(): boolean {
 // Resolve the audio file for a vocab item, if one is known to exist.
 // `audio: 'hello.mp3'` on the entry is an explicit override; otherwise the
 // generated manifest tells us whether `<id>.mp3` exists (avoids 404 noise).
-export function audioUrl(item: Pick<VocabEntry, 'audio' | 'id'>): string | null {
+export function audioUrl(item: { audio?: string; id?: string }): string | null {
   if (item.audio) return AUDIO_DIR + item.audio;
   if (item.id && AUDIO_FILES.has(item.id)) return AUDIO_DIR + item.id + '.mp3';
   return null;
@@ -92,8 +92,12 @@ async function backendTtsAvailable(): Promise<boolean> {
 
 // Speak a vocab item: prefer native audio files, then the backend TTS, then the
 // browser. Without any Lao-capable voice we still play the romanization so
-// the learner hears something close.
-export async function speakItem(item: VocabEntry, rate = 0.85): Promise<boolean> {
+// the learner hears something close. Alphabet letters pass a minimal shape
+// ({ id: 'alpha-…', lao, romanization }) — anything with these fields speaks.
+export async function speakItem(
+  item: { id?: string; audio?: string; lao: string; romanization?: string },
+  rate = 0.85,
+): Promise<boolean> {
   const file = audioUrl(item) || (item.id ? blobUrls.get(item.id) : null);
   if (file && await playFile(file)) return true;
 
@@ -109,7 +113,9 @@ export async function speakItem(item: VocabEntry, rate = 0.85): Promise<boolean>
   }
 
   if (hasLaoVoice()) return speak(item.lao, { lang: 'lo-LA', rate });
-  return speak(item.romanization, { lang: 'en-US', rate: Math.max(rate, 0.9) });
+  return item.romanization
+    ? speak(item.romanization, { lang: 'en-US', rate: Math.max(rate, 0.9) })
+    : Promise.resolve(false);
 }
 
 export function canRecognize(): boolean {
