@@ -25,6 +25,16 @@ ok(VOCAB.every(v => hasLao(v.lao)), 'every lao field contains Lao script');
 ok(VOCAB.every(v => /[a-z-]/.test(v.romanization)), 'every entry has a karaoke romanization');
 ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');
 
+console.log('Alphabet:');
+const { ALPHA_GROUPS, ALL_LETTERS } = await import('../src/data/alphabet.ts');
+const laos = ALL_LETTERS.map(l => l.lao);
+ok(ALPHA_GROUPS.length === 9, `${ALPHA_GROUPS.length} groups (6 consonant + 3 vowel)`);
+ok(new Set(laos).size === laos.length, 'letters are unique across groups');
+ok(ALL_LETTERS.every(l => hasLao(l.lao)), 'every letter glyph is Lao script');
+ok(ALL_LETTERS.filter(l => /^[ກ-ຮ]/.test(l.lao) && l.lao.length === 1).length === 27, '27 single-char consonants present');
+ok(ALL_LETTERS.every(l => /^[a-z-]+$/.test(l.roman)), 'every letter has a lowercase karaoke romanization');
+ok(ALL_LETTERS.every(l => (l.noteFr ?? '') !== '' ? !!l.note : true), 'a letter with a French note also has an English one');
+
 console.log('Units & lessons:');
 ok(UNITS.length === 13, `${UNITS.length} units`);
 const lessonCount = Object.keys(LESSON_BY_ID).length;

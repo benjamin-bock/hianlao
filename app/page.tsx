@@ -56,6 +56,7 @@ export default function Home() {
         <h2>{t('features_title')}</h2>
         <div className="feature-grid">
           {feature('🎯', t('feat_lessons'), t('feat_lessons_desc'))}
+          {feature('🔤', t('feat_alphabet'), t('feat_alphabet_desc'))}
           {feature('🔊', t('feat_audio'), t('feat_audio_desc'))}
           {feature('📖', t('feat_grammar'), t('feat_grammar_desc'))}
           {feature('🧺', t('feat_words'), t('feat_words_desc'))}

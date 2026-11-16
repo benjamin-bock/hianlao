@@ -16,6 +16,7 @@ import { GRAMMAR } from '@/data/grammar.ts';
 const NAV = [
   { page: 'home', href: '/', key: 'nav_home', icon: '🏠' },
   { page: 'learn', href: '/learn', key: 'nav_learn', icon: '🧠' },
+  { page: 'alphabet', href: '/alphabet', key: 'nav_alphabet', icon: '🔤' },
   { page: 'review', href: '/review', key: 'nav_review', icon: '🔁' },
   { page: 'words', href: '/words', key: 'nav_words', icon: '💬' },
   { page: 'grammar', href: '/grammar', key: 'nav_grammar', icon: '📖' },

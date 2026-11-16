@@ -588,3 +588,46 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="dark"] .nudge-review { border-left-color: #a78bfa; }
 [data-theme="dark"] .nudge-weak { border-left-color: #ffb066; }
 [data-theme="dark"] .nudge-go { color: #9db8ff; }
+
+/* ---- /alphabet: Duolingo-kana-style script learning ---- */
+.alpha-progress { color: var(--muted); font-weight: 600; font-size: .92rem; margin-top: .4rem; }
+.alpha-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .9rem; margin: 1rem 0 1.25rem; }
+.group-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: .35rem;
+  text-align: left; cursor: pointer; position: relative; padding: 1rem 1.1rem;
+}
+.group-card:hover { background: #faf7ee; }
+.group-card.done { border-color: #ffd76e; background: #fffbe8; }
+.group-star { position: absolute; top: .6rem; right: .7rem; font-size: 1rem; min-height: 1em; }
+.group-glyphs { font-size: 1.5rem; line-height: 1.5; color: var(--lao-text); }
+.group-name { font-weight: 700; font-size: .95rem; }
+.group-cta { color: var(--blue-ink); font-size: .85rem; font-weight: 700; }
+.group-card.done .group-cta { color: var(--green-dark); }
+.practice-mixed { margin: 0 0 1.5rem; }
+.alpha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .8rem; }
+.alpha-tile { padding: .9rem .8rem; text-align: center; }
+.alpha-glyph { font-size: 2.6rem; line-height: 1.35; color: var(--lao-text); }
+.alpha-tile .word-romanization { font-size: .95rem; }
+.alpha-note { font-size: .8rem; color: var(--muted); margin-top: .3rem; line-height: 1.45; }
+.alpha-glyph-lg { font-size: 5rem; line-height: 1.25; color: var(--lao-text); }
+.intro-card, .drill-card { position: relative; }
+.intro-speak, .drill-card .speak-btn { position: absolute; top: .75rem; right: .75rem; }
+.drill-card { min-height: 0; }
+.drill-prompt { text-align: center; font-weight: 700; margin: 1.1rem 0 1rem; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.glyph-option .glyph-only { font-size: 2.2rem; color: var(--lao-text); }
+.roman-only { font-size: 1.4rem; font-weight: 700; }
+.intro-steps { display: flex; justify-content: center; gap: .45rem; margin: 1rem 0 .6rem; }
+.intro-steps .dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--line); }
+.intro-steps .dot.on { background: var(--blue); }
+.intro-steps .dot.past { background: var(--green); }
+.alpha-drill-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.alpha-foot { margin-top: 1.25rem; }
+.mixed-flag { display: block; text-align: center; margin-top: 1rem; font-size: .85rem; }
+.summary-card { text-align: center; padding: 2rem 1.25rem; }
+.summary-star { font-size: 3rem; }
+.summary-glyphs { font-size: 1.6rem; margin: .5rem 0; color: var(--lao-text); }
+.summary-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; margin-top: 1.25rem; }
+[data-theme="dark"] .group-card:hover { background: #23233a; }
+[data-theme="dark"] .group-card.done { border-color: #6b5a15; background: #2b2610; }
+[data-theme="dark"] .group-glyphs, [data-theme="dark"] .alpha-glyph, [data-theme="dark"] .alpha-glyph-lg, [data-theme="dark"] .summary-glyphs { color: #9db8ff; }
