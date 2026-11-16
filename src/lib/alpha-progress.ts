@@ -2,11 +2,17 @@
 //
 // Every letter carries a strength level 0–4:
 //   0  not introduced yet
-//   1  introduced (showcased once) / shaky
+//   1  introduced / shaky
 //   4  mastered
-// Correct answers raise the level by 1; wrong answers lower it by 1, but a
-// letter never drops below 1 once introduced (it stays "seen" and keeps
-// coming back through review sessions until it reaches 4).
+// Mastery is earned, not given: each letter has a charge counter and needs
+// LV_NEED[lv] separate correct answers to reach the next level (2 to be
+// introduced, 2 more to solidify, then 3 and 3 — ten correct answers spread
+// over several sessions before a bar turns gold). A mistake resets the
+// charge and drops one level (never below 1 once introduced).
+//
+// Strength also decays with neglect (checked when the store loads): 3 days
+// without practice caps a letter at level 3, two weeks at level 2 — so
+// mastered letters keep coming back through review sessions.
 //
 // Sessions never dump a whole group at once: a run introduces at most
 // NEW_BATCH letters and pads the rest of the session with review questions
@@ -16,11 +22,14 @@
 import { ALPHA_GROUPS, type AlphaGroup } from '@/data/alphabet';
 
 export const MAX_LV = 4;
+/** correct answers needed to go from lv n to n+1 */
+export const LV_NEED = [2, 2, 3, 3];
 const NEW_BATCH = 3;
 const KEY = 'hianlao-alpha-v2';
 const LEGACY_KEY = 'hianlao-alpha-v1';
+const DAY = 86_400_000;
 
-export interface LetterStat { lv: number; ts: number }
+export interface LetterStat { lv: number; ts: number; ch?: number }
 export interface AlphaStore {
   letters: Record<string, LetterStat>;
   /** gid → ts, kept only so v1 progress migrates cleanly */
@@ -46,7 +55,8 @@ export function loadStore(): AlphaStore {
     if (raw) {
       const parsed = JSON.parse(raw) as AlphaStore;
       if (parsed && typeof parsed === 'object' && parsed.letters) {
-        return { letters: parsed.letters, done: parsed.done || {} };
+        const store: AlphaStore = { letters: parsed.letters, done: parsed.done || {} };
+        return decayStore(store);
       }
     }
     // migrate v1 ({ done: {gid: ts} }): keep the work, mark letters "seen"
@@ -66,6 +76,24 @@ export function loadStore(): AlphaStore {
     }
   } catch { /* private mode / corrupt */ }
   return emptyStore();
+}
+
+/** Neglect decay: 3 days idle caps at 3, two weeks caps at 2. */
+function decayStore(store: AlphaStore): AlphaStore {
+  const now = Date.now();
+  let changed = false;
+  const letters: Record<string, LetterStat> = {};
+  for (const [id, s] of Object.entries(store.letters)) {
+    const idle = now - (s.ts || 0);
+    let lv = s.lv;
+    if (idle >= 14 * DAY) lv = Math.min(lv, 2);
+    else if (idle >= 3 * DAY) lv = Math.min(lv, 3);
+    letters[id] = lv === s.lv ? s : { ...s, lv };
+    if (lv !== s.lv) changed = true;
+  }
+  const next = { letters, done: store.done };
+  if (changed) saveStore(next);
+  return next;
 }
 
 export function saveStore(store: AlphaStore) {
@@ -93,12 +121,24 @@ export function totalLetters(): number {
   return ALPHA_GROUPS.reduce((acc, g) => acc + g.letters.length, 0);
 }
 
-/** Raise/lower one letter and persist. */
+/** Charge one answer: correct fills the level's gauge, wrong resets + drops. */
 export function bumpLetter(store: AlphaStore, gid: string, n: number, right: boolean): AlphaStore {
   const id = letterId(gid, n);
-  const cur = store.letters[id]?.lv || 0;
-  const lv = right ? Math.min(MAX_LV, cur + 1) : Math.max(1, cur - 1);
-  const next: AlphaStore = { letters: { ...store.letters, [id]: { lv, ts: Date.now() } }, done: store.done };
+  const cur = store.letters[id] || { lv: 0, ts: 0 };
+  let lv = cur.lv;
+  let ch = cur.ch || 0;
+  if (right) {
+    ch += 1;
+    if (lv < MAX_LV && ch >= LV_NEED[lv]) {
+      lv += 1;
+      ch = 0;
+    }
+    if (lv >= MAX_LV) ch = 0;
+  } else {
+    lv = Math.max(1, lv - 1);
+    ch = 0;
+  }
+  const next: AlphaStore = { letters: { ...store.letters, [id]: { lv, ts: Date.now(), ch } }, done: store.done };
   saveStore(next);
   return next;
 }
