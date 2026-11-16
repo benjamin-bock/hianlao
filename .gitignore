@@ -13,3 +13,10 @@
 
 # local tts generation venv (scripts/generate-audio.mjs)
 .tts-venv/
+
+# next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
