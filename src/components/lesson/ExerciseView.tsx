@@ -164,7 +164,7 @@ function ListenView({ ex, answered, onResolve }: ExerciseProps) {
 // ---------- matching pairs ----------
 
 function MatchView({ ex, answered, onResolve }: ExerciseProps) {
-  const { t } = useT();
+  const { t, def } = useT();
   const items = useMemo(
     () => (ex.ids ?? []).map((id) => V[id]).filter(Boolean) as VocabEntry[],
     [ex],
@@ -227,7 +227,7 @@ function MatchView({ ex, answered, onResolve }: ExerciseProps) {
             {v.romanization ? <span className="opt-sub">{v.romanization}</span> : null}
           </div>
         ) : (
-          <span>{v.en}</span>
+          <span>{def(v)}</span>
         )}
       </button>
     );
@@ -327,9 +327,14 @@ function Bank({
 // type-as-tiles: assemble the Lao word (romanized distractors) or the English
 // meaning from a word bank — no keyboard needed.
 function TypeView({ ex, answered, onResolve }: ExerciseProps) {
-  const { def } = useT();
+  const { def, lang } = useT();
   const item = V[ex.id!] as VocabEntry;
   const en2lao = ex.dir === 'en2lao';
+  // meaning in the current UI language — FR learners tap FR word tiles
+  const meaningOf = (w: VocabEntry) => def(w) ?? w.en;
+  // number/measure entries are glossed like "7 (sept)" — the gloss is a hint,
+  // not part of the answer, so strip it before turning the meaning into tiles.
+  const cleanAnswer = (s: string) => s.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
 
   const { tokens, required } = useMemo(() => {
     if (en2lao) {
@@ -346,20 +351,21 @@ function TypeView({ ex, answered, onResolve }: ExerciseProps) {
       }
       return { tokens: [target, ...distractors], required: 1 };
     }
-    const words = stripPunct(item.en).trim().split(/\s+/).filter(Boolean);
+    let words = stripPunct(cleanAnswer(meaningOf(item))).trim().split(/\s+/).filter(Boolean);
+    if (!words.length) words = [meaningOf(item).trim()];
     const seen = new Set(words.map((w) => w.toLowerCase()));
     const others = shuffle(Object.values(V).filter((w) => w.id !== item.id));
     const pool = [...others.filter((w) => w.cat === item.cat), ...others];
     const distractors: BankToken[] = [];
     for (const w of pool) {
       if (distractors.length >= 4) break;
-      const first = stripPunct(w.en).trim().split(/\s+/)[0];
+      const first = stripPunct(cleanAnswer(meaningOf(w))).trim().split(/\s+/)[0];
       if (!first || seen.has(first.toLowerCase())) continue;
       seen.add(first.toLowerCase());
       distractors.push({ uid: `x${distractors.length}`, text: first });
     }
     return { tokens: [...words.map((w, i) => ({ uid: `t${i}`, text: w })), ...distractors], required: words.length };
-  }, [en2lao, item]);
+  }, [en2lao, item, lang]);
 
   return (
     <div>
@@ -381,7 +387,7 @@ function TypeView({ ex, answered, onResolve }: ExerciseProps) {
           const got = chosenToks.map((x) => (x.lao != null ? x.lao : (x.text || '').toLowerCase())).join('');
           const want = en2lao
             ? item.lao
-            : stripPunct(item.en).trim().split(/\s+/).map((w) => w.toLowerCase()).join('');
+            : stripPunct(cleanAnswer(meaningOf(item))).trim().split(/\s+/).map((w) => w.toLowerCase()).join('');
           return { ok: despaced(got) === despaced(want), correctText: `${item.lao} — ${item.romanization} — ${def(item)}` };
         }}
       />
