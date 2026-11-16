@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="That Luang stupa in Vientiane">
+  <rect width="400" height="300" fill="#eaf6ff"/>
+  <circle cx="330" cy="55" r="30" fill="#ffc800"/>
+  <circle cx="330" cy="55" r="38" fill="#ffc800" opacity=".25"/>
+  <rect y="220" width="400" height="80" fill="#8ed081"/>
+  <path d="M0 245 Q50 235 100 245 T200 245 T300 245 T400 245 V300 H0 Z" fill="#1cb0f6"/>
+  <path d="M0 258 Q50 250 100 258 T200 258 T300 258 T400 258 V300 H0 Z" fill="#1899d6" opacity=".6"/>
+  <!-- stupa -->
+  <g>
+    <rect x="150" y="215" width="100" height="14" rx="3" fill="#f4efe2"/>
+    <rect x="160" y="195" width="80" height="22" rx="3" fill="#fff"/>
+    <path d="M170 195 Q200 130 230 195 Z" fill="#fff"/>
+    <path d="M178 195 Q200 150 222 195 Z" fill="#f4efe2"/>
+    <rect x="197" y="105" width="6" height="32" rx="3" fill="#ffc800"/>
+    <circle cx="200" cy="100" r="7" fill="#ffc800"/>
+    <rect x="188" y="176" width="24" height="19" rx="2" fill="#002868"/>
+    <circle cx="200" cy="165" r="4" fill="#ffc800"/>
+  </g>
+  <!-- small trees -->
+  <g fill="#2e9e4f">
+    <circle cx="80" cy="205" r="16"/><rect x="77" y="215" width="6" height="14" fill="#7a5230"/>
+    <circle cx="320" cy="200" r="20"/><rect x="317" y="214" width="6" height="16" fill="#7a5230"/>
+  </g>
+</svg>
