@@ -1,7 +1,7 @@
-// Integration tests for the HianLao serverless API, without any network:
-// a tiny in-memory Upstash-compatible REST server runs on 127.0.0.1 and the
-// real handlers (api/*.js) are invoked with mock req/res objects.
-// Run: node tests/api.test.mjs
+// Integration tests for the HianLao API (Next.js route handlers), without
+// any network: a tiny in-memory Upstash-compatible REST server runs on
+// 127.0.0.1 and the real GET/POST/PUT handlers are invoked with Request
+// objects. Run: node tests/api.test.mjs
 import http from 'node:http';
 import assert from 'node:assert/strict';
 
@@ -45,120 +45,120 @@ await new Promise(r => kvServer.listen(0, '127.0.0.1', r));
 const kvPort = kvServer.address().port;
 process.env.KV_REST_API_URL = `http://127.0.0.1:${kvPort}`;
 process.env.KV_REST_API_TOKEN = 'test-token';
+delete process.env.AZURE_SPEECH_KEY;
+delete process.env.AZURE_TTS_KEY;
+delete process.env.AZURE_SPEECH_REGION;
 
 // ---- import handlers AFTER env vars are set ----
-const { default: health } = await import('../api/health.js');
-const { default: register } = await import('../api/auth/register.js');
-const { default: login } = await import('../api/auth/login.js');
-const { default: logout } = await import('../api/auth/logout.js');
-const { default: me } = await import('../api/auth/me.js');
-const { default: progress } = await import('../api/progress.js');
-const { default: leaderboard } = await import('../api/leaderboard.js');
-const { hashPassword, verifyPassword, validateUsername, validatePassword, validateProgress, mergeProgress } = await import('../api/_lib/auth.js');
-const { default: tts } = await import('../api/tts.js');
+const health = await import('../app/api/health/route.ts');
+const register = await import('../app/api/auth/register/route.ts');
+const login = await import('../app/api/auth/login/route.ts');
+const logout = await import('../app/api/auth/logout/route.ts');
+const me = await import('../app/api/auth/me/route.ts');
+const progress = await import('../app/api/progress/route.ts');
+const leaderboard = await import('../app/api/leaderboard/route.ts');
+const tts = await import('../app/api/tts/route.ts');
+const lib = await import('../app/api/_lib/auth.ts');
 
-// ---- mock req/res ----
-function mockReq({ method = 'GET', body: b, cookie = '', origin = 'https://hianlao.test', query = {} } = {}) {
-  return {
-    method,
-    headers: { host: 'hianlao.test', cookie, origin, 'x-forwarded-for': '127.0.0.1', 'content-type': 'application/json' },
-    body: b,
-    query,
-    socket: { remoteAddress: '127.0.0.1' },
-  };
-}
-function mockRes() {
-  const res = {
-    statusCode: 200,
-    headers: {},
-    payload: null,
-    status(c) { this.statusCode = c; return this; },
-    json(o) { this.payload = o; return this; },
-    setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
-  };
-  return res;
-}
-const call = (h, reqOpts) => { const res = mockRes(); return h(mockReq(reqOpts), res).then(() => res); };
-const cookieFrom = res => (res.headers['set-cookie'] || '').match(/hianlao_session=([a-f0-9]+)/)?.[1] || '';
+const HOST = 'https://hianlao.test';
+const H = { host: 'hianlao.test', origin: 'https://hianlao.test', 'x-forwarded-for': '127.0.0.1' };
+const req = (path, { method = 'GET', json, cookie } = {}) => new Request(HOST + path, {
+  method,
+  headers: { ...H, ...(cookie ? { cookie } : {}), ...(json ? { 'content-type': 'application/json' } : {}) },
+  body: json ? JSON.stringify(json) : undefined,
+});
+const call = async (mod, handler, opts) => {
+  const res = await mod[handler](req(opts.path, opts));
+  const payload = res.headers.get('content-type')?.includes('json') ? await res.json() : null;
+  return { status: res.status, res, payload, setCookie: res.headers.get('set-cookie') || '' };
+};
+const cookieFrom = r => r.setCookie.match(/hianlao_session=([a-f0-9]+)/)?.[1] || '';
 
 let passed = 0;
 function ok(cond, msg) { assert.ok(cond, msg); passed++; console.log('  ✔', msg); }
 
 // ---- unit: crypto & validation ----
 console.log('auth lib:');
-const h = hashPassword('supersecret');
-ok(verifyPassword('supersecret', h), 'scrypt hash verifies');
-ok(!verifyPassword('wrongpass', h), 'wrong password rejected');
-ok(validateUsername('lao_learner99') && !validateUsername('ab') && !validateUsername('bad name!'), 'username validation');
-ok(validatePassword('12345678') && !validatePassword('short'), 'password validation');
-const vp = validateProgress({ xp: 42, done: { u1l1: 123, bogus: 1 }, streak: 3, lastVisit: '2026-11-13' });
+const h = lib.hashPassword('supersecret');
+ok(lib.verifyPassword('supersecret', h), 'scrypt hash verifies');
+ok(!lib.verifyPassword('wrongpass', h), 'wrong password rejected');
+ok(lib.validateUsername('lao_learner99') && !lib.validateUsername('ab') && !lib.validateUsername('bad name!'), 'username validation');
+ok(lib.validatePassword('12345678') && !lib.validatePassword('short'), 'password validation');
+const vp = lib.validateProgress({ xp: 42, done: { u1l1: 123, bogus: 1 }, streak: 3, lastVisit: '2026-11-13' });
 ok(vp.xp === 42 && vp.done.u1l1 === 123 && !('bogus' in vp.done), 'progress validation keeps known lessons only');
-const merged = mergeProgress({ xp: 10, done: { u1l1: 1 }, streak: 1, lastVisit: '2026-01-01' }, { xp: 50, done: { u1l2: 2 }, streak: 5, lastVisit: '2026-02-02' });
+const merged = lib.mergeProgress({ xp: 10, done: { u1l1: 1 }, streak: 1, lastVisit: '2026-01-01' }, { xp: 50, done: { u1l2: 2 }, streak: 5, lastVisit: '2026-02-02' });
 ok(merged.xp === 50 && merged.done.u1l1 && merged.done.u1l2 && merged.streak === 5 && merged.lastVisit === '2026-02-02', 'progress merge takes max/union');
 
 // ---- integration: full flow ----
 console.log('api flow:');
-let r = await call(health, {});
-ok(r.statusCode === 200 && r.payload.ok && r.payload.kv === true, 'health ok with kv');
+let r = await call(health, 'GET', { path: '/api/health' });
+ok(r.status === 200 && r.payload.ok && r.payload.kv === true, 'health ok with kv');
 
-r = await call(register, { method: 'POST', body: { username: 'bad name!', password: '12345678' } });
-ok(r.statusCode === 400, 'register rejects invalid username');
-r = await call(register, { method: 'POST', body: { username: 'tester', password: 'short' } });
-ok(r.statusCode === 400, 'register rejects short password');
-r = await call(register, { method: 'POST', body: { username: 'tester', password: 'password123', displayName: 'Test', localProgress: { xp: 30, done: { u1l1: 111 }, streak: 2, lastVisit: '2026-11-10' } } });
-ok(r.statusCode === 200 && r.payload.user.username === 'tester', 'register works');
+r = await call(register, 'POST', { path: '/api/auth/register', method: 'POST', json: { username: 'bad name!', password: '12345678' } });
+ok(r.status === 400, 'register rejects invalid username');
+r = await call(register, 'POST', { path: '/api/auth/register', method: 'POST', json: { username: 'tester', password: 'short' } });
+ok(r.status === 400, 'register rejects short password');
+r = await call(register, 'POST', { path: '/api/auth/register', method: 'POST', json: { username: 'tester', password: 'password123', displayName: 'Test', localProgress: { xp: 30, done: { u1l1: 111 }, streak: 2, lastVisit: '2026-11-10' } } });
+ok(r.status === 200 && r.payload.user.username === 'tester', 'register works');
 ok(r.payload.progress.xp === 30 && r.payload.progress.done.u1l1 === 111, 'register merges local progress');
 const token = cookieFrom(r);
 ok(token.length === 64, 'session cookie set (httpOnly)');
-ok((r.headers['set-cookie'] || '').includes('HttpOnly'), 'cookie is HttpOnly');
+ok(r.setCookie.includes('HttpOnly'), 'cookie is HttpOnly');
 
-r = await call(register, { method: 'POST', body: { username: 'tester', password: 'password123' } });
-ok(r.statusCode === 409, 'duplicate username -> 409');
+r = await call(register, 'POST', { path: '/api/auth/register', method: 'POST', json: { username: 'tester', password: 'password123' } });
+ok(r.status === 409, 'duplicate username -> 409');
 
-r = await call(me, { cookie: `hianlao_session=${token}` });
+r = await call(me, 'GET', { path: '/api/auth/me', cookie: `hianlao_session=${token}` });
 ok(r.payload.user?.username === 'tester' && r.payload.progress.xp === 30, 'me returns user + progress');
 
-r = await call(login, { method: 'POST', body: { username: 'tester', password: 'wrong-password' } });
-ok(r.statusCode === 401, 'login wrong password -> 401');
-r = await call(login, { method: 'POST', body: { username: 'tester', password: 'password123', localProgress: { xp: 80, done: { u1l2: 222 }, streak: 0, lastVisit: null } } });
-ok(r.statusCode === 200 && r.payload.progress.xp === 80 && r.payload.progress.done.u1l2 === 222, 'login merges local progress (xp max=80)');
+r = await call(login, 'POST', { path: '/api/auth/login', method: 'POST', json: { username: 'tester', password: 'wrong-password' } });
+ok(r.status === 401, 'login wrong password -> 401');
+r = await call(login, 'POST', { path: '/api/auth/login', method: 'POST', json: { username: 'tester', password: 'password123', localProgress: { xp: 80, done: { u1l2: 222 }, streak: 0, lastVisit: null } } });
+ok(r.status === 200 && r.payload.progress.xp === 80 && r.payload.progress.done.u1l2 === 222, 'login merges local progress (xp max=80)');
 const token2 = cookieFrom(r);
 
-r = await call(progress, { method: 'GET', cookie: `hianlao_session=${token2}` });
-ok(r.statusCode === 200 && r.payload.progress.xp === 80, 'GET progress');
-r = await call(progress, { method: 'PUT', cookie: `hianlao_session=${token2}`, body: { progress: { xp: 120, done: { u1l1: 1, u9l3: 5, evil: 9 }, streak: 4, lastVisit: '2026-11-13' } } });
-ok(r.statusCode === 200 && r.payload.progress.xp === 120 && !('evil' in r.payload.progress.done), 'PUT progress sanitizes unknown lesson ids');
-r = await call(progress, { method: 'GET' });
-ok(r.statusCode === 401, 'progress without session -> 401');
+r = await call(progress, 'GET', { path: '/api/progress', cookie: `hianlao_session=${token2}` });
+ok(r.status === 200 && r.payload.progress.xp === 80, 'GET progress');
+r = await call(progress, 'PUT', { path: '/api/progress', method: 'PUT', cookie: `hianlao_session=${token2}`, json: { progress: { xp: 120, done: { u1l1: 1, u9l3: 5, evil: 9 }, streak: 4, lastVisit: '2026-11-13' } } });
+ok(r.status === 200 && r.payload.progress.xp === 120 && !('evil' in r.payload.progress.done), 'PUT progress sanitizes unknown lesson ids');
+r = await call(progress, 'GET', { path: '/api/progress' });
+ok(r.status === 401, 'progress without session -> 401');
+
+// cross-origin guard
+r = await call(health, 'GET', { path: '/api/health', headers: { origin: 'https://evil.example' } }).catch(() => null);
+// (call() above doesn't accept headers — do it manually)
+{
+  const res = await health.GET(new Request(HOST + '/api/health', { headers: { host: 'hianlao.test', origin: 'https://evil.example' } }));
+  ok(res.status === 403, 'cross-origin request rejected');
+}
 
 // second user for the leaderboard
-await call(register, { method: 'POST', body: { username: 'champ', password: 'password123' } });
-await call(progress, { method: 'PUT', cookie: `hianlao_session=${cookieFrom(await call(login, { method: 'POST', body: { username: 'champ', password: 'password123' } }))}`, body: { progress: { xp: 500, done: {}, streak: 1, lastVisit: '2026-11-13' } } });
-r = await call(leaderboard, { query: { limit: '10' } });
+await register.POST(req('/api/auth/register', { method: 'POST', json: { username: 'champ', password: 'password123' } }));
+{
+  const lr = await call(login, 'POST', { path: '/api/auth/login', method: 'POST', json: { username: 'champ', password: 'password123' } });
+  await call(progress, 'PUT', { path: '/api/progress', method: 'PUT', cookie: `hianlao_session=${cookieFrom(lr)}`, json: { progress: { xp: 500, done: {}, streak: 1, lastVisit: '2026-11-13' } } });
+}
+r = await call(leaderboard, 'GET', { path: '/api/leaderboard?limit=10' });
 ok(r.payload.entries.length === 2 && r.payload.entries[0].username === 'champ' && r.payload.entries[0].xp === 500, 'leaderboard sorted by xp desc');
 
-r = await call(leaderboard, { query: { limit: '10', period: 'week' } });
+r = await call(leaderboard, 'GET', { path: '/api/leaderboard?limit=10&period=week' });
 ok(r.payload.period === 'week' && r.payload.entries.length === 2, 'weekly leaderboard (?period=week) works');
 
-r = await call(progress, { method: 'PUT', cookie: `hianlao_session=${token2}`, body: { progress: { xp: 200, done: {}, streak: 1, lastVisit: '2026-11-14', goal: 50, reviews: { u1l1: { due: 1, iv: 2 }, bogus: { due: 1, iv: 1 } } } } });
-ok(r.statusCode === 200 && r.payload.progress.goal === 50 && r.payload.progress.reviews.u1l1?.iv === 2 && !('bogus' in r.payload.progress.reviews), 'goal + SRS reviews validated on PUT');
-r = await call(progress, { method: 'PUT', cookie: `hianlao_session=${token2}`, body: { progress: { xp: 5, goal: 99999, reviews: {} } } });
+r = await call(progress, 'PUT', { path: '/api/progress', method: 'PUT', cookie: `hianlao_session=${token2}`, json: { progress: { xp: 200, done: {}, streak: 1, lastVisit: '2026-11-14', goal: 50, reviews: { u1l1: { due: 1, iv: 2 }, bogus: { due: 1, iv: 1 } } } } });
+ok(r.status === 200 && r.payload.progress.goal === 50 && r.payload.progress.reviews.u1l1?.iv === 2 && !('bogus' in r.payload.progress.reviews), 'goal + SRS reviews validated on PUT');
+r = await call(progress, 'PUT', { path: '/api/progress', method: 'PUT', cookie: `hianlao_session=${token2}`, json: { progress: { xp: 5, goal: 99999, reviews: {} } } });
 ok(r.payload.progress.goal === 20, 'invalid goal falls back to default 20');
 
-r = await call(logout, { method: 'POST', cookie: `hianlao_session=${token2}` });
-ok(r.statusCode === 200, 'logout ok');
-r = await call(me, { cookie: `hianlao_session=${token2}` });
+r = await call(logout, 'POST', { path: '/api/auth/logout', method: 'POST', cookie: `hianlao_session=${token2}` });
+ok(r.status === 200, 'logout ok');
+r = await call(me, 'GET', { path: '/api/auth/me', cookie: `hianlao_session=${token2}` });
 ok(r.payload.user === null, 'session destroyed after logout');
 
-// same-origin guard
-r = await call(health, { origin: 'https://evil.example' });
-ok(r.statusCode === 403, 'cross-origin request rejected');
-
 // tts endpoint: id validation + graceful "not configured" when no Azure key
-r = await call(tts, { query: { id: 'hello' } });
-ok(r.statusCode === 503 && r.payload.ok === false, 'tts returns 503 when not configured');
-let res = await call(tts, {}); // no id param
-ok(res.statusCode === 404 && res.payload.ok === false, 'tts rejects unknown/missing id');
+r = await call(tts, 'GET', { path: '/api/tts?id=hello' });
+ok(r.status === 503 && r.payload.ok === false, 'tts returns 503 when not configured');
+r = await call(tts, 'GET', { path: '/api/tts' });
+ok(r.status === 404 && r.payload.ok === false, 'tts rejects unknown/missing id');
 
 kvServer.close();
 console.log(`\nAPI TESTS PASSED ✔ (${passed} assertions)`);
