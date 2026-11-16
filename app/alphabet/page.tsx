@@ -14,7 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useT, pickVariant } from '@/lib/i18n';
 import { addXp } from '@/lib/store';
 import { useShell } from '@/components/SiteShell';
-import { speak } from '@/lib/speech';
+import { speakItem } from '@/lib/speech';
 import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
 import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, groupById, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
@@ -22,6 +22,18 @@ import { shuffle } from '@/lib/shuffle';
 
 const ALPHA_KEY = 'hianlao-alpha-v1';
 const MIXED_SIZE = 12;
+
+// Stable audio id per letter (group id + position) — the generated files are
+// public/audio/alpha-<group>-<n>.mp3, listed in audio-manifest.ts.
+const LETTER_AUDIO_ID = new Map<AlphaLetter, string>(
+  ALPHA_GROUPS.flatMap((g) => g.letters.map((letter, i) => [letter, `alpha-${g.id}-${i + 1}`] as const)),
+);
+
+// Play a glyph with the same native neural voice the lessons use (falls back
+// down the usual chain when a file is missing).
+function speakAlpha(letter: AlphaLetter, rate = 0.8) {
+  return speakItem({ id: LETTER_AUDIO_ID.get(letter), lao: letter.lao, romanization: letter.roman }, rate);
+}
 
 type Q = { letter: AlphaLetter; dir: 'char' | 'roman'; tries: number };
 
@@ -214,7 +226,7 @@ export default function AlphabetPage() {
           <button
             className="icon-btn speak-btn intro-speak"
             title="Listen" aria-label="Listen"
-            onClick={() => speak(letter.roman, { lang: 'en-US', rate: 0.8 })}
+            onClick={() => speakAlpha(letter)}
           >🔊</button>
         </div>
         <button className="btn btn-continue btn-lg" onClick={() => (last ? setMode('drill') : setIntroIdx((i) => i + 1))}>
@@ -303,7 +315,7 @@ function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext 
           <button
             className="icon-btn speak-btn"
             title="Listen" aria-label="Listen"
-            onClick={() => speak(current.letter.roman, { lang: 'en-US', rate: 0.8 })}
+            onClick={() => speakAlpha(current.letter)}
           >🔊</button>
         </div>
       ) : null}

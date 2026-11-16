@@ -28,6 +28,7 @@ ok(Object.keys(VOCAB_BY_ID).length === VOCAB.length, 'VOCAB_BY_ID consistent');
 console.log('Alphabet:');
 const { ALPHA_GROUPS, ALL_LETTERS } = await import('../src/data/alphabet.ts');
 const laos = ALL_LETTERS.map(l => l.lao);
+const ALPHA_IDS = ALPHA_GROUPS.flatMap(g => g.letters.map((l, i) => `alpha-${g.id}-${i + 1}`));
 ok(ALPHA_GROUPS.length === 9, `${ALPHA_GROUPS.length} groups (6 consonant + 3 vowel)`);
 ok(new Set(laos).size === laos.length, 'letters are unique across groups');
 ok(ALL_LETTERS.every(l => hasLao(l.lao)), 'every letter glyph is Lao script');
@@ -58,11 +59,13 @@ CULTURE.forEach(c => ok(!c.img || existsSync(join(root, 'public/img', c.img)), `
 console.log('Audio (public/audio + manifest):');
 const { AUDIO_FILES } = await import('../src/data/audio-manifest.ts');
 const idSet = new Set(ids);
+const alphaIdSet = new Set(ALPHA_IDS);
 for (const id of AUDIO_FILES) {
-  ok(idSet.has(id), `manifest id "${id}" is a vocab id`);
+  ok(idSet.has(id) || alphaIdSet.has(id), `manifest id "${id}" is a vocab or alphabet id`);
   const f = join(root, 'public/audio', `${id}.mp3`);
   ok(existsSync(f), `audio file exists: public/audio/${id}.mp3`);
 }
+ok(ALPHA_IDS.every(a => AUDIO_FILES.has(a)), `all ${ALPHA_IDS.length} alphabet letters have native audio`);
 
 console.log('PWA & SEO:');
 ok(existsSync(join(root, 'public/sw.js')), 'public/sw.js exists');
