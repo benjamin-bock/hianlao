@@ -1,14 +1,19 @@
 'use client';
 
-// /alphabet — learn the Lao script the way Duolingo teaches kana: glyphs are
-// introduced in small groups, then drilled shape→sound and sound→shape, with
-// wrong answers re-queued (repetition is the whole method).
+// /alphabet — learn the Lao script the way Duolingo teaches kana.
+//
+// A run never dumps a whole group: it introduces up to 3 NEW letters with
+// showcase cards ("New letter" + audio), then drills them while interleaving
+// review questions from the weakest already-known letters. Every letter has
+// its own strength level 0–4 (the ࠁ lv bars), raised by correct answers and
+// gently lowered by mistakes; groups complete letter by letter and old
+// letters keep coming back until each bar is full.
 //
 // Modes:
-//   home    — group cards (stars when done) + a full reference grid
-//   intro   — one "meet the letter" card per glyph (skipped on re-runs)
+//   home    — group cards with per-letter completion bars + a full reference
+//   intro   — one "meet the letter" showcase card per NEW letter of the run
 //   drill   — 4-option multiple choice; right auto-advances, wrong re-queues
-//   summary — mistakes, XP, replay
+//   summary — the run's letters with their post-run bars, mistakes, XP
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useT, pickVariant } from '@/lib/i18n';
@@ -17,49 +22,36 @@ import { useShell } from '@/components/SiteShell';
 import { speakItem } from '@/lib/speech';
 import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
-import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, groupById, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
+import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
+import {
+  MAX_LV, letterLevel, groupPercent, knownCount, bumpLetter,
+  composeGroupRun, composeMixedRun, loadStore, type AlphaStore, type Run, type RunQ,
+} from '@/lib/alpha-progress';
 import { shuffle } from '@/lib/shuffle';
 
-const ALPHA_KEY = 'hianlao-alpha-v1';
-const MIXED_SIZE = 12;
+// letter defs with their group id + 1-based position (matches audio ids)
+const LETTER_DEFS = ALPHA_GROUPS.flatMap((g) => g.letters.map((letter, i) => ({ gid: g.id, group: g, letter, n: i + 1 })));
+const LET = new Map(LETTER_DEFS.map((d) => [`${d.gid}-${d.n}`, d]));
 
 // Stable audio id per letter (group id + position) — the generated files are
 // public/audio/alpha-<group>-<n>.mp3, listed in audio-manifest.ts.
-const LETTER_AUDIO_ID = new Map<AlphaLetter, string>(
-  ALPHA_GROUPS.flatMap((g) => g.letters.map((letter, i) => [letter, `alpha-${g.id}-${i + 1}`] as const)),
-);
+const LETTER_AUDIO_ID = new Map(LETTER_DEFS.map((d) => [`${d.gid}-${d.n}`, `alpha-${d.gid}-${d.n}`]));
 
-// Play a glyph with the same native neural voice the lessons use (falls back
-// down the usual chain when a file is missing).
-function speakAlpha(letter: AlphaLetter, rate = 0.8) {
-  return speakItem({ id: LETTER_AUDIO_ID.get(letter), lao: letter.lao, romanization: letter.roman }, rate);
+function speakAlpha(gid: string, n: number, letter: AlphaLetter, rate = 0.8) {
+  return speakItem({ id: LETTER_AUDIO_ID.get(`${gid}-${n}`), lao: letter.lao, romanization: letter.roman }, rate);
 }
 
-type Q = { letter: AlphaLetter; dir: 'char' | 'roman'; tries: number };
-
-function loadDone(): Record<string, number> {
-  try {
-    const raw = JSON.parse(localStorage.getItem(ALPHA_KEY) || '{}') as { done?: Record<string, number> };
-    return raw.done || {};
-  } catch { return {}; }
-}
-function markGroup(gid: string) {
-  const done = loadDone();
-  done[gid] = Date.now();
-  try { localStorage.setItem(ALPHA_KEY, JSON.stringify({ done })); } catch { /* private mode */ }
-}
-
-const isConsonantGroup = (g: AlphaGroup) => g.kind === 'consonants';
+type Q = RunQ;
 
 // 4-option MC: the answer + 3 distractors (same group first, then anywhere).
 // Distractors sharing the answer's roman (ຂ/ຄ both "kh"), sharing another
 // option's roman, or repeating the answer's glyph are excluded, so every
 // question shows four visually distinct options and exactly one right answer.
-function optionsFor(q: Q, group: AlphaGroup): AlphaLetter[] {
-  const chosen: AlphaLetter[] = [q.letter];
-  const seenLao = new Set([q.letter.lao]);
-  const seenRoman = new Set([q.letter.roman]);
-  const candidates = [...shuffle(group.letters), ...shuffle(ALL_LETTERS)];
+function optionsFor(answer: AlphaLetter, answerGroup: AlphaGroup): AlphaLetter[] {
+  const chosen: AlphaLetter[] = [answer];
+  const seenLao = new Set([answer.lao]);
+  const seenRoman = new Set([answer.roman]);
+  const candidates = [...shuffle(answerGroup.letters), ...shuffle(ALL_LETTERS)];
   for (const l of candidates) {
     if (chosen.length >= 4) break;
     if (seenLao.has(l.lao) || seenRoman.has(l.roman)) continue;
@@ -67,29 +59,25 @@ function optionsFor(q: Q, group: AlphaGroup): AlphaLetter[] {
     seenRoman.add(l.roman);
     chosen.push(l);
   }
-  // keep same-group letters adjacent to the answer when possible: rebuild with
-  // group-first ordering without breaking the uniqueness rules above.
-  const gFirst = chosen.filter((l) => group.letters.includes(l) || l === q.letter);
-  const gRest = chosen.filter((l) => !group.letters.includes(l) && l !== q.letter);
+  // keep same-group letters adjacent to the answer when possible
+  const gFirst = chosen.filter((l) => answerGroup.letters.includes(l) || l === answer);
+  const gRest = chosen.filter((l) => !answerGroup.letters.includes(l) && l !== answer);
   return shuffle([...gFirst, ...gRest]);
 }
 
-// Each letter of a group is drilled in both directions. Mixed practice draws
-// one random direction per letter from the completed groups (or from
-// everything when nothing is done yet).
-function buildQueue(group: AlphaGroup, mixed: boolean, done: Record<string, number>): Q[] {
-  if (mixed) {
-    const doneGroups = ALPHA_GROUPS.filter((g) => done[g.id]);
-    const source = doneGroups.length ? doneGroups.flatMap((g) => g.letters) : ALL_LETTERS;
-    return shuffle(source).slice(0, MIXED_SIZE).map((letter) => {
-      const dir: 'char' | 'roman' = Math.random() < 0.5 ? 'char' : 'roman';
-      return { letter, dir, tries: 0 };
-    });
-  }
-  return shuffle(group.letters.flatMap((letter): Q[] => [
-    { letter, dir: 'char', tries: 0 },
-    { letter, dir: 'roman', tries: 0 },
-  ]));
+// Per-letter completion bar: MAX_LV segments, filled = current strength level.
+function LvBar({ lv }: { lv: number }) {
+  const { t } = useT();
+  return (
+    <span
+      className={`lvbar${lv >= MAX_LV ? ' max' : ''}`}
+      role="img"
+      aria-label={t('alpha_lv_aria').replace('{x}', String(lv)).replace('{y}', String(MAX_LV))}
+      title={t('alpha_lv_aria').replace('{x}', String(lv)).replace('{y}', String(MAX_LV))}
+    >
+      {Array.from({ length: MAX_LV }, (_, i) => <i key={i} className={i < lv ? 'f' : ''} />)}
+    </span>
+  );
 }
 
 export default function AlphabetPage() {
@@ -97,9 +85,8 @@ export default function AlphabetPage() {
   const { pingStats } = useShell();
 
   const [mode, setMode] = useState<'home' | 'intro' | 'drill' | 'summary'>('home');
-  const [group, setGroup] = useState<AlphaGroup>(ALPHA_GROUPS[0]);
-  const [mixed, setMixed] = useState(false);
-  const [done, setDone] = useState<Record<string, number>>({});
+  const [store, setStore] = useState<AlphaStore>({ letters: {}, done: {} });
+  const [run, setRun] = useState<Run | null>(null);
   const [introIdx, setIntroIdx] = useState(0);
   const [totalQ, setTotalQ] = useState(0);
   const [queue, setQueue] = useState<Q[]>([]);
@@ -107,32 +94,32 @@ export default function AlphabetPage() {
   const [picked, setPicked] = useState<AlphaLetter | null>(null);
   const [mistakes, setMistakes] = useState(0);
 
-  useEffect(() => setDone(loadDone()), []);
+  useEffect(() => setStore(loadStore()), []);
 
-  const doneCount = Object.keys(done).length;
+  const known = knownCount(store);
 
-  function startGroup(id: string, mixedRun = false) {
-    const g = mixedRun ? ALPHA_GROUPS[0] : groupById(id) || ALPHA_GROUPS[0];
-    const q = buildQueue(g, mixedRun, done);
-    setGroup(g);
-    setMixed(mixedRun);
+  function startRun(r: Run) {
+    setRun(r);
     setMistakes(0);
     setIntroIdx(0);
-    setTotalQ(q.length);
-    setQueue(q.slice(1));
-    setCurrent(q[0] || null);
+    setTotalQ(r.drill.length);
+    setQueue(r.drill.slice(1));
+    setCurrent(r.drill[0] || null);
     setPicked(null);
-    setMode(mixedRun || done[g.id] ? 'drill' : 'intro');
+    setMode(r.intro.length ? 'intro' : 'drill');
+  }
+
+  function startGroup(id: string, mixedRun = false) {
+    startRun(mixedRun ? composeMixedRun(store) : composeGroupRun(ALPHA_GROUPS.find((g) => g.id === id) || ALPHA_GROUPS[0], store));
   }
 
   function nextQuestion(rest: Q[]) {
     if (!rest.length) {
-      const xp = mixed ? 2 : 5;
+      const xp = run?.hasNew ? 5 : 2;
       setPicked(null);
       setCurrent(null);
       setMode('summary');
       addXp(xp).then(() => pingStats()).catch(() => pingStats());
-      if (!mixed) { markGroup(group.id); setDone(loadDone()); }
       return;
     }
     setCurrent(rest[0]);
@@ -142,13 +129,19 @@ export default function AlphabetPage() {
 
   function answer(choice: AlphaLetter) {
     if (!current || picked) return;
+    const right = choice.lao === currentLetter(current)?.lao;
     setPicked(choice);
-    if (choice.lao !== current.letter.lao) {
+    if (run?.bumpable) setStore(bumpLetter(store, current.gid, current.n, right));
+    if (!right) {
       setMistakes((m) => m + 1);
       if (current.tries < 1) setQueue((prev) => [...prev, { ...current, tries: current.tries + 1 }]);
       return; // wrong: the learner reads the correction, then taps CONTINUE
     }
     window.setTimeout(() => nextQuestion(queue), 620);
+  }
+
+  function currentLetter(q: Q): AlphaLetter | undefined {
+    return LET.get(`${q.gid}-${q.n}`)?.letter;
   }
 
   // ---------- home ----------
@@ -158,18 +151,27 @@ export default function AlphabetPage() {
         <div className="page-head">
           <h1>{t('alpha_title')}</h1>
           <H as="p" className="section-sub" html={t('alpha_sub')} />
-          <p className="alpha-progress">{t('alpha_progress').replace('{x}', String(doneCount)).replace('{y}', String(ALPHA_GROUPS.length))}</p>
+          <p className="alpha-progress">{t('alpha_known').replace('{x}', String(known)).replace('{y}', String(LETTER_DEFS.length))}</p>
         </div>
 
         <div className="alpha-groups">
           {ALPHA_GROUPS.map((g) => {
-            const isDone = !!done[g.id];
+            const pct = groupPercent(store, g);
+            const isDone = pct >= 100;
+            const cta = isDone ? t('alpha_again') : pct === 0 ? t('alpha_start') : t('alpha_continue');
             return (
               <button key={g.id} className={`group-card card${isDone ? ' done' : ''}`} onClick={() => startGroup(g.id)}>
                 <span className="group-star" aria-hidden="true">{isDone ? '⭐' : ''}</span>
-                <span className="group-glyphs lao">{g.letters.map((l) => l.lao).join('')}</span>
+                <span className="group-letters">
+                  {g.letters.map((l, i) => (
+                    <span key={l.lao} className="gl">
+                      <span className="lao">{l.lao}</span>
+                      <LvBar lv={letterLevel(store, g.id, i + 1)} />
+                    </span>
+                  ))}
+                </span>
                 <span className="group-name">{t('alpha_g_' + g.id)}</span>
-                <span className="group-cta">{isDone ? t('alpha_again') : t('alpha_start')}</span>
+                <span className="group-cta">{pct}% · {cta}</span>
               </button>
             );
           })}
@@ -182,8 +184,8 @@ export default function AlphabetPage() {
         <section className="unit-section">
           <h2>{t('alpha_consonants')}</h2>
           <div className="alpha-grid">
-            {CONSONANT_GROUPS.flatMap((g) => g.letters).map((l) => (
-              <RefCard key={'c' + l.lao} letter={l} lang={lang} />
+            {LETTER_DEFS.filter((d) => d.gid.startsWith('c')).map((d) => (
+              <RefCard key={'c' + d.gid + d.n} gid={d.gid} n={d.n} letter={d.letter} lang={lang} lv={letterLevel(store, d.gid, d.n)} />
             ))}
           </div>
         </section>
@@ -191,8 +193,8 @@ export default function AlphabetPage() {
           <h2>{t('alpha_vowels')}</h2>
           <p className="section-sub">{t('alpha_vowels_sub')}</p>
           <div className="alpha-grid">
-            {VOWEL_GROUPS.flatMap((g) => g.letters).map((l) => (
-              <RefCard key={'v' + l.lao} letter={l} lang={lang} />
+            {LETTER_DEFS.filter((d) => d.gid.startsWith('v')).map((d) => (
+              <RefCard key={'v' + d.gid + d.n} gid={d.gid} n={d.n} letter={d.letter} lang={lang} lv={letterLevel(store, d.gid, d.n)} />
             ))}
           </div>
         </section>
@@ -201,10 +203,11 @@ export default function AlphabetPage() {
     );
   }
 
-  // ---------- intro ----------
-  if (mode === 'intro') {
-    const letter = group.letters[introIdx];
-    const last = introIdx >= group.letters.length - 1;
+  // ---------- intro (showcase of the run's NEW letters) ----------
+  if (mode === 'intro' && run && introIdx < run.intro.length) {
+    const step = run.intro[introIdx];
+    const letter = LET.get(`${step.gid}-${step.n}`)!.letter;
+    const last = introIdx >= run.intro.length - 1;
     const note = lang === 'fr' ? letter.noteFr : letter.note;
     return (
       <>
@@ -212,23 +215,15 @@ export default function AlphabetPage() {
           <Link className="btn btn-ghost" href="/alphabet" onClick={(e) => { e.preventDefault(); setMode('home'); }}>
             ← {t('alpha_back')}
           </Link>
-          <span className="group-name">{t('alpha_g_' + group.id)}</span>
+          <span className="group-name">{t('alpha_g_' + run.group.id)}</span>
         </div>
+        <div className="session-bar" aria-hidden="true"><div style={{ width: `${Math.round((100 * (introIdx + 1)) / (run.intro.length + run.drill.length))}%` }} /></div>
         <div className="intro-steps">
-          {group.letters.map((l, i) => (
-            <span key={l.lao} className={`dot${i === introIdx ? ' on' : ''}${i < introIdx ? ' past' : ''}`} />
+          {run.intro.map((s, i) => (
+            <span key={`${s.gid}-${s.n}`} className={`dot${i === introIdx ? ' on' : ''}${i < introIdx ? ' past' : ''}`} />
           ))}
         </div>
-        <div className="big-word card intro-card">
-          <div className="alpha-glyph-lg lao">{letter.lao}</div>
-          <div className="word-romanization">{letter.roman}</div>
-          {note ? <p className="alpha-note">{note}</p> : null}
-          <button
-            className="icon-btn speak-btn intro-speak"
-            title="Listen" aria-label="Listen"
-            onClick={() => speakAlpha(letter)}
-          >🔊</button>
-        </div>
+        <ShowcaseCard gid={step.gid} n={step.n} letter={letter} note={note} />
         <button className="btn btn-continue btn-lg" onClick={() => (last ? setMode('drill') : setIntroIdx((i) => i + 1))}>
           {last ? t('cont') : t('alpha_next')}
         </button>
@@ -237,19 +232,32 @@ export default function AlphabetPage() {
   }
 
   // ---------- summary ----------
-  if (mode === 'summary') {
+  if (mode === 'summary' && run) {
+    const drillIds = Array.from(new Set(run.drill.map((q) => `${q.gid}-${q.n}`)));
+    const pct = run.mixed ? null : groupPercent(store, run.group);
+    const doneTitle = pct !== null && pct >= 100;
     return (
       <>
         <div className="big-word card summary-card">
-          <div className="summary-star">⭐</div>
-          <h2>{mixed ? t('alpha_mixed_done_title') : t('alpha_done_title')}</h2>
-          {!mixed ? <div className="group-glyphs summary-glyphs lao">{group.letters.map((l) => l.lao).join('')}</div> : null}
+          <div className="summary-star">{doneTitle || run.mixed ? '⭐' : '💪'}</div>
+          <h2>{run.mixed ? t('alpha_mixed_done_title') : doneTitle ? t('alpha_done_title') : t('alpha_run_done')}</h2>
+          <div className="summary-letters">
+            {drillIds.map((id) => {
+              const d = LET.get(id)!;
+              return (
+                <span key={id} className="gl">
+                  <span className="lao">{d.letter.lao}</span>
+                  <LvBar lv={letterLevel(store, d.gid, d.n)} />
+                </span>
+              );
+            })}
+          </div>
           <p className="alpha-note">
-            {t('alpha_mistakes').replace('{x}', String(mistakes))} · <strong>{t('alpha_xp_earned').replace('{x}', mixed ? '2' : '5')}</strong>
+            {t('alpha_mistakes').replace('{x}', String(mistakes))} · <strong>{t('alpha_xp_earned').replace('{x}', run.hasNew ? '5' : '2')}</strong>
           </p>
         </div>
         <div className="summary-actions">
-          <button className="btn btn-primary btn-lg" onClick={() => startGroup(group.id, mixed)}>🔁 {t('alpha_again')}</button>
+          <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}>🔁 {t('alpha_again')}</button>
           <button className="btn btn-ghost btn-lg" onClick={() => setMode('home')}>{t('alpha_back')}</button>
         </div>
       </>
@@ -259,46 +267,71 @@ export default function AlphabetPage() {
   // ---------- drill ----------
   return (
     <Drill
-      group={group}
-      mixed={mixed}
       current={current}
       queue={queue}
       totalQ={totalQ}
       picked={picked}
+      mixed={!!run?.mixed}
+      label={run?.mixed ? t('alpha_practice_all') : run ? t('alpha_g_' + run.group.id) : ''}
       onAnswer={answer}
       onNext={() => nextQuestion(queue)}
     />
   );
 }
 
-function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext }: {
-  group: AlphaGroup;
-  mixed: boolean;
+// "Meet the letter" card — auto-plays the letter's audio once, Duolingo-style.
+function ShowcaseCard({ gid, n, letter, note }: { gid: string; n: number; letter: AlphaLetter; note?: string }) {
+  const { t } = useT();
+  useEffect(() => {
+    const id = window.setTimeout(() => { speakAlpha(gid, n, letter); }, 350);
+    return () => window.clearTimeout(id);
+  }, [gid, n, letter]);
+  return (
+    <div className="big-word card intro-card">
+      <span className="alpha-new-chip">{t('alpha_new_letter')}</span>
+      <div className="alpha-glyph-lg lao">{letter.lao}</div>
+      <div className="word-romanization">{letter.roman}</div>
+      {note ? <p className="alpha-note">{note}</p> : null}
+      <button
+        className="icon-btn speak-btn intro-speak"
+        title="Listen" aria-label="Listen"
+        onClick={() => speakAlpha(gid, n, letter)}
+      >🔊</button>
+    </div>
+  );
+}
+
+function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext }: {
   current: Q | null;
   queue: Q[];
   totalQ: number;
   picked: AlphaLetter | null;
+  mixed: boolean;
+  label: string;
   onAnswer: (choice: AlphaLetter) => void;
   onNext: () => void;
 }) {
   const { t, tRaw } = useT();
-  const opts = useMemo(() => (current ? optionsFor(current, group) : []), [current, group]);
+  const def = current ? LET.get(`${current.gid}-${current.n}`) : undefined;
+  const letter = def?.letter;
+  const group = def?.group || ALPHA_GROUPS[0];
+  const opts = useMemo(() => (letter ? optionsFor(letter, group) : []), [letter, group]);
 
-  if (!current) return null;
+  if (!current || !letter || !def) return null;
 
-  const consonants = isConsonantGroup(group);
+  const consonants = def.gid.startsWith('c');
   const remaining = queue.length + 1;
   const answered = Math.max(0, totalQ - remaining);
-  const isRight = !!picked && picked.lao === current.letter.lao;
+  const isRight = !!picked && picked.lao === letter.lao;
   const wasWrong = !!picked && !isRight;
 
   const prompt = current.dir === 'char'
     ? consonants
-      ? t('alpha_q_char_sound').replace('{c}', current.letter.lao)
-      : t('alpha_q_syl_roman').replace('{c}', current.letter.lao)
+      ? t('alpha_q_char_sound').replace('{c}', letter.lao)
+      : t('alpha_q_syl_roman').replace('{c}', letter.lao)
     : consonants
-      ? t('alpha_q_sound_char').replace('{s}', current.letter.roman)
-      : t('alpha_q_roman_syl').replace('{s}', current.letter.roman);
+      ? t('alpha_q_sound_char').replace('{s}', letter.roman)
+      : t('alpha_q_roman_syl').replace('{s}', letter.roman);
 
   return (
     <>
@@ -308,14 +341,15 @@ function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext 
         </Link>
         <span className="alpha-progress">{t('alpha_count').replace('{x}', String(answered)).replace('{y}', String(totalQ))}</span>
       </div>
+      <div className="session-bar" aria-hidden="true"><div style={{ width: `${Math.round((100 * answered) / Math.max(1, totalQ))}%` }} /></div>
 
       {current.dir === 'char' ? (
         <div className="big-word card drill-card">
-          <div className="alpha-glyph-lg lao">{current.letter.lao}</div>
+          <div className="alpha-glyph-lg lao">{letter.lao}</div>
           <button
             className="icon-btn speak-btn"
             title="Listen" aria-label="Listen"
-            onClick={() => speakAlpha(current.letter)}
+            onClick={() => speakAlpha(def.gid, def.n, letter)}
           >🔊</button>
         </div>
       ) : null}
@@ -327,7 +361,7 @@ function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext 
           const cls = [
             'option-card',
             current.dir === 'roman' ? 'glyph-option' : '',
-            picked && o.lao === current.letter.lao ? 'correct' : '',
+            picked && o.lao === letter.lao ? 'correct' : '',
             picked && o.lao === picked.lao && !isRight ? 'wrong' : '',
           ].filter(Boolean).join(' ');
           return (
@@ -343,9 +377,9 @@ function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext 
       {picked ? (
         <div className={`feedback ${isRight ? 'ok' : 'bad'}`}>
           {isRight ? (
-            <H as="p" html={`${esc(pickVariant(tRaw('fb_ok_variants')))} ${esc(pickVariant(tRaw('fb_praise')))} · ${esc(current.letter.lao)} — ${esc(current.letter.roman)}`} />
+            <H as="p" html={`${esc(pickVariant(tRaw('fb_ok_variants')))} ${esc(pickVariant(tRaw('fb_praise')))} · ${esc(letter.lao)} — ${esc(letter.roman)}`} />
           ) : (
-            <H as="p" html={`${esc(t('fb_bad'))} ${t('fb_correct_answer').replace('{x}', esc(`${current.letter.lao} — ${current.letter.roman}`))}`} />
+            <H as="p" html={`${esc(t('fb_bad'))} ${t('fb_correct_answer').replace('{x}', esc(`${letter.lao} — ${letter.roman}`))}`} />
           )}
         </div>
       ) : null}
@@ -353,18 +387,19 @@ function Drill({ group, mixed, current, queue, totalQ, picked, onAnswer, onNext 
       {wasWrong ? (
         <button className="btn btn-continue btn-lg" onClick={onNext}>{t('cont')}</button>
       ) : null}
-      <span className="muted mixed-flag">{mixed ? t('alpha_practice_all') : t('alpha_g_' + group.id)}</span>
+      <span className="muted mixed-flag">{label}</span>
     </>
   );
 }
 
-// Reference-grid card: glyph + karaoke romanization + optional hint.
-function RefCard({ letter, lang }: { letter: AlphaLetter; lang: string }) {
+// Reference-grid card: glyph + karaoke romanization + optional hint + its bar.
+function RefCard({ gid, n, letter, lang, lv }: { gid: string; n: number; letter: AlphaLetter; lang: string; lv: number }) {
   const note = lang === 'fr' ? letter.noteFr : letter.note;
   return (
     <div className="alpha-tile card">
       <div className="alpha-glyph lao">{letter.lao}</div>
       <div className="word-romanization">{letter.roman}</div>
+      <LvBar lv={lv} />
       {note ? <div className="alpha-note">{note}</div> : null}
     </div>
   );

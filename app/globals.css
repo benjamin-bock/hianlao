@@ -602,6 +602,30 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .group-glyphs { font-size: 1.5rem; line-height: 1.5; color: var(--lao-text); }
 .group-name { font-weight: 700; font-size: .95rem; }
 .group-cta { color: var(--blue-ink); font-size: .85rem; font-weight: 700; }
+
+/* per-letter completion: glyph + 4-segment strength bar (0–4) */
+.group-letters { display: flex; gap: .6rem; flex-wrap: wrap; }
+.gl { display: flex; flex-direction: column; align-items: center; gap: .18rem; }
+.gl > .lao { font-size: 1.35rem; line-height: 1.4; color: var(--lao-text); }
+.lvbar { display: inline-flex; gap: 2px; }
+.lvbar i { width: 10px; height: 5px; border-radius: 2px; background: var(--line); }
+.lvbar i.f { background: var(--green); }
+.lvbar.max i.f { background: var(--gold); }
+.alpha-tile .lvbar { justify-content: center; margin-top: .35rem; }
+.summary-letters { display: flex; gap: .7rem; justify-content: center; flex-wrap: wrap; margin: .6rem 0 .7rem; }
+.summary-letters .gl > .lao { font-size: 1.7rem; }
+
+/* Duolingo-style session progress bar under the drill header */
+.session-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: .25rem 0 .9rem; }
+.session-bar > div { height: 100%; width: 0; background: var(--green); border-radius: 4px; transition: width .35s ease; }
+
+/* "New letter" chip on showcase cards */
+.alpha-new-chip {
+  display: inline-block; background: var(--blue); color: #fff;
+  font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  padding: .2rem .6rem; border-radius: 999px; margin-bottom: .5rem;
+}
+
 .group-card.done .group-cta { color: var(--green-dark); }
 .practice-mixed { margin: 0 0 1.5rem; }
 .alpha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .8rem; }
@@ -631,3 +655,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="dark"] .group-card:hover { background: #23233a; }
 [data-theme="dark"] .group-card.done { border-color: #6b5a15; background: #2b2610; }
 [data-theme="dark"] .group-glyphs, [data-theme="dark"] .alpha-glyph, [data-theme="dark"] .alpha-glyph-lg, [data-theme="dark"] .summary-glyphs { color: #9db8ff; }
+[data-theme="dark"] .gl > .lao { color: #9db8ff; }
+[data-theme="dark"] .session-bar > div { background: #7ed321; }
+[data-theme="dark"] .lvbar i.f { background: #7ed321; }
+[data-theme="dark"] .lvbar.max i.f { background: #c9a600; }
