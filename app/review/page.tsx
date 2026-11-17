@@ -230,7 +230,11 @@ export default function ReviewPage() {
             <div>
               <strong>{t('rev_practice_title')}</strong>
               <p className="section-sub">
-                {weakCount > 0 ? t('rev_practice_sub', { x: weakCount }) : t('rev_practice_sub_any')}
+                {weakCount === 1
+                  ? t('rev_practice_sub_one', { x: weakCount })
+                  : weakCount > 1
+                    ? t('rev_practice_sub', { x: weakCount })
+                    : t('rev_practice_sub_any')}
               </p>
             </div>
           </div>
