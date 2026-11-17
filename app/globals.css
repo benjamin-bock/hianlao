@@ -414,6 +414,7 @@ td .lao { font-size: 1.15rem; color: var(--lao-text); }
 }
 @media (prefers-reduced-motion: reduce) {
   .shake, .pop, .pulse, .xp-fly, .confetti, .feedback { animation: none !important; }
+  .trace-guide-line, .trace-guide-start, .trace-dot.cur { animation: none !important; }
 }
 
 /* ---------- responsive ---------- */
@@ -635,6 +636,36 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .trace-miss { color: var(--red); font-weight: 700; font-size: .85rem; margin-top: .4rem; text-align: center; }
 .trace-hit { color: var(--green-dark); font-weight: 700; font-size: .85rem; margin-top: .4rem; text-align: center; }
 .trace-actions { margin-top: .7rem; }
+
+/* stroke-by-stroke tracing: progress dots + animated guide overlay */
+.trace-stage { position: relative; width: 280px; height: 280px; }
+.trace-stage canvas { display: block; }
+.trace-meta { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; }
+.trace-steps { display: inline-flex; gap: .35rem; }
+.trace-dot {
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 800; background: var(--line); color: var(--muted);
+  flex: none;
+}
+.trace-dot.done { background: var(--green); color: #fff; }
+.trace-dot.cur { background: var(--blue); color: #fff; animation: hl-pulse 1.6s ease-in-out infinite; }
+.trace-stroke-count { font-size: .78rem; font-weight: 700; color: var(--muted); }
+.trace-guide { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trace-guide-line {
+  fill: none; stroke: var(--blue); stroke-width: 3.2;
+  stroke-linecap: round; stroke-linejoin: round; opacity: .6;
+  stroke-dasharray: 1600; stroke-dashoffset: 1600;
+  animation: trace-draw .8s ease-out forwards;
+}
+@keyframes trace-draw { to { stroke-dashoffset: 0; } }
+.trace-guide-start {
+  fill: var(--blue-ink); opacity: .85;
+  animation: hl-pulse 1.6s ease-in-out infinite;
+  transform-origin: center; transform-box: fill-box;
+}
+.trace-guide-arrow { fill: var(--blue-ink); opacity: .75; }
+.trace-guide-arrow.end { opacity: .95; }
 
 
 .group-card.done .group-cta { color: var(--green-dark); }
