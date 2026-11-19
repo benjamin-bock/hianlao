@@ -5,10 +5,7 @@ import { SiteShell } from '@/components/SiteShell';
 export const metadata: Metadata = {
   metadataBase: new URL('https://hianlao.vercel.app'),
   verification: {
-    google: [
-      '_UeWK7NZ4jqLNPqb2PmH-04r3nuoTpkbIl5swUI5ATs',
-      'Nah_1Nt9ZzsbM43MEwTzAE8J_RjbzqFOvDbl_ZJCC-w',
-    ],
+    google: 'Nah_1Nt9ZzsbM43MEwTzAE8J_RjbzqFOvDbl_ZJCC-w',
   },
   title: 'HianLao — Learn Lao free & open-source',
   description: 'HianLao (ຮຽນລາວ) is a free, open-source, Duolingo-style website to learn the Lao language: lessons, grammar bible, vocabulary with audio and Lao culture. Made for the Lao diaspora worldwide.',
