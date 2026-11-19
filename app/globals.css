@@ -860,3 +860,12 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
 /* Mouse affordance: game controls are buttons but must look clickable. */
 .option-card, .tile, .group-card { cursor: pointer; }
 .option-card:disabled, .tile:disabled { cursor: default; }
+
+/* ---- /alphabet guided path (linear, Duolingo-kana style) ---- */
+.alpha-guided-cta { margin: 0 0 1.25rem; }
+.alpha-path { max-width: 640px; margin-bottom: 1.25rem; }
+.alpha-node { width: 100%; text-align: left; font-family: var(--font); cursor: pointer; }
+.alpha-node.locked { cursor: not-allowed; }
+.alpha-node .lesson-meta { flex: 1; min-width: 0; }
+.alpha-node .group-letters { margin-top: .35rem; display: flex; gap: .6rem; flex-wrap: wrap; }
+.alpha-all-done { max-width: 640px; margin: 0 0 1.25rem; font-weight: 700; text-align: center; }

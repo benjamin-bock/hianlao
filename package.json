@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/check-data.mjs && node tests/api.test.mjs",
+    "test": "node tests/check-data.mjs && node tests/api.test.mjs && node tests/alpha-progress.test.mjs",
     "audio": "node scripts/generate-audio.mjs"
   },
   "license": "MIT",

@@ -19,7 +19,7 @@
 // drawn weakest-first from already-introduced letters. Repetition is the
 // whole method.
 
-import { ALPHA_GROUPS, type AlphaGroup } from '@/data/alphabet';
+import { ALPHA_GROUPS, type AlphaGroup } from '../data/alphabet.ts';
 
 export const MAX_LV = 4;
 /** correct answers needed to go from lv n to n+1 */
@@ -117,6 +117,42 @@ export function knownCount(store: AlphaStore): number {
   return Object.values(store.letters).filter((s) => s.lv >= 1).length;
 }
 
+// ---- guided linear path (Duolingo-kana style) ----
+// The 9 groups in ALPHA_GROUPS order form the path. A group unlocks only when
+// the previous group is fully mastered (every letter at MAX_LV) — or was
+// completed under the legacy v1 store — so new letters are always introduced
+// in small batches on top of solid ground, never all mixed at once.
+
+export function groupUnlocked(store: AlphaStore, index: number): boolean {
+  if (index <= 0) return true;
+  const prev = ALPHA_GROUPS[index - 1];
+  return groupPercent(store, prev) >= 100 || !!store.done[prev.id];
+}
+
+/** First path group that is unlocked but not yet mastered; -1 when the whole path is done. */
+export function nextGuidedIndex(store: AlphaStore): number {
+  for (let i = 0; i < ALPHA_GROUPS.length; i++) {
+    if (!groupUnlocked(store, i)) break; // linear: stop at the first locked node
+    if (groupPercent(store, ALPHA_GROUPS[i]) < 100) return i;
+  }
+  return -1;
+}
+
+/** All known-but-not-mastered letters across every group, weakest first. */
+function globalWeakPool(store: AlphaStore): Array<{ g: AlphaGroup; n: number }> {
+  return ALPHA_GROUPS.flatMap((g) =>
+    g.letters.map((_, i) => ({
+      g,
+      n: i + 1,
+      lv: letterLevel(store, g.id, i + 1),
+      ts: store.letters[letterId(g.id, i + 1)]?.ts || 0,
+    })),
+  )
+    .filter((s) => s.lv >= 1 && s.lv < MAX_LV)
+    .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts))
+    .map((s) => ({ g: s.g, n: s.n }));
+}
+
 export function totalLetters(): number {
   return ALPHA_GROUPS.reduce((acc, g) => acc + g.letters.length, 0);
 }
@@ -182,11 +218,13 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /**
- * A group run, Duolingo-style:
- *  - up to NEW_BATCH unseen letters get a showcase card each;
+ * A group run, Duolingo-style, on the guided path:
+ *  - up to NEW_BATCH unseen letters *of this group* get a showcase card each
+ *    (new letters only ever come from the current path node);
  *  - each new letter is drilled 3× right away (shape→sound, sound→shape, mixed);
- *  - one review question from the group's weakest known letters is slotted
- *    after each new letter's batch, so old letters keep being strengthened;
+ *  - review questions are slotted after each new letter's batch, drawn
+ *    weakest-first from ALL letters already introduced (any earlier group),
+ *    so old letters keep being strengthened while new ones arrive;
  *  - with nothing new left, the run becomes a pure strengthening session
  *    (up to 10 questions on the letters below mastery).
  */
@@ -200,37 +238,43 @@ export function composeGroupRun(g: AlphaGroup, store: AlphaStore): Run {
     if (levels[i] === 0) newIdx.push(i + 1);
   }
   const hasNew = newIdx.length > 0;
-  const weak = groupWeakFirst(g, store).filter((n) => {
-    const lv = letterLevel(store, g.id, n);
-    return lv >= 1 && lv < MAX_LV;
-  });
+  const pool = globalWeakPool(store);
 
   if (hasNew) {
     newIdx.forEach((n) => intro.push({ kind: 'showcase', gid: g.id, n }));
-    const pool = [...weak];
+    const review = [...pool];
     for (const n of newIdx) {
       drill.push(mkQ(g, n, 'char'), mkQ(g, n, 'roman'), mkQ(g, n));
-      for (let k = 0; k < 2 && pool.length; k++) drill.push(mkQ(g, pool.shift()!));
+      for (let k = 0; k < 2 && review.length; k++) {
+        const r = review.shift()!;
+        drill.push(mkQ(r.g, r.n));
+      }
     }
     // top up short runs (e.g. a single late letter) with more review
-    while (drill.length < 9 && pool.length) drill.push(mkQ(g, pool.shift()!));
+    while (drill.length < 9 && review.length) {
+      const r = review.shift()!;
+      drill.push(mkQ(r.g, r.n));
+    }
   } else {
-    const batch = (weak.length ? weak : g.letters.map((_, i) => i + 1)).slice(0, 10);
-    for (const n of shuffle(batch)) drill.push(mkQ(g, n));
+    const batch = (pool.length ? pool : g.letters.map((_, i) => ({ g, n: i + 1 }))).slice(0, 10);
+    for (const s of shuffle(batch)) drill.push(mkQ(s.g, s.n));
   }
 
   return { group: g, mixed: false, hasNew, bumpable: true, intro, drill };
 }
 
-/** Mixed practice: weakest known letters across all groups, random direction. */
+/**
+ * Mixed practice: weakest KNOWN letters across all groups, random direction.
+ * Never introduces unknown letters — with an empty store the run is empty
+ * (the guided path is the right first step, not a random mix of the script).
+ */
 export function composeMixedRun(store: AlphaStore, size = 12): Run {
-  const pool = ALPHA_GROUPS.flatMap((g) =>
+  const known = ALPHA_GROUPS.flatMap((g) =>
     g.letters.map((_, i) => ({ g, n: i + 1, lv: letterLevel(store, g.id, i + 1), ts: store.letters[letterId(g.id, i + 1)]?.ts || 0 })),
-  );
-  const known = pool.filter((s) => s.lv >= 1).sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts));
-  const source = known.length ? known : shuffle(pool);
-  const first = source.slice(0, size);
-  const drill = shuffle(first.map((s) => mkQ(s.g, s.n)));
+  )
+    .filter((s) => s.lv >= 1)
+    .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts));
+  const drill = shuffle(known.slice(0, size).map((s) => mkQ(s.g, s.n)));
   const group = drill[0] ? (ALPHA_GROUPS.find((g) => g.id === drill[0].gid) || ALPHA_GROUPS[0]) : ALPHA_GROUPS[0];
-  return { group, mixed: true, hasNew: false, bumpable: known.length > 0, intro: [], drill };
+  return { group, mixed: true, hasNew: false, bumpable: drill.length > 0, intro: [], drill };
 }

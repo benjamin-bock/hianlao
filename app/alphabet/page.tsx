@@ -27,7 +27,8 @@ import TracePad from '@/components/alphabet/TracePad';
 import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
 import {
   MAX_LV, letterLevel, groupPercent, knownCount, bumpLetter,
-  composeGroupRun, composeMixedRun, loadStore, type AlphaStore, type Run, type RunQ,
+  composeGroupRun, composeMixedRun, loadStore, groupUnlocked, nextGuidedIndex,
+  type AlphaStore, type Run, type RunQ,
 } from '@/lib/alpha-progress';
 import { shuffle } from '@/lib/shuffle';
 
@@ -38,6 +39,9 @@ const LET = new Map(LETTER_DEFS.map((d) => [`${d.gid}-${d.n}`, d]));
 // Stable audio id per letter (group id + position) — the generated files are
 // public/audio/alpha-<group>-<n>.mp3, listed in audio-manifest.ts.
 const LETTER_AUDIO_ID = new Map(LETTER_DEFS.map((d) => [`${d.gid}-${d.n}`, `alpha-${d.gid}-${d.n}`]));
+
+// One color per path node (guided path circles / borders).
+const GROUP_COLORS = ['#58cc02', '#1cb0f6', '#ffc800', '#ff4b4b', '#8b5cf6', '#ff9600', '#00b8b8', '#e0559d', '#8a6d3b'];
 
 function speakAlpha(gid: string, n: number, letter: AlphaLetter, rate = 0.8) {
   return speakItem({ id: LETTER_AUDIO_ID.get(`${gid}-${n}`), lao: letter.lao, romanization: letter.roman }, rate);
@@ -156,6 +160,8 @@ export default function AlphabetPage() {
 
   // ---------- home ----------
   if (mode === 'home') {
+    const guidedIdx = nextGuidedIndex(store);
+    const guided = guidedIdx >= 0 ? ALPHA_GROUPS[guidedIdx] : null;
     return (
       <>
         <div className="page-head">
@@ -164,32 +170,60 @@ export default function AlphabetPage() {
           <p className="alpha-progress">{t('alpha_known').replace('{x}', String(known)).replace('{y}', String(LETTER_DEFS.length))}</p>
         </div>
 
-        <div className="alpha-groups">
-          {ALPHA_GROUPS.map((g) => {
+        {/* Guided path: one big CTA always starts the right next run
+            (first unlocked, not-yet-mastered group), then the linear path of
+            group nodes — each unlocks only when the previous is mastered. */}
+        {guided ? (
+          <button className="btn btn-primary btn-lg alpha-guided-cta" onClick={() => startGroup(guided.id)}>
+            ▶ {known > 0 ? t('alpha_continue') : t('alpha_start')} · {t('alpha_g_' + guided.id)}
+          </button>
+        ) : (
+          <div className="card alpha-all-done">🎉 {t('alpha_all_mastered')}</div>
+        )}
+
+        <div className="lessons-path alpha-path">
+          {ALPHA_GROUPS.map((g, i) => {
             const pct = groupPercent(store, g);
-            const isDone = pct >= 100;
-            const cta = isDone ? t('alpha_again') : pct === 0 ? t('alpha_start') : t('alpha_continue');
+            const done = pct >= 100;
+            const unlocked = groupUnlocked(store, i);
+            const hasNew = g.letters.some((_, j) => letterLevel(store, g.id, j + 1) === 0);
+            const cta = done ? '⭐' : unlocked ? (hasNew ? t('alpha_start') : t('alpha_continue')) : t('alpha_locked');
             return (
-              <button key={g.id} className={`group-card card${isDone ? ' done' : ''}`} onClick={() => startGroup(g.id)}>
-                <span className="group-star" aria-hidden="true">{isDone ? '⭐' : ''}</span>
-                <span className="group-letters">
-                  {g.letters.map((l, i) => (
-                    <span key={l.lao} className="gl">
-                      <span className="lao">{l.lao}</span>
-                      <LvBar lv={letterLevel(store, g.id, i + 1)} />
-                    </span>
-                  ))}
-                </span>
-                <span className="group-name">{t('alpha_g_' + g.id)}</span>
-                <span className="group-cta">{pct}% · {cta}</span>
+              <button
+                key={g.id}
+                type="button"
+                className={`lesson-node alpha-node${done ? ' done' : ''}${unlocked ? '' : ' locked'}`}
+                style={{ ['--unit-color' as string]: GROUP_COLORS[i % GROUP_COLORS.length] }}
+                aria-disabled={unlocked ? 'false' : 'true'}
+                title={unlocked ? undefined : t('alpha_locked')}
+                onClick={(e) => {
+                  if (!unlocked) { sfx('wrong'); buzz(40); shake(e.currentTarget); return; }
+                  startGroup(g.id);
+                }}
+              >
+                <div className="lesson-circle">{done ? '✓' : unlocked ? String(i + 1) : '🔒'}</div>
+                <div className="lesson-meta">
+                  <strong>{t('alpha_g_' + g.id)}</strong>
+                  <span>{pct}% · {cta}</span>
+                  <span className="group-letters">
+                    {g.letters.map((l, j) => (
+                      <span key={l.lao} className="gl">
+                        <span className="lao">{l.lao}</span>
+                        <LvBar lv={letterLevel(store, g.id, j + 1)} />
+                      </span>
+                    ))}
+                  </span>
+                </div>
               </button>
             );
           })}
         </div>
 
-        <button className="btn btn-ghost practice-mixed" onClick={() => startGroup('', true)}>
-          🔁 {t('alpha_practice_all')}
-        </button>
+        {known > 0 ? (
+          <button className="btn btn-ghost practice-mixed" onClick={() => startGroup('', true)}>
+            🔁 {t('alpha_practice_all')}
+          </button>
+        ) : null}
 
         <section className="unit-section">
           <h2>{t('alpha_consonants')}</h2>
@@ -279,6 +313,9 @@ export default function AlphabetPage() {
     const drillIds = Array.from(new Set(run.drill.map((q) => `${q.gid}-${q.n}`)));
     const pct = run.mixed ? null : groupPercent(store, run.group);
     const doneTitle = pct !== null && pct >= 100;
+    // group mastered → the next path node unlocks: offer it as the primary action
+    const gi = ALPHA_GROUPS.findIndex((g) => g.id === run.group.id);
+    const nextG = !run.mixed && doneTitle && gi >= 0 && gi < ALPHA_GROUPS.length - 1 ? ALPHA_GROUPS[gi + 1] : null;
     return (
       <div className="fx-stage">
         <div className="big-word card summary-card">
@@ -300,7 +337,13 @@ export default function AlphabetPage() {
           </p>
         </div>
         <div className="summary-actions">
-          <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}>🔁 {t('alpha_again')}</button>
+          {nextG ? (
+            <button className="btn btn-primary btn-lg" onClick={() => startGroup(nextG.id)}>
+              ▶ {t('alpha_next_group', { x: t('alpha_g_' + nextG.id) })}
+            </button>
+          ) : (
+            <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}>🔁 {t('alpha_again')}</button>
+          )}
           <button className="btn btn-ghost btn-lg" onClick={() => setMode('home')}>{t('alpha_back')}</button>
         </div>
       </div>
