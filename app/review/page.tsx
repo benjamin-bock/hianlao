@@ -20,6 +20,7 @@ import { LESSON_BY_ID } from '@/data/units.ts';
 import { VOCAB, VOCAB_BY_ID } from '@/data/vocab.ts';
 import type { VocabEntry } from '@/data/types.ts';
 import { speakItem } from '@/lib/speech';
+import { sfx, buzz, pop, shake, burstAt, confettiBurst } from '@/lib/fx';
 import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
 import { shuffle } from '@/lib/shuffle';
@@ -181,18 +182,30 @@ export default function ReviewPage() {
     setPicked(null);
     setMode('summary');
     void addXp(2).then(() => pingStats()).catch(() => pingStats());
+    sfx('fanfare');
+    confettiBurst(70);
   }
 
-  function answer(o: Opt) {
+  function answer(o: Opt, e?: React.MouseEvent<HTMLButtonElement>) {
     if (!current || picked) return;
     setPicked(o);
     setAnswered((n) => n + 1);
     if (o.correct) {
+      if (e) {
+        pop(e.currentTarget);
+        const r = e.currentTarget.getBoundingClientRect();
+        burstAt(r.left + r.width / 2, r.top + r.height / 2, 14);
+      }
+      sfx('correct');
+      buzz([12, 30, 12]);
       relieveWeakWord(current.w.id);
       setXpEarned((n) => n + 1);
       setPracticed((ps) => (ps.some((p) => p.id === current.w.id) ? ps : [...ps, current.w]));
       window.setTimeout(() => next(), 950);
     } else {
+      if (e) shake(e.currentTarget);
+      sfx('wrong');
+      buzz(70);
       setMistakes((m) => m + 1);
       addWeakWord(current.w.id);
       if (current.tries < 1) {
@@ -273,7 +286,7 @@ export default function ReviewPage() {
   // ---------- summary ----------
   if (mode === 'summary') {
     return (
-      <>
+      <div className="fx-stage">
         <div className="summary-card card">
           <div className="summary-star">{mistakes ? '💪' : '⭐'}</div>
           <h2>{t('rev_done_title')}</h2>
@@ -293,7 +306,7 @@ export default function ReviewPage() {
           <button className="btn btn-primary btn-lg" onClick={startPractice}>🔁 {t('rev_practice_start')}</button>
           <button className="btn btn-ghost btn-lg" onClick={() => { setMode('list'); refreshList(); }}>{t('alpha_back')}</button>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -307,7 +320,7 @@ export default function ReviewPage() {
       : t('rev_q_recall');
 
   return (
-    <>
+    <div className="fx-stage" key={`${current.w.id}-${current.kind}-${current.tries}-${idx}`}>
       <div className="page-head alpha-drill-head">
         <button className="btn btn-ghost" onClick={() => { setMode('list'); refreshList(); }}>← {t('alpha_back')}</button>
         <span className="alpha-progress">{t('alpha_count', { x: Math.min(answered + 1, totalQ || 1), y: totalQ })}</span>
@@ -342,7 +355,7 @@ export default function ReviewPage() {
             picked === o && !o.correct ? 'wrong' : '',
           ].filter(Boolean).join(' ');
           return (
-            <button key={`${o.label}:${i}`} className={cls} disabled={!!picked} onClick={() => answer(o)}>
+            <button key={`${o.label}:${i}`} className={cls} disabled={!!picked} onClick={(e) => answer(o, e)}>
               {current.kind === 'recall'
                 ? (
                   <>
@@ -351,6 +364,7 @@ export default function ReviewPage() {
                   </>
                 )
                 : <span className="rev-meaning">{o.label}</span>}
+              <span className="kbd" aria-hidden="true">{i + 1}</span>
             </button>
           );
         })}
@@ -358,7 +372,8 @@ export default function ReviewPage() {
 
       {picked ? (
         <div className={`feedback ${picked.correct ? 'ok' : 'bad'}`}>
-          <div className="feedback-icon">{picked.correct ? '🎉' : '💡'}</div>
+          <img src="/img/elephant.svg" alt="" className={`feedback-mascot${picked.correct ? '' : ' somber'}`} aria-hidden="true" />
+          <div className="feedback-icon" aria-hidden="true">{picked.correct ? '🎉' : '💡'}</div>
           <div>
             {picked.correct ? (
               <H
@@ -377,7 +392,7 @@ export default function ReviewPage() {
           ) : null}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 

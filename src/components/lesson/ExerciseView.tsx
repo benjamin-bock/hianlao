@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n';
 import { SpeakButton } from '@/components/SpeakButton';
 import { VOCAB_BY_ID as V } from '@/data/vocab.ts';
-import { sfx, buzz, shake, pop } from '@/lib/fx';
+import { sfx, buzz, shake, pop, burstAt } from '@/lib/fx';
 import { shuffle } from '@/lib/shuffle';
 import {
   speakItem, canRecognize, recognize, speechMatches,
@@ -61,7 +61,7 @@ function McView({ ex, answered, onResolve }: ExerciseProps) {
         <div className="big-word card"><div className="word-en-lg">{def(item)}</div></div>
       )}
       <div className="options">
-        {order.map((id) => {
+        {order.map((id, i) => {
           const w = V[id] as VocabEntry | undefined;
           if (!w) return null;
           return (
@@ -73,8 +73,11 @@ function McView({ ex, answered, onResolve }: ExerciseProps) {
               onClick={(e) => {
                 if (answered) return;
                 setSel(true);
-                sfx('click');
-                if (id === ex.answer) pop(e.currentTarget);
+                if (id === ex.answer) {
+                  pop(e.currentTarget);
+                  const r = e.currentTarget.getBoundingClientRect();
+                  burstAt(r.left + r.width / 2, r.top + r.height / 2, 14);
+                }
                 onResolve(id === ex.answer, `${item.lao} — ${item.romanization} — ${def(item)}`);
               }}
             >
@@ -86,6 +89,7 @@ function McView({ ex, answered, onResolve }: ExerciseProps) {
                   {w.romanization ? <span className="opt-sub">{w.romanization}</span> : null}
                 </div>
               )}
+              <span className="kbd" aria-hidden="true">{i + 1}</span>
             </button>
           );
         })}
@@ -136,7 +140,7 @@ function ListenView({ ex, answered, onResolve }: ExerciseProps) {
         </p>
       </div>
       <div className="options">
-        {order.map((id) => {
+        {order.map((id, i) => {
           const w = V[id] as VocabEntry | undefined;
           if (!w) return null;
           return (
@@ -145,14 +149,19 @@ function ListenView({ ex, answered, onResolve }: ExerciseProps) {
               type="button"
               className={cls(id)}
               disabled={answered}
-              onClick={() => {
+              onClick={(e) => {
                 if (answered) return;
                 setPicked(id);
-                sfx('click');
+                if (id === ex.answer) {
+                  pop(e.currentTarget);
+                  const r = e.currentTarget.getBoundingClientRect();
+                  burstAt(r.left + r.width / 2, r.top + r.height / 2, 14);
+                }
                 onResolve(id === ex.answer, `${answer.lao} — ${answer.romanization} — ${def(answer)}`);
               }}
             >
               <span>{def(w)}</span>
+              <span className="kbd" aria-hidden="true">{i + 1}</span>
             </button>
           );
         })}
@@ -191,10 +200,12 @@ function MatchView({ ex, answered, onResolve }: ExerciseProps) {
       setSelL(null);
       setSelR(null);
       sfx('match');
+      buzz([10, 24, 10]);
+      document.querySelectorAll('.match-grid .option-card.selected').forEach((el) => pop(el as HTMLElement));
     } else {
       sfx('wrong');
       buzz(40);
-      shake(document.querySelector('.match-grid'));
+      document.querySelectorAll('.match-grid .option-card.selected').forEach((el) => shake(el as HTMLElement));
       setWrongFlash(true);
     }
   }, [selL, selR, answered]);
@@ -282,33 +293,40 @@ function Bank({
     return () => window.clearTimeout(id);
   }, [chosen, required, answered, byUid]);
 
-  const tile = (tok: BankToken, isChosen: boolean) => (
-    <button
-      key={tok.uid}
-      type="button"
-      className={`tile${isChosen ? ' chosen' : ''}`}
-      disabled={answered}
-      onClick={() => {
-        if (answered) return;
-        if (isChosen) {
-          setChosen((c) => c.filter((u) => u !== tok.uid));
-          sfx('click');
-        } else if (!chosen.includes(tok.uid)) {
-          setChosen((c) => [...c, tok.uid]);
-          sfx('click');
-        }
-      }}
-    >
-      {tok.lao != null ? (
-        <>
-          <span className="lao">{tok.lao.trim()}</span>
-          {tok.roman ? <span className="opt-sub">{tok.roman}</span> : null}
-        </>
-      ) : (
-        <span>{tok.text}</span>
-      )}
-    </button>
-  );
+  const tile = (tok: BankToken, isChosen: boolean) => {
+    // tiles play their own pick/unpick sounds, so opt out of the global tick
+    const pos = bank.indexOf(tok);
+    return (
+      <button
+        key={tok.uid}
+        type="button"
+        data-sfx-off
+        className={`tile${isChosen ? ' chosen' : ''}`}
+        disabled={answered}
+        onClick={(e) => {
+          if (answered) return;
+          if (isChosen) {
+            setChosen((c) => c.filter((u) => u !== tok.uid));
+            sfx('deselect');
+          } else if (!chosen.includes(tok.uid)) {
+            setChosen((c) => [...c, tok.uid]);
+            sfx('select');
+            pop(e.currentTarget);
+          }
+        }}
+      >
+        {tok.lao != null ? (
+          <>
+            <span className="lao">{tok.lao.trim()}</span>
+            {tok.roman ? <span className="opt-sub">{tok.roman}</span> : null}
+          </>
+        ) : (
+          <span>{tok.text}</span>
+        )}
+        {!isChosen && pos >= 0 && pos < 9 ? <span className="kbd" aria-hidden="true">{pos + 1}</span> : null}
+      </button>
+    );
+  };
 
   return (
     <div className="tiles-wrap">

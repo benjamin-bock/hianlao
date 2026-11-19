@@ -8,6 +8,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { t, useI18n, setLang, LANGS, type Lang } from '@/lib/i18n';
 import { applyTheme, getTheme, toggleTheme } from '@/lib/theme';
+import { fxEnabled, setFxEnabled, sfx } from '@/lib/fx';
+import { FxLayer } from '@/components/FxLayer';
 import { getState, touchStreak, getUser, initAuth, type ApiUser } from '@/lib/store';
 import { VOCAB } from '@/data/vocab.ts';
 import { UNITS, LESSON_BY_ID } from '@/data/units.ts';
@@ -40,12 +42,14 @@ function activeFromPath(path: string): string {
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const [themeIcon, setThemeIcon] = useState('🌙');
+  const [fxOn, setFxOn] = useState(true);
   const [stats, setStats] = useState({ xp: 0, streak: 0 });
   const [user, setUserState] = useState<ApiUser | null>(null);
 
   useEffect(() => {
     applyTheme();
     setThemeIcon(getTheme() === 'dark' ? '☀️' : '🌙');
+    setFxOn(fxEnabled());
     setStats(getState());
     // PWA: register the service worker (only over http(s), not file://).
     if ('serviceWorker' in navigator && /^https?:$/.test(window.location.protocol)) {
@@ -66,6 +70,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ShellContext.Provider value={{ user, setUser, pingStats }}>
+      <FxLayer />
       <header id="header">
         <div className="header-inner">
           <Link className="brand" href="/">
@@ -87,6 +92,16 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             <Link id="auth-chip" className={`pill auth-chip${user ? ' signed-in' : ''}`} href="/account" title="Account & progress sync">
               👤 <span className="auth-label">{user ? (user.displayName || user.username) : t('sign_in')}</span>
             </Link>
+            <button
+              id="sound-toggle"
+              className="icon-btn"
+              title={t('snd_toggle')}
+              aria-label={t('snd_toggle')}
+              aria-pressed={fxOn}
+              onClick={() => { const on = !fxEnabled(); setFxEnabled(on); setFxOn(on); if (on) sfx('click'); }}
+            >
+              {fxOn ? '🔊' : '🔇'}
+            </button>
             <button
               id="theme-toggle"
               className="icon-btn"

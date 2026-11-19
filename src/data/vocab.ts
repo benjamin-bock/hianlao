@@ -29,6 +29,26 @@ export const CATEGORIES: Record<string, string> = {
   proverbs: 'Proverbs & sayings',
 };
 
+// Emoji icon per category — used on word cards and filter chips for visual scanning.
+export const CATEGORY_ICONS: Record<string, string> = {
+  greetings: '👋',
+  basics: '⭐',
+  numbers: '🔢',
+  family: '👨‍👩‍👧',
+  verbs: '🏃',
+  adjectives: '🎨',
+  food: '🍜',
+  phrases: '💬',
+  places: '📍',
+  time: '⏰',
+  directions: '🧭',
+  colors: '🌈',
+  travel: '✈️',
+  emotions: '😊',
+  work: '💼',
+  proverbs: '🦉',
+};
+
 export const CATEGORIES_FR: Record<string, string> = {
   'greetings': 'Salutations & politesse',
   'basics': 'Mots essentiels',

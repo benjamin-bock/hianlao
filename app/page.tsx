@@ -81,6 +81,7 @@ export default function Home() {
       </section>
 
       <section className="cta card">
+        <img src="/img/elephant.svg" alt="" className="cta-mascot" aria-hidden="true" />
         <H as="h2" html={t('cta_title')} />
         <p>{t('cta_sub')}</p>
         <Link className="btn btn-primary btn-lg" href={ctaHref}>{t('cta_now')}</Link>

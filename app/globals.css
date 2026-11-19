@@ -144,6 +144,7 @@ footer { border-top: 1px solid var(--line); background: #faf7ee; margin-top: 3re
   background: var(--card); border: 1px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 1.25rem;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease;
 }
 
 /* touch ergonomics: no tap delay, no accidental text selection on game controls */
@@ -413,8 +414,11 @@ td .lao { font-size: 1.15rem; color: var(--lao-text); }
   animation-name: hl-confetti-fall; animation-timing-function: linear; animation-fill-mode: forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .shake, .pop, .pulse, .xp-fly, .confetti, .feedback { animation: none !important; }
+  .shake, .pop, .pulse, .xp-fly, .confetti, .feedback, .ripple, .burst { animation: none !important; }
   .trace-guide-line, .trace-guide-start, .trace-dot.cur { animation: none !important; }
+  .fx-stage *, .hero-art img, .progress-fill::after, .speak-btn.playing, .play-btn.playing,
+  .lvbar i.f, .feedback-mascot, .goal-fill, .session-bar > div { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
 }
 
 /* ---------- responsive ---------- */
@@ -715,3 +719,144 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .drill-prompt { text-align: center; font-weight: 700; font-size: 1.05rem; margin: 0 auto 1rem; }
 .drill-card .word-romanization { font-size: 1.05rem; margin-top: .3rem; }
 [data-theme="dark"] .listen-play { background: #232736; border-color: #3a4358; }
+
+/* ---------- juice v2: press feel, ripples, hovers, entrances, mascot ---------- */
+/* Ripple hosts must clip the expanding circle. */
+button, .option-card, .tile, .chip, .bn-item, .nav-link, .lang-btn, .auth-chip,
+.lesson-node, .unit-chip, .group-card, .nudge-card, .play-btn {
+  position: relative; overflow: hidden;
+}
+.ripple {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+  background: rgba(60, 60, 60, .12);
+  transform: scale(0); opacity: 1;
+  animation: hl-ripple .45s ease-out forwards;
+}
+[data-theme="dark"] .ripple { background: rgba(255, 255, 255, .16); }
+@keyframes hl-ripple { to { transform: scale(1); opacity: 0; } }
+
+/* burstAt(): small radial pop at the tap point (correct answers) */
+.burst-wrap { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+.burst {
+  position: absolute; width: 9px; height: 9px; border-radius: 50%;
+  animation: hl-burst .62s cubic-bezier(.2, .7, .3, 1) forwards;
+}
+@keyframes hl-burst {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx, 0), var(--dy, 0)) scale(.4); opacity: 0; }
+}
+
+/* Duolingo-style press: the chunky bottom border collapses as you press. */
+.btn:active { transform: translateY(3px); }
+.btn-primary:active, .btn-continue:active { box-shadow: 0 1px 0 var(--green-dark); }
+.btn-ghost:active { box-shadow: 0 1px 0 var(--line); }
+.btn-mic:active { box-shadow: 0 1px 0 var(--blue-dark); }
+.option-card:active:not(:disabled), .tile:active:not(:disabled) {
+  transform: translateY(2px); border-bottom-width: 2px;
+}
+.chip:active, .lang-btn:active, .icon-btn:active { transform: scale(.9); }
+.bn-item:active { transform: scale(.86); }
+.unit-chip:active, .lesson-node:active, .group-card:active, .nudge-card:active { transform: translateY(1px); }
+.nav-link:active { transform: scale(.95); }
+
+/* State animations must always win over entrance animations. */
+.shake { animation: hl-shake .45s ease !important; }
+.pop { animation: hl-pop .3s ease !important; }
+.pulse { animation: hl-pulse .35s ease !important; }
+
+/* Keyboard hint badges (desktop, hover-capable pointers only — the lesson
+   engine maps keys 1-9 to these cards in DOM order). */
+.kbd {
+  display: none; min-width: 1.4rem; height: 1.4rem; padding: 0 .3rem; flex: none;
+  border-radius: 6px; border: 1.5px solid var(--line); border-bottom-width: 3px;
+  background: #fff; color: var(--muted);
+  font-size: .72rem; font-weight: 800; font-family: var(--font);
+  align-items: center; justify-content: center;
+}
+[data-theme="dark"] .kbd { background: #232736; }
+.tile { display: inline-flex; align-items: center; gap: .45rem; }
+
+/* Hover lifts — mouse users get a physical feel; touch devices skip them. */
+@media (hover: hover) and (pointer: fine) {
+  .feature-card:hover, .word-card:hover, .group-card:hover, .lesson-node:hover,
+  .alpha-tile:hover, .nudge-card:hover, .badge-card:hover, .unit-chip:hover {
+    transform: translateY(-2px); box-shadow: 0 5px 0 var(--line);
+  }
+  .lesson-node.done:hover { box-shadow: 0 5px 0 rgba(88, 204, 2, .4); }
+  .kbd { display: inline-flex; }
+  .option-card:hover:not(:disabled):not(.matched) { border-color: #cfc8b4; }
+  [data-theme="dark"] .option-card:hover:not(:disabled):not(.matched) { border-color: #3a4358; }
+}
+
+/* Entrance: each exercise / drill question rises in, cards staggered. The
+   stage wrappers carry .fx-stage and are React-keyed per question. */
+@keyframes hl-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.fx-stage .exercise-head, .fx-stage .retry-note, .fx-stage .context-card, .fx-stage .big-word,
+.fx-stage .drill-prompt, .fx-stage .options, .fx-stage .tiles-wrap, .fx-stage .match-grid,
+.fx-stage .speak-wrap, .fx-stage .summary, .fx-stage .trace-wrap { animation: hl-rise .28s ease both; }
+.fx-stage .options .option-card, .fx-stage .tile-bank .tile, .fx-stage .match-col .match-card {
+  animation: hl-rise .3s ease both;
+}
+.fx-stage .options .option-card:nth-child(2), .fx-stage .match-col .match-card:nth-child(2) { animation-delay: .05s; }
+.fx-stage .options .option-card:nth-child(3), .fx-stage .match-col .match-card:nth-child(3) { animation-delay: .1s; }
+.fx-stage .options .option-card:nth-child(4), .fx-stage .match-col .match-card:nth-child(4) { animation-delay: .15s; }
+.fx-stage .options .option-card:nth-child(5) { animation-delay: .2s; }
+.fx-stage .options .option-card:nth-child(6) { animation-delay: .25s; }
+
+/* Progress bars: shimmer + gold when full. */
+.progress-fill, .goal-fill, .session-bar > div { position: relative; overflow: hidden; }
+.progress-fill::after, .goal-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 32%, rgba(255, 255, 255, .5) 50%, transparent 68%);
+  background-size: 220% 100%;
+  animation: hl-shimmer 2.4s linear infinite;
+}
+@keyframes hl-shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.progress-fill.done { background: var(--gold); }
+
+/* Audio buttons pulse while speaking. */
+.speak-btn.playing, .play-btn.playing, .listen-play.playing { animation: hl-pulse .9s ease-in-out infinite; }
+
+/* Mascot (Laos elephant) in feedback banners & the fail screen. */
+.feedback-mascot { width: 56px; height: 56px; flex: none; border-radius: 12px; animation: hl-pop .35s ease; }
+.feedback-mascot.somber { filter: grayscale(.45) brightness(.96); }
+.fail-mascot { width: 130px; max-width: 40vw; margin: 0 auto .5rem; display: block; animation: hl-bob 3.2s ease-in-out infinite; }
+
+/* Mastery bar segments pop in as they fill. */
+@keyframes hl-seg { 0% { transform: scale(1.7); } 100% { transform: scale(1); } }
+.lvbar i { transition: background-color .2s ease; }
+.lvbar i.f { animation: hl-seg .3s ease; }
+
+/* Gentle idle motion for the hero art. */
+@keyframes hl-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.hero-art img { animation: hl-bob 4.5s ease-in-out infinite; }
+
+/* Brand-colored text selection. */
+::selection { background: #ffe58a; color: #3c3c3c; }
+[data-theme="dark"] ::selection { background: #6b5d1f; color: #fff; }
+
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Comfortable touch targets on small screens. */
+@media (max-width: 980px) {
+  .chip { min-height: 42px; padding: .45rem 1rem; }
+  .bn-item { min-height: 50px; justify-content: center; }
+  .nav-link { min-height: 40px; display: inline-flex; align-items: center; }
+  .lang-btn { min-height: 32px; }
+  .kbd { display: none !important; }
+}
+
+/* CTA mascot on the home page */
+.cta-mascot { width: 96px; max-width: 30vw; margin: 0 auto .4rem; display: block; animation: hl-bob 4s ease-in-out infinite; }
+
+/* session bars get the shimmer too */
+.session-bar > div::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 32%, rgba(255,255,255,.5) 50%, transparent 68%);
+  background-size: 220% 100%;
+  animation: hl-shimmer 2.4s linear infinite;
+}
+
+/* Mouse affordance: game controls are buttons but must look clickable. */
+.option-card, .tile, .group-card { cursor: pointer; }
+.option-card:disabled, .tile:disabled { cursor: default; }

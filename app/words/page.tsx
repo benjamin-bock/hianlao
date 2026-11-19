@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useT, def, noteOf } from '@/lib/i18n';
 import { getWeakWords } from '@/lib/store';
 import { SpeakButton } from '@/components/SpeakButton';
-import { VOCAB, VOCAB_BY_ID, CATEGORIES, CATEGORIES_FR } from '@/data/vocab.ts';
+import { VOCAB, VOCAB_BY_ID, CATEGORIES, CATEGORIES_FR, CATEGORY_ICONS } from '@/data/vocab.ts';
 import type { VocabEntry } from '@/data/types';
 
 export default function WordsPage() {
@@ -74,7 +74,7 @@ export default function WordsPage() {
         {Object.entries(CATEGORIES).map(([k, label]) => (
           <Chip
             key={k}
-            label={lang === 'fr' ? (CATEGORIES_FR[k] || label) : label}
+            label={`${CATEGORY_ICONS[k] || '🏷️'} ${lang === 'fr' ? (CATEGORIES_FR[k] || label) : label}`}
             active={activeCat === k}
             onClick={() => setActiveCat(k)}
           />
@@ -113,7 +113,7 @@ function WordCard({ v, lang }: { v: VocabEntry; lang: string }) {
         <SpeakButton item={v} />
       </div>
       {v.note ? <div className="word-note">{noteOf(v)}</div> : null}
-      <div className="word-cat">{lang === 'fr' ? (CATEGORIES_FR[v.cat] || v.cat) : (CATEGORIES[v.cat] || v.cat)}</div>
+      <div className="word-cat">{CATEGORY_ICONS[v.cat] || '🏷️'} {lang === 'fr' ? (CATEGORIES_FR[v.cat] || v.cat) : (CATEGORIES[v.cat] || v.cat)}</div>
     </div>
   );
 }

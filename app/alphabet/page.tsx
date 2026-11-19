@@ -20,6 +20,7 @@ import { useT, pickVariant } from '@/lib/i18n';
 import { addXp } from '@/lib/store';
 import { useShell } from '@/components/SiteShell';
 import { speakItem } from '@/lib/speech';
+import { sfx, buzz, pop, shake, burstAt, confettiBurst } from '@/lib/fx';
 import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
 import TracePad from '@/components/alphabet/TracePad';
@@ -127,6 +128,8 @@ export default function AlphabetPage() {
       setCurrent(null);
       setMode('summary');
       addXp(xp).then(() => pingStats()).catch(() => pingStats());
+      sfx('fanfare');
+      confettiBurst(70);
       return;
     }
     setCurrent(rest[0]);
@@ -217,7 +220,7 @@ export default function AlphabetPage() {
     const last = introIdx >= run.intro.length - 1;
     const note = lang === 'fr' ? letter.noteFr : letter.note;
     return (
-      <>
+      <div className="fx-stage" key={`intro-${step.gid}-${step.n}`}>
         <div className="page-head alpha-drill-head">
           <Link className="btn btn-ghost" href="/alphabet" onClick={(e) => { e.preventDefault(); setMode('home'); }}>
             ← {t('alpha_back')}
@@ -248,7 +251,7 @@ export default function AlphabetPage() {
         >
           {last ? t('cont') : t('alpha_next')}
         </button>
-      </>
+      </div>
     );
   }
 
@@ -277,7 +280,7 @@ export default function AlphabetPage() {
     const pct = run.mixed ? null : groupPercent(store, run.group);
     const doneTitle = pct !== null && pct >= 100;
     return (
-      <>
+      <div className="fx-stage">
         <div className="big-word card summary-card">
           <div className="summary-star">{doneTitle || run.mixed ? '⭐' : '💪'}</div>
           <h2>{run.mixed ? t('alpha_mixed_done_title') : doneTitle ? t('alpha_done_title') : t('alpha_run_done')}</h2>
@@ -300,7 +303,7 @@ export default function AlphabetPage() {
           <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}>🔁 {t('alpha_again')}</button>
           <button className="btn btn-ghost btn-lg" onClick={() => setMode('home')}>{t('alpha_back')}</button>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -322,14 +325,16 @@ export default function AlphabetPage() {
 // "Meet the letter" card — auto-plays the letter's audio once, Duolingo-style.
 function ShowcaseCard({ gid, n, letter, note }: { gid: string; n: number; letter: AlphaLetter; note?: string }) {
   const { t } = useT();
+  const glyphRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const id = window.setTimeout(() => { speakAlpha(gid, n, letter); }, 350);
+    pop(glyphRef.current);
     return () => window.clearTimeout(id);
   }, [gid, n, letter]);
   return (
     <div className="big-word card intro-card">
       <span className="alpha-new-chip">{t('alpha_new_letter')}</span>
-      <div className="alpha-glyph-lg lao">{letter.lao}</div>
+      <div className="alpha-glyph-lg lao" ref={glyphRef}>{letter.lao}</div>
       <div className="word-romanization">{letter.roman}</div>
       {note ? <p className="alpha-note">{note}</p> : null}
       <button
@@ -374,7 +379,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
       : t('alpha_q_roman_syl').replace('{s}', letter.roman);
 
   return (
-    <>
+    <div className="fx-stage" key={`${current.gid}-${current.n}-${current.tries}-${answered}`}>
       <div className="page-head alpha-drill-head">
         <Link className="btn btn-ghost" href="/alphabet">
           ← {t('alpha_back')}
@@ -397,7 +402,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
       <p className="drill-prompt">{prompt}</p>
 
       <div className="options">
-        {opts.map((o) => {
+        {opts.map((o, i) => {
           const cls = [
             'option-card',
             current.dir === 'roman' ? 'glyph-option' : '',
@@ -405,10 +410,30 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
             picked && o.lao === picked.lao && !isRight ? 'wrong' : '',
           ].filter(Boolean).join(' ');
           return (
-            <button key={o.lao} className={cls} disabled={!!picked} onClick={() => onAnswer(o)}>
+            <button
+              key={o.lao}
+              className={cls}
+              disabled={!!picked}
+              onClick={(e) => {
+                const right = o.lao === letter.lao;
+                if (right) {
+                  pop(e.currentTarget);
+                  const r = e.currentTarget.getBoundingClientRect();
+                  burstAt(r.left + r.width / 2, r.top + r.height / 2, 14);
+                  sfx('correct');
+                  buzz([12, 30, 12]);
+                } else {
+                  shake(e.currentTarget);
+                  sfx('wrong');
+                  buzz(70);
+                }
+                onAnswer(o);
+              }}
+            >
               {current.dir === 'roman'
                 ? <span className="lao glyph-only">{o.lao}</span>
                 : <span className="roman-only">{o.roman}</span>}
+              <span className="kbd" aria-hidden="true">{i + 1}</span>
             </button>
           );
         })}
@@ -416,6 +441,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
 
       {picked ? (
         <div className={`feedback ${isRight ? 'ok' : 'bad'}`}>
+          <img src="/img/elephant.svg" alt="" className={`feedback-mascot${isRight ? '' : ' somber'}`} aria-hidden="true" />
           {isRight ? (
             <H as="p" html={`${esc(pickVariant(tRaw('fb_ok_variants')))} ${esc(pickVariant(tRaw('fb_praise')))} · ${esc(letter.lao)} — ${esc(letter.roman)}`} />
           ) : (
@@ -428,7 +454,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
         <button className="btn btn-continue btn-lg" onClick={onNext}>{t('cont')}</button>
       ) : null}
       <span className="muted mixed-flag">{label}</span>
-    </>
+    </div>
   );
 }
 

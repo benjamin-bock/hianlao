@@ -20,6 +20,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n';
+import { sfx, buzz, pop, shake } from '@/lib/fx';
 import type { AlphaLetter } from '@/data/alphabet';
 import { ALPHA_STROKES } from '@/data/alpha-strokes';
 
@@ -194,6 +195,7 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
   const [verdict, setVerdict] = useState<'none' | 'pass' | 'fail'>('none');
   const [step, setStep] = useState(0);       // index of the stroke being traced
   const [fontTick, setFontTick] = useState(0); // re-measure once webfonts land
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   const model = ALPHA_STROKES[letter.lao];
   const modelPts = useMemo(
@@ -394,6 +396,9 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
       strokes.current = [];
       const next = step + 1;
       setStep(next);
+      sfx('correct');
+      buzz([12, 30, 12]);
+      pop(cardRef.current);
       if (next >= guides.length) {
         setVerdict('pass');
         window.setTimeout(onPass, 700);
@@ -402,6 +407,9 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
         window.setTimeout(() => setVerdict('none'), 620);
       }
     } else {
+      sfx('wrong');
+      buzz(50);
+      shake(cardRef.current);
       setVerdict('fail');
       window.setTimeout(() => {
         strokes.current = [];
@@ -449,7 +457,16 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     const spillPct = ink ? spill / ink : 1;
     const passed = cov >= COV_MIN && spillPct <= SPILL_MAX;
     setVerdict(passed ? 'pass' : 'fail');
-    if (passed) window.setTimeout(onPass, 750);
+    if (passed) {
+      sfx('correct');
+      buzz([12, 30, 12]);
+      pop(cardRef.current);
+      window.setTimeout(onPass, 750);
+    } else {
+      sfx('wrong');
+      buzz(50);
+      shake(cardRef.current);
+    }
   }
 
   function clear() {
@@ -508,7 +525,7 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
           </span>
         </div>
       ) : null}
-      <div className={`card trace-card${verdict === 'pass' ? ' ok' : ''}${verdict === 'fail' ? ' miss' : ''}`}>
+      <div ref={cardRef} className={`card trace-card${verdict === 'pass' ? ' ok' : ''}${verdict === 'fail' ? ' miss' : ''}`}>
         <div className="trace-stage">
           <canvas
             ref={canvasRef}

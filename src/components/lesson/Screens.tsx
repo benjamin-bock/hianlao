@@ -25,7 +25,8 @@ export function Feedback({ ok, correctText, explain, practice, hearts, onContinu
   const xp = practice ? 5 : 10;
   return (
     <div className={`feedback ${ok ? 'ok' : 'bad'}`}>
-      <div className="feedback-icon">{ok ? '🎉' : '💡'}</div>
+      <img src="/img/elephant.svg" alt="" className={`feedback-mascot${ok ? '' : ' somber'}`} aria-hidden="true" />
+      <div className="feedback-icon" aria-hidden="true">{ok ? '🎉' : '💡'}</div>
       <div>
         <strong>{ok ? pickVariant(t('fb_ok_variants')) : t('fb_bad')}</strong>
         {ok
@@ -53,8 +54,9 @@ export function FailScreen({ correct, total, lessonHref }: { correct: number; to
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { shake(ref.current); }, []);
   return (
-    <div className="lesson-stage" ref={ref}>
+    <div className="lesson-stage fx-stage" ref={ref}>
       <div className="summary card fail">
+        <img src="/img/elephant.svg" alt="" className="fail-mascot" aria-hidden="true" />
         <div className="summary-icon">💔</div>
         <h1>{t('fail_title')}</h1>
         <p
@@ -91,7 +93,7 @@ export function SummaryScreen({ icon, laoHtml, body, stats, nextId, missedCount,
   const iconRef = useRef<HTMLDivElement>(null);
   useEffect(() => { pop(iconRef.current); }, []);
   return (
-    <div className="lesson-stage">
+    <div className="lesson-stage fx-stage">
       <div className="summary card">
         <div className="summary-icon" ref={iconRef}>{icon}</div>
         <h1>{t('done_title')}</h1>

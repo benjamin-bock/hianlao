@@ -195,6 +195,7 @@ export default function LessonClient() {
       pulse(document.querySelector('.xp-pill'));
     } else {
       sfx('wrong');
+      sfx('heart');
       buzz(70);
       shake(document.querySelector('.lesson-stage'));
       shake(document.querySelector('.hearts'));
@@ -229,7 +230,6 @@ export default function LessonClient() {
       phase: 'lesson',
       exKey: s.exKey + 1,
     }));
-    sfx('click');
   }, [activeLesson]);
 
   // practice mode: kick the queue like a fresh lesson starts
@@ -242,31 +242,8 @@ export default function LessonClient() {
     }
   }, [state.practiceMode, state.cur, state.queue.length, state.answered, state.phase]);
 
-  // ---- keyboard comfort (desktop): 1-9 pick a tile/option, Enter continues ----
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if (e.key === 'Enter') {
-        const cont = document.querySelector('.lesson-actionbar .btn-continue') as HTMLElement | null;
-        const primary = document.querySelector('.summary-actions .btn-primary') as HTMLElement | null;
-        if (cont) cont.click();
-        else if (primary) primary.click();
-        return;
-      }
-      const n = parseInt(e.key, 10);
-      if (n >= 1 && n <= 9) {
-        const tiles = [...document.querySelectorAll('.lesson-stage .tile-bank .tile')]
-          .filter((el) => !el.classList.contains('chosen')) as HTMLElement[];
-        const opts = [...document.querySelectorAll('.lesson-stage .option-card:not([disabled]):not(.matched)')] as HTMLElement[];
-        const list = tiles.length ? tiles : opts;
-        if (list[n - 1]) list[n - 1].click();
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, []);
+  // ---- keyboard comfort (1-9 pick a tile/option, Enter continues) lives in
+  // ---- FxLayer so it also works in the alphabet & review drills.
 
   if (lessonId !== '__weak' && !lesson) {
     return (
@@ -339,14 +316,14 @@ export default function LessonClient() {
     <>
       <div className="lesson-topbar">
         <Link className="icon-btn" href="/learn" aria-label="Exit lesson">✕</Link>
-        <div className="progress"><div className="progress-fill" style={{ width: `${progressPct}%` }} /></div>
+        <div className="progress"><div className={`progress-fill${progressPct >= 100 ? ' done' : ''}`} style={{ width: `${progressPct}%` }} /></div>
         <span className="combo" ref={comboRef} style={{ display: state.combo >= 2 ? '' : 'none' }}>🔥 ×{state.combo}</span>
         <span className="hearts" aria-label="Hearts">
           {'❤️'.repeat(Math.max(state.hearts, 0))}{'🖤'.repeat(Math.max(5 - state.hearts, 0))}
         </span>
       </div>
 
-      <div className="lesson-stage">
+      <div className="lesson-stage fx-stage" key={state.exKey}>
         {state.practiceMode ? (
           <div className="retry-note">🛠️ {t('practice_mode')}</div>
         ) : cur.isRetry ? (

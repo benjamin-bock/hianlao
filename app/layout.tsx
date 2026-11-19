@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   description: 'HianLao (ຮຽນລາວ) is a free, open-source, Duolingo-style website to learn the Lao language: lessons, grammar bible, vocabulary with audio and Lao culture. Made for the Lao diaspora worldwide.',
   icons: { icon: [{ url: '/img/logo.svg', type: 'image/svg+xml' }], apple: '/img/icon-192.png' },
   manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'HianLao',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
   openGraph: {
     title: 'HianLao — Learn Lao free & open-source',
     description: 'Lessons, grammar, words with audio and Lao culture. No subscription — free and open-source for the Lao diaspora.',
@@ -17,6 +25,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover', // safe-area insets for notched phones / future Capacitor app
   themeColor: '#002868',
 };
 
