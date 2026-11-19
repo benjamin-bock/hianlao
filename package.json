@@ -1,17 +1,31 @@
 {
   "name": "hianlao",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Free & open-source Duolingo-style website to learn Lao (ພາສາລາວ) — for the Lao diaspora worldwide.",
-  "type": "module",
   "private": true,
   "scripts": {
-    "test": "node tests/check-data.mjs && node tests/api.test.mjs",
-    "audio": "node scripts/generate-audio.mjs",
-    "serve": "python3 -m http.server 8000",
-    "dev": "python3 scripts/dev-server.py 8000"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/check-data.mjs && node tests/api.test.mjs && node tests/alpha-progress.test.mjs",
+    "audio": "node scripts/generate-audio.mjs"
   },
   "license": "MIT",
   "dependencies": {
-    "@vercel/analytics": "^2.0.1"
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.1.0",
+    "next": "^15.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
   }
 }
