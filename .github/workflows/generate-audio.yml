@@ -1,4 +1,4 @@
-# Regenerate the native-voice audio (assets/audio/*.mp3 + the manifest) in the
+# Regenerate the native-voice audio (public/audio/*.mp3 + the manifest) in the
 # cloud — no secrets needed, the default provider talks to Microsoft Edge's
 # read-aloud endpoint. Run it from the GitHub Actions tab ("Run workflow"),
 # review the generated PR, and merge. Use only when audio content changed;
@@ -28,11 +28,11 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           BRANCH="audio/batch-$(date +%Y%m%d-%H%M)"
           git checkout -b "$BRANCH"
-          if git diff --quiet -- assets/audio assets/js/audio-manifest.js; then
+          if git diff --quiet -- public/audio src/data/audio-manifest.ts; then
             echo "No audio changes — nothing to do."
             exit 0
           fi
-          git add assets/audio assets/js/audio-manifest.js
+          git add public/audio src/data/audio-manifest.ts
           git commit -m "chore(audio): regenerate native-voice MP3s"
           git push -u origin "$BRANCH"
           gh pr create --fill --head "$BRANCH" --title "chore(audio): regenerate native-voice MP3s" \
