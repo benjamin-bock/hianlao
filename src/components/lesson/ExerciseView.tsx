@@ -351,15 +351,34 @@ function TypeView({ ex, answered, onResolve }: ExerciseProps) {
       }
       return { tokens: [target, ...distractors], required: 1 };
     }
-    let words = stripPunct(cleanAnswer(meaningOf(item))).trim().split(/\s+/).filter(Boolean);
-    if (!words.length) words = [meaningOf(item).trim()];
-    const seen = new Set(words.map((w) => w.toLowerCase()));
     const others = shuffle(Object.values(V).filter((w) => w.id !== item.id));
     const pool = [...others.filter((w) => w.cat === item.cat), ...others];
+    const glossOf = (w: VocabEntry) => stripPunct(cleanAnswer(meaningOf(w))).trim();
+
+    // Multi-alternative glosses (khao = "il / elle / ils") cannot be assembled
+    // word by word — a "/" tile puzzle is nonsense. Those become tap-the-gloss:
+    // whole glosses as tiles, one of them is right.
+    const cleaned = glossOf(item);
+    if (!cleaned || cleaned.includes('/')) {
+      const gloss = cleaned || meaningOf(item).trim();
+      const seen = new Set([gloss.toLowerCase()]);
+      const distractors: BankToken[] = [];
+      for (const w of pool) {
+        if (distractors.length >= 4) break;
+        const g = glossOf(w);
+        if (!g || seen.has(g.toLowerCase())) continue;
+        seen.add(g.toLowerCase());
+        distractors.push({ uid: `x${distractors.length}`, text: g });
+      }
+      return { tokens: [{ uid: 'a', text: gloss }, ...distractors], required: 1 };
+    }
+
+    const words = cleaned.split(/\s+/).filter(Boolean);
+    const seen = new Set(words.map((w) => w.toLowerCase()));
     const distractors: BankToken[] = [];
     for (const w of pool) {
       if (distractors.length >= 4) break;
-      const first = stripPunct(cleanAnswer(meaningOf(w))).trim().split(/\s+/)[0];
+      const first = glossOf(w).split(/\s+/)[0];
       if (!first || seen.has(first.toLowerCase())) continue;
       seen.add(first.toLowerCase());
       distractors.push({ uid: `x${distractors.length}`, text: first });
