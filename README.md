@@ -10,7 +10,7 @@ No accounts. No paywall. No ads. Your progress stays on your device, and the sit
 - **📖 Grammar bible** — the Lao script, the 6 tones, sentence structure, verb particles, negation, questions, classifiers, politeness, telling time, ordering food, directions… explained simply, always with Lao script + transliteration + English.
 - **🧺 Words & phrases** — a searchable dictionary of 200+ words and real-life phrases (greetings, food, family, numbers, travel, colors…) with a listen button on every word.
 - **🇱🇦 Culture** — Laos at a glance, festivals (Pi Mai, Boun That Luang, rocket festival), food (larb, tam mak hoong, khao piak sen, sticky rice…), etiquette (the nop, head & feet rules), and the story of the Lao diaspora.
-- **🔊 Voice (native-quality audio)** — every word plays a neural Lao MP3 (Microsoft's native `lo-LA` voices, generated once and served as static files — offline-friendly, free, no API at runtime), falling back to `/api/tts` on the backend, then to the browser's Lao voice, then to the transliteration. Speaking exercises use the Web Speech API where supported. See `scripts/generate-audio.mjs`.
+- **🔊 Voice (native-quality audio)** — every word plays a neural Lao MP3 (Microsoft's native `lo-LA` voices, generated once and served as static files — offline-friendly, free, no API at runtime), falling back to `/api/tts` on the backend, then to the browser's Lao voice, then to the transliteration. Speaking exercises use the browser's speech recognition where it works, with a server-side fallback through `/api/stt` (Azure Speech STT, `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION` — the same resource as `/api/tts`) when the browser has no engine (Firefox, WebViews) or cannot reach its cloud. See `scripts/generate-audio.mjs`.
 - **📱 PWA / mobile app** — the site is already an installable Progressive Web App (manifest + service worker + icons): works offline, "Add to Home Screen" on Android & iOS. See the *Mobile app* section below for store publishing costs.
 - **🌙 Dark theme, 🌐 EN/FR/LAO UI, 🎯 daily XP goal, 🔁 spaced-repetition review, 🏆 weekly & all-time leaderboards** — all in the header / Learn page.
 - **👤 Accounts & sync** — free username/password accounts on Vercel (serverless `api/` + Upstash KV): progress synced across devices, 🏆 leaderboard, 🏅 achievement badges. Without a backend the site still works fully offline (localStorage).
@@ -59,6 +59,8 @@ The site works 100% locally (progress in `localStorage`). It also ships a small 
 | Endpoint | Method | Purpose |
 |---|---|---|
 | `/api/health` | GET | `{ ok, kv }` — backend availability probe |
+| `/api/tts?id=…` | GET | neural Lao MP3 for ids without a static file (`AZURE_SPEECH_KEY`) |
+| `/api/stt` | POST | speech-to-text for the mic exercises, audio upload (`AZURE_SPEECH_KEY`) |
 | `/api/auth/register` | POST | create account (merges `localProgress`), sets session cookie |
 | `/api/auth/login` | POST | sign in (merges `localProgress`), sets session cookie |
 | `/api/auth/logout` | POST | destroy session |

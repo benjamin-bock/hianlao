@@ -14,7 +14,7 @@ import { sfx, buzz, shake, pop } from '@/lib/fx';
 import { shuffle } from '@/lib/shuffle';
 import {
   speakItem, canRecognize, recognize, speechMatches,
-  hasLaoVoice, hasNativeAudio,
+  hasLaoVoice, hasNativeAudio, sttAvailable,
 } from '@/lib/speech';
 import type { Exercise, VocabEntry } from '@/data/types';
 
@@ -449,6 +449,13 @@ function SpeakView({ ex, answered, onResolve }: ExerciseProps) {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
   const mic = canRecognize();
+  const [backendStt, setBackendStt] = useState(false);
+  useEffect(() => {
+    let on = true;
+    sttAvailable().then((v) => { if (on) setBackendStt(v); }).catch(() => undefined);
+    return () => { on = false; };
+  }, []);
+  const canSpeak = mic || backendStt;
 
   const ask = async () => {
     if (answered || busy) return;
@@ -489,7 +496,7 @@ function SpeakView({ ex, answered, onResolve }: ExerciseProps) {
         <div className="word-en">{def(item)}</div>
         <SpeakButton item={item} />
       </div>
-      {mic ? (
+      {canSpeak ? (
         <>
           <button type="button" className="btn btn-mic btn-lg" disabled={busy || answered} onClick={ask}>
             🎤 {t('speak_tap')}

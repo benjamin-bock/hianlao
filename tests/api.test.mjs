@@ -160,6 +160,54 @@ ok(r.status === 503 && r.payload.ok === false, 'tts returns 503 when not configu
 r = await call(tts, 'GET', { path: '/api/tts' });
 ok(r.status === 404 && r.payload.ok === false, 'tts rejects unknown/missing id');
 
+// ---- stt endpoint: mic-exercise fallback via Azure Speech STT (mocked) ----
+console.log('stt endpoint:');
+const sttMock = http.createServer((req2, res) => {
+  const chunks = [];
+  req2.on('data', (d) => chunks.push(d));
+  req2.on('end', () => {
+    const bodyBuf = Buffer.concat(chunks);
+    if (bodyBuf.includes('FAILMARK')) { res.writeHead(500); res.end('{}'); return; }
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ RecognitionStatus: 'Success', DisplayText: 'ສະບາຍດີ ' }));
+  });
+});
+await new Promise((r) => sttMock.listen(0, '127.0.0.1', r));
+process.env.AZURE_SPEECH_KEY = 'test-key';
+process.env.AZURE_SPEECH_REGION = 'eu-mock';
+process.env.AZURE_SPEECH_ENDPOINT = `http://127.0.0.1:${sttMock.address().port}`;
+const stt = await import('../app/api/stt/route.ts');
+const sttLib = await import('../app/api/_lib/stt.ts');
+ok(sttLib.sttEnabled, 'stt lib enabled with key + region');
+
+r = { status: (await stt.POST(new Request(HOST + '/api/stt', { method: 'POST', headers: { origin: 'https://evil.example' } }))).status };
+ok(r.status === 403, 'stt rejects cross-origin upload');
+{
+  const res = await stt.POST(new Request(HOST + '/api/stt', { method: 'POST', headers: { ...H, 'content-type': 'application/json' }, body: '{}' }));
+  ok(res.status === 400, 'stt rejects missing audio file');
+}
+{
+  const fdBig = new FormData();
+  fdBig.append('audio', new File([Buffer.alloc(7 * 1024 * 1024)], 'big.wav', { type: 'audio/wav' }));
+  const res = await stt.POST(new Request(HOST + '/api/stt', { method: 'POST', headers: H, body: fdBig }));
+  ok(res.status === 413, 'stt rejects oversized audio');
+}
+{
+  const fd = new FormData();
+  fd.append('audio', new File([Buffer.from('RIFF....DATA')], 'speech.wav', { type: 'audio/wav' }));
+  fd.append('lang', 'lo-LA');
+  const res = await stt.POST(new Request(HOST + '/api/stt', { method: 'POST', headers: H, body: fd }));
+  const payload = await res.json();
+  ok(res.status === 200 && payload.text === 'ສະບາຍດີ', 'stt transcribes via azure (mock), trims DisplayText');
+}
+{
+  const fdFail = new FormData();
+  fdFail.append('audio', new File([Buffer.concat([Buffer.from('RIFF'), Buffer.from('FAILMARK'), Buffer.alloc(64)])], 'speech.wav', { type: 'audio/wav' }));
+  const res = await stt.POST(new Request(HOST + '/api/stt', { method: 'POST', headers: H, body: fdFail }));
+  ok(res.status === 502, 'stt surfaces azure errors as 502');
+}
+sttMock.close();
+
 kvServer.close();
 console.log(`\nAPI TESTS PASSED ✔ (${passed} assertions)`);
 process.exit(0);

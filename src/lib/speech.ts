@@ -6,6 +6,10 @@
 //      AZURE_SPEECH_KEY)
 //   3. the browser's Lao TTS voice (lo-LA), if the device has one
 //   4. the romanization read by any TTS voice, as a last resort.
+// Recognition engines for the mic exercises, in order: the browser's
+// SpeechRecognition (Chrome/Safari), then — when the browser has no engine or
+// cannot reach its cloud — /api/stt on the backend (Azure Speech STT, when
+// deployed with AZURE_SPEECH_KEY), else the romanization in en-US.
 'use client';
 
 import { AUDIO_FILES } from '@/data/audio-manifest.ts';
@@ -14,7 +18,6 @@ import type { VocabEntry } from '@/data/types.ts';
 const AUDIO_DIR = '/audio/';
 const blobUrls = new Map<string, string>(); // vocab id -> object URL from the backend TTS
 const apiTried = new Set<string>(); // ids already fetched from the backend this session
-let backendTTS: boolean | undefined; // undefined = unknown, then boolean after one /api/health probe
 
 export function ttsSupported(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -78,16 +81,27 @@ function playFile(url: string): Promise<boolean> {
   });
 }
 
-// Probe once per session whether the optional backend can synthesize Lao audio.
-async function backendTtsAvailable(): Promise<boolean> {
-  if (backendTTS !== undefined) return backendTTS;
+// Probe once per session what the optional backend offers (TTS synthesis,
+// STT recognition — both Azure Speech, deployed with AZURE_SPEECH_KEY).
+let apiHealthKnown = false;
+let apiHealth: { tts?: boolean; stt?: boolean } = {};
+async function apiHealthOnce(): Promise<{ tts?: boolean; stt?: boolean }> {
+  if (apiHealthKnown) return apiHealth;
   try {
     const r = await fetch('/api/health', { headers: { Accept: 'application/json' } });
-    backendTTS = r.ok ? Boolean((await r.json()).tts) : false;
+    apiHealth = r.ok ? await r.json() : {};
   } catch {
-    backendTTS = false;
+    apiHealth = {};
   }
-  return backendTTS;
+  apiHealthKnown = true;
+  return apiHealth;
+}
+async function backendTtsAvailable(): Promise<boolean> {
+  return Boolean((await apiHealthOnce()).tts);
+}
+export async function sttAvailable(): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) return false;
+  return Boolean((await apiHealthOnce()).stt);
 }
 
 // Speak a vocab item: prefer native audio files, then the backend TTS, then the
@@ -181,9 +195,122 @@ export async function recognize({ lang = 'lo-LA', timeoutMs = 10000 } = {}): Pro
   if (res.transcript === null && (res.error === 'no-speech' || res.error === 'aborted' || res.error === null)) {
     res = await recognizeOnce({ lang, timeoutMs });
   }
+  // The browser engine is cloud-bound: it cannot run at all in some browsers
+  // (Firefox, Android WebView) and cannot reach its service behind VPNs,
+  // corporate proxies or ad-blocking DNS ('network'). When deployed with
+  // AZURE_SPEECH_KEY, record the mic ourselves and let /api/stt transcribe.
+  const engineUnusable = res.transcript === null
+    && (res.error === null
+      || res.error === 'network'
+      || res.error === 'service-not-allowed'
+      || res.error === 'audio-capture'
+      || res.error === 'language-not-supported'
+      || res.error === 'language-not-available');
+  if (engineUnusable && (await sttAvailable())) {
+    return recognizeViaBackend({ lang, timeoutMs });
+  }
   if (res.transcript || (res.error !== 'language-not-supported' && res.error !== 'language-not-available')) return res;
   const retry = await recognizeOnce({ lang: 'en-US', timeoutMs });
   return retry.transcript ? retry : { ...retry, error: retry.error || res.error };
+}
+
+// 16 kHz mono 16-bit PCM WAV from raw mic balloons (Azure's real-time STT
+// accepts PCM WAV in every browser we care about, MediaRecorder containers do not).
+function encodeWav(chunks: Float32Array[], fromRate: number, toRate = 16000): ArrayBuffer {
+  let n = 0;
+  for (const c of chunks) n += c.length;
+  const outLen = Math.max(1, Math.round(n / (fromRate / toRate)));
+  const out = new Float32Array(outLen);
+  const ratio = fromRate / toRate;
+  for (let i = 0; i < outLen; i++) {
+    const pos = i * ratio;
+    const j = Math.floor(pos);
+    const frac = pos - j;
+    const a = chunks && j < n ? sample(chunks, j) : 0;
+    const b = j + 1 < n ? sample(chunks, j + 1) : a;
+    out[i] = a + (b - a) * frac;
+  }
+  const bytes = 44 + outLen * 2;
+  const buf = new ArrayBuffer(bytes);
+  const v = new DataView(buf);
+  const str = (off: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, bytes - 8, true); str(8, 'WAVE');
+  str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, toRate, true); v.setUint32(28, toRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, outLen * 2, true);
+  for (let i = 0; i < outLen; i++) {
+    const s = Math.max(-1, Math.min(1, out[i]));
+    v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return buf;
+}
+function sample(chunks: Float32Array[], globalIndex: number): number {
+  for (const c of chunks) {
+    if (globalIndex < c.length) return c[globalIndex];
+    globalIndex -= c.length;
+  }
+  return 0;
+}
+
+// Engine 2: capture the mic ourselves (works with a plain getUserMedia, so
+// Firefox and Android WebView too), stop after ~2s of silence once speech was
+// heard or at the timeout, then let /api/stt transcribe.
+async function recognizeViaBackend({ lang, timeoutMs }: { lang: string; timeoutMs: number }): Promise<RecognizeResult> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof AudioContext === 'undefined') {
+    return { transcript: null, error: 'service-not-allowed' };
+  }
+  let stream: MediaStream | null = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(stream);
+    const proc = ctx.createScriptProcessor(4096, 1, 1); // deprecated, but the one capture node every engine ships
+    const bufs: Float32Array[] = [];
+    let loud = false;
+    let lastLoudAt = 0;
+    const begin = Date.now();
+    proc.onaudioprocess = (e) => {
+      const inp = e.inputBuffer.getChannelData(0);
+      bufs.push(new Float32Array(inp));
+      let sum = 0;
+      for (let i = 0; i < inp.length; i++) sum += inp[i] * inp[i];
+      if (Math.sqrt(sum / inp.length) > 0.02) { loud = true; lastLoudAt = Date.now(); }
+    };
+    const mute = ctx.createGain();
+    mute.gain.value = 0; // ScriptProcessor only processes when wired to the output
+    src.connect(proc);
+    proc.connect(mute);
+    mute.connect(ctx.destination);
+    await new Promise<void>((resolve) => {
+      const check = setInterval(() => {
+        const now = Date.now();
+        if (loud && now - lastLoudAt >= 1900) return resolve();
+        if (now - begin >= timeoutMs) return resolve();
+      }, 100);
+      window.setTimeout(resolve, timeoutMs + 500); // safety net if timers are throttled
+    });
+    proc.disconnect();
+    src.disconnect();
+    mute.disconnect();
+    await ctx.close().catch(() => undefined);
+    if (!bufs.length || !loud) {
+      stream.getTracks().forEach((t) => t.stop());
+      return { transcript: null, error: 'no-speech' };
+    }
+    const wav = encodeWav(bufs, ctx.sampleRate);
+    const form = new FormData();
+    form.append('audio', new Blob([wav], { type: 'audio/wav' }), 'speech.wav');
+    form.append('lang', lang);
+    const r = await fetch('/api/stt', { method: 'POST', body: form });
+    stream.getTracks().forEach((t) => t.stop());
+    if (!r.ok) return { transcript: null, error: 'network' };
+    const j = (await r.json()) as { text?: string };
+    return j.text ? { transcript: j.text, error: null } : { transcript: null, error: 'no-speech' };
+  } catch {
+    return { transcript: null, error: 'network' };
+  } finally {
+    stream?.getTracks().forEach((t) => t.stop());
+  }
 }
 
 // Minimal structural types for the Web Speech API (not in TypeScript's DOM lib).
