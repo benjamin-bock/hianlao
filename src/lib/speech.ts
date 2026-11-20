@@ -124,31 +124,66 @@ export function canRecognize(): boolean {
   return 'SpeechRecognition' in w || 'webkitSpeechRecognition' in w;
 }
 
-export function recognize({ lang = 'lo-LA', timeoutMs = 8000 }: { lang?: string; timeoutMs?: number } = {}): Promise<string | null> {
+// What a recognition attempt ended with: a transcript, or the engine's error
+// code ('not-allowed' = mic permission blocked, 'service-not-allowed' = engine
+// absent (Android WebView), 'network' = cloud recognizer unreachable,
+// 'language-not-supported' = e.g. Safari without a Lao dictation language,
+// 'no-speech' = nothing said before the engine gave up, 'timeout' = our limit).
+export interface RecognizeResult {
+  transcript: string | null;
+  error: string | null;
+}
+
+function recognizeOnce({ lang, timeoutMs }: { lang: string; timeoutMs: number }): Promise<RecognizeResult> {
   return new Promise((resolve) => {
-    if (!canRecognize()) return resolve(null);
+    if (!canRecognize()) return resolve({ transcript: null, error: 'service-not-allowed' });
     try {
       const w = window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike; webkitSpeechRecognition?: new () => SpeechRecognitionLike };
       const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-      if (!SR) return resolve(null);
+      if (!SR) return resolve({ transcript: null, error: 'service-not-allowed' });
       const rec = new SR();
       rec.lang = lang;
       rec.interimResults = false;
       rec.maxAlternatives = 3;
       let done = false;
-      const finish = (val: string | null) => { if (!done) { done = true; try { rec.stop(); } catch { /* ignore */ } resolve(val); } };
-      rec.onresult = (e) => {
-        const alts = Array.from(e.results[0]).map((a) => a.transcript).join(' | ');
-        finish(alts);
+      let transcript: string | null = null;
+      let errorCode: string | null = null;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        try { rec.stop(); } catch { /* ignore */ }
+        resolve({ transcript, error: errorCode });
       };
-      rec.onerror = () => finish(null);
-      rec.onend = () => finish(null);
-      setTimeout(() => finish(null), timeoutMs);
+      rec.onresult = (e) => {
+        transcript = Array.from(e.results[0]).map((a) => a.transcript).join(' | ') || null;
+        finish();
+      };
+      rec.onerror = (e) => { errorCode = e.error || 'speech-error'; finish(); };
+      rec.onend = finish;
+      setTimeout(finish, timeoutMs);
       rec.start();
-    } catch {
-      resolve(null);
+    } catch (e) {
+      resolve({ transcript: null, error: (e as Error)?.name || 'speech-error' });
     }
   });
+}
+
+// Speech recognition in one go. If the engine cannot handle the requested
+// language at all (Safari, some Android browsers have no Lao voice typing),
+// retry once in English so the learner can still say the romanization —
+// speechMatches() accepts that path.
+export async function recognize({ lang = 'lo-LA', timeoutMs = 10000 } = {}): Promise<RecognizeResult> {
+  let res = await recognizeOnce({ lang, timeoutMs });
+  // Chrome aborts the first session while the mic warms up ('aborted'), can call
+  // 'no-speech' before the learner gets a word out, and sometimes just ends with
+  // neither result nor error - so give it exactly one quiet second wind.
+  // Permission is already granted, so no new prompt appears.
+  if (res.transcript === null && (res.error === 'no-speech' || res.error === 'aborted' || res.error === null)) {
+    res = await recognizeOnce({ lang, timeoutMs });
+  }
+  if (res.transcript || (res.error !== 'language-not-supported' && res.error !== 'language-not-available')) return res;
+  const retry = await recognizeOnce({ lang: 'en-US', timeoutMs });
+  return retry.transcript ? retry : { ...retry, error: retry.error || res.error };
 }
 
 // Minimal structural types for the Web Speech API (not in TypeScript's DOM lib).
@@ -159,7 +194,7 @@ interface SpeechRecognitionLike {
   start(): void;
   stop(): void;
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error?: string; message?: string }) => void) | null;
   onend: (() => void) | null;
 }
 
@@ -167,16 +202,41 @@ export function normalize(s: string): string {
   return String(s || '')
     .toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[.,!?;:"'’“”()[\]…¿¡]/g, '')
+    .replace(/[\u0ec8-\u0ecb]/g, '') // Lao tone marks: voice typing adds/drops them on near-hits
+    .replace(/[.,!?;:"'’“”()[\]…¿¡-]/g, '') // includes '-', so "sa-bai-dii" == "sa bai dii"
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-// Loose comparison for speech results: accept if the transcript matches the Lao
-// script, the romanization, or contains either as a substring.
+// Levenshtein over a few short strings; transcript and target are single words.
+function similarity(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (!m || !n) return 0;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return 1 - prev[n] / Math.max(m, n);
+}
+
+const SIMILAR_ENOUGH = 0.75; // one edit still matches words of ~4+ chars
+
+// Loose comparison for speech results: each engine alternative (recognize()
+// joins them with ' | ') is accepted if it matches the Lao script or the
+// romanization, or comes close to either - voice typing mishears a tone mark
+// or vowel length now and then, though the learner said the word correctly.
 export function speechMatches(transcript: string | null, item: VocabEntry): boolean {
   if (!transcript) return false;
-  const t = normalize(transcript);
   const targets = [normalize(item.lao), normalize(item.romanization)].filter(Boolean);
-  return targets.some((target) => t.includes(target) || target.includes(t));
+  const despaced = (s: string) => s.replace(/\s+/g, ''); // targets carry no spaces either
+  return transcript.split(' | ').some((alt) => {
+    const t = normalize(alt);
+    if (!t) return false;
+    const forms = [t, despaced(t)];
+    return targets.some((target) => forms.some((form) => form.includes(target) || target.includes(form) || similarity(form, target) >= SIMILAR_ENOUGH));
+  });
 }

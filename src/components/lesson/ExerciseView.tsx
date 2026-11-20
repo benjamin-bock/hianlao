@@ -435,12 +435,25 @@ function SpeakView({ ex, answered, onResolve }: ExerciseProps) {
     if (answered || busy) return;
     setBusy(true);
     setStatus(t('speak_listening'));
-    const transcript = await recognize({ lang: 'lo-LA' });
+    const res = await recognize({ lang: 'lo-LA' });
     setBusy(false);
     if (answered) return;
-    if (transcript === null) { setStatus(t('speak_missed')); return; }
-    setStatus(t('speak_heard', { x: transcript }));
-    onResolve(speechMatches(transcript, item), `${item.lao} — ${item.romanization}`);
+    if (res.transcript === null) {
+      // Surface the real reason instead of a generic miss — the mic cannot be
+      // fixed if the user doesn't know why it turned off.
+      setStatus(
+        res.error === 'not-allowed'
+          ? t('speak_denied')
+          : res.error === 'service-not-allowed'
+            ? t('speak_nomic')
+            : res.error === 'network'
+              ? t('speak_network')
+              : t('speak_missed'),
+      );
+      return;
+    }
+    setStatus(t('speak_heard', { x: res.transcript }));
+    onResolve(speechMatches(res.transcript, item), `${item.lao} — ${item.romanization}`);
   };
 
   const saidIt = () => {
