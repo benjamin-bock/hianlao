@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Volume2 } from 'lucide-react';
 import { speakItem } from '@/lib/speech';
 import type { VocabEntry } from '@/data/types';
 
@@ -18,7 +19,7 @@ export function SpeakButton({ item, className = '' }: { item: VocabEntry; classN
         setPlaying(false);
       }}
     >
-      🔊
+      <Volume2 />
     </button>
   );
 }
