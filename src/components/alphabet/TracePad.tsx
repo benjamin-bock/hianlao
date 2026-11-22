@@ -163,6 +163,64 @@ function dilate(src: Uint8ClampedArray | Uint8Array, r: number): Uint8Array {
   return out;
 }
 
+// two-pass chamfer distance field: distance of every pixel to the nearest ink pixel
+function distField(mask: Uint8Array): Float32Array {
+  const INF = 1e9;
+  const d = new Float32Array(CANVAS * CANVAS);
+  for (let i = 0; i < CANVAS * CANVAS; i++) d[i] = mask[i] ? 0 : INF;
+  for (let y = 0; y < CANVAS; y++) {
+    for (let x = 0; x < CANVAS; x++) {
+      const i = y * CANVAS + x;
+      let m = d[i];
+      if (x > 0) m = Math.min(m, d[i - 1] + 1);
+      if (y > 0) m = Math.min(m, d[i - CANVAS] + 1);
+      if (x > 0 && y > 0) m = Math.min(m, d[i - CANVAS - 1] + 1.4142);
+      if (x < CANVAS - 1 && y > 0) m = Math.min(m, d[i - CANVAS + 1] + 1.4142);
+      d[i] = m;
+    }
+  }
+  for (let y = CANVAS - 1; y >= 0; y--) {
+    for (let x = CANVAS - 1; x >= 0; x--) {
+      const i = y * CANVAS + x;
+      let m = d[i];
+      if (x < CANVAS - 1) m = Math.min(m, d[i + 1] + 1);
+      if (y < CANVAS - 1) m = Math.min(m, d[i + CANVAS] + 1);
+      if (x < CANVAS - 1 && y < CANVAS - 1) m = Math.min(m, d[i + CANVAS + 1] + 1.4142);
+      if (x > 0 && y < CANVAS - 1) m = Math.min(m, d[i + CANVAS - 1] + 1.4142);
+      d[i] = m;
+    }
+  }
+  return d;
+}
+
+// Refine the bounding-box fit so the model's ink actually sits on the glyph's
+// ink: local search over scale/translation minimizing the symmetric chamfer
+// distance between the rasterized model strokes and the ghost glyph mask.
+function refineFit(modelPts: Array<Array<Pt>>, glyphMask: Uint8Array, fit0: { sc: number; ox: number; oy: number }) {
+  const distG = distField(glyphMask);
+  let gN = 0;
+  for (let i = 0; i < CANVAS * CANVAS; i++) if (glyphMask[i]) gN++;
+  let best = { cost: Infinity, sc: fit0.sc, ox: fit0.ox, oy: fit0.oy };
+  for (const f of [0.94, 0.97, 1, 1.03, 1.06]) {
+    for (const dx of [-14, -7, 0, 7, 14]) {
+      for (const dy of [-14, -7, 0, 7, 14]) {
+        const sc = fit0.sc * f, ox = fit0.ox + dx, oy = fit0.oy + dy;
+        const mapped = modelPts.map((mp) => mp.map((p) => ({ x: p.x * sc + ox, y: p.y * sc + oy })));
+        const mask = alphaMask(rasterize(strokePolylines(mapped), BRUSH * 1.2));
+        const distM = distField(mask);
+        let mSum = 0, mN = 0, gSum = 0;
+        for (let i = 0; i < CANVAS * CANVAS; i++) {
+          if (mask[i]) { mN++; mSum += distG[i]; }
+          if (glyphMask[i]) gSum += distM[i];
+        }
+        const cost = mSum / (mN || 1) + gSum / (gN || 1);
+        if (cost < best.cost) best = { cost, sc, ox, oy };
+      }
+    }
+  }
+  return { sc: best.sc, ox: best.ox, oy: best.oy };
+}
+
 // score learner ink against a guide-line mask, with spill measured outside a
 // looser mask covering every stroke of the glyph (early strokes of the next
 // line are not punished)
@@ -219,10 +277,12 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     g.fillText(letter.lao, CANVAS / 2, CANVAS / 2 + CANVAS * 0.02);
     const data = g.getImageData(0, 0, CANVAS, CANVAS).data;
     let x0 = CANVAS, y0 = CANVAS, x1 = 0, y1 = 0, any = false;
+    const glyphMask = new Uint8Array(CANVAS * CANVAS);
     for (let y = 0; y < CANVAS; y++) {
       for (let x = 0; x < CANVAS; x++) {
         if (data[(y * CANVAS + x) * 4 + 3] > 40) {
           any = true;
+          glyphMask[y * CANVAS + x] = 1;
           if (x < x0) x0 = x;
           if (x > x1) x1 = x;
           if (y < y0) y0 = y;
@@ -243,11 +303,12 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     const mw = mx1 - mx0 || 1, mh = my1 - my0 || 1;
     const gw = x1 - x0 + 1, gh = y1 - y0 + 1;
     const sc = Math.min(gw / mw, gh / mh);
-    setFit({
+    const fit0 = {
       sc,
       ox: x0 + gw / 2 - (mx0 + mw / 2) * sc,
       oy: y0 + gh / 2 - (my0 + mh / 2) * sc,
-    });
+    };
+    setFit(refineFit(modelPts, glyphMask, fit0));
   }, [modelPts, letter.lao, fontTick]);
 
   const toCanvas = (p: Pt): Pt => (fit ? { x: p.x * fit.sc + fit.ox, y: p.y * fit.sc + fit.oy } : p);
