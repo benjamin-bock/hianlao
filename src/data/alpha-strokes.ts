@@ -40,10 +40,9 @@ export const ALPHA_STROKES: Record<string, AlphaStroke[]> = {
     s('M 26 34 L 26 96'),
     s('M 26 50 Q 30 32 46 32 Q 62 32 66 46 L 66 96'),
   ],
-  // ງ — head ring top-right, then the sweeping body with the open bowl
+  // ງ — one continuous stroke: head hook over the top, down the right side, curling left along the foot
   'ງ': [
-    s(ring(65, 24, 13)),
-    s('M 54 35 Q 38 42 38 58 Q 38 78 55 78 Q 69 78 69 60 Q 69 46 55 50'),
+    s('M 34 20 Q 40 11 50 12 Q 60 13 61 24 L 60 80 Q 60 92 46 96 Q 30 99 24 91'),
   ],
   // ຈ — loop left, then the roof arc ending in the inner hook
   'ຈ': [
