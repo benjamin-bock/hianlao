@@ -10,19 +10,22 @@ import { t, useI18n, setLang, LANGS, type Lang } from '@/lib/i18n';
 import { applyTheme, getTheme, toggleTheme } from '@/lib/theme';
 import { fxEnabled, setFxEnabled, sfx } from '@/lib/fx';
 import { FxLayer } from '@/components/FxLayer';
+import { NAV_ICONS } from '@/components/Icons';
 import { getState, touchStreak, getUser, initAuth, type ApiUser } from '@/lib/store';
 import { VOCAB } from '@/data/vocab.ts';
 import { UNITS, LESSON_BY_ID } from '@/data/units.ts';
 import { GRAMMAR } from '@/data/grammar.ts';
+import { Flame, Heart, Moon, Sun, UserRound, Volume2, VolumeX, Zap } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
 
 const NAV = [
-  { page: 'home', href: '/', key: 'nav_home', icon: '🏠' },
-  { page: 'learn', href: '/learn', key: 'nav_learn', icon: '🧠' },
-  { page: 'alphabet', href: '/alphabet', key: 'nav_alphabet', icon: '🔤' },
-  { page: 'review', href: '/review', key: 'nav_review', icon: '🔁' },
-  { page: 'words', href: '/words', key: 'nav_words', icon: '💬' },
-  { page: 'grammar', href: '/grammar', key: 'nav_grammar', icon: '📖' },
-  { page: 'culture', href: '/culture', key: 'nav_culture', icon: '🇱🇦' },
+  { page: 'home', href: '/', key: 'nav_home' },
+  { page: 'learn', href: '/learn', key: 'nav_learn' },
+  { page: 'alphabet', href: '/alphabet', key: 'nav_alphabet' },
+  { page: 'review', href: '/review', key: 'nav_review' },
+  { page: 'words', href: '/words', key: 'nav_words' },
+  { page: 'grammar', href: '/grammar', key: 'nav_grammar' },
+  { page: 'culture', href: '/culture', key: 'nav_culture' },
 ];
 
 interface ShellCtx {
@@ -41,14 +44,14 @@ function activeFromPath(path: string): string {
 }
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
-  const [themeIcon, setThemeIcon] = useState('🌙');
+  const [dark, setDark] = useState(false);
   const [fxOn, setFxOn] = useState(true);
   const [stats, setStats] = useState({ xp: 0, streak: 0 });
   const [user, setUserState] = useState<ApiUser | null>(null);
 
   useEffect(() => {
     applyTheme();
-    setThemeIcon(getTheme() === 'dark' ? '☀️' : '🌙');
+    setDark(getTheme() === 'dark');
     setFxOn(fxEnabled());
     setStats(getState());
     // PWA: register the service worker (only over http(s), not file://).
@@ -87,10 +90,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="header-stats">
-            <span className="pill xp-pill" title="XP earned">⚡ {stats.xp}</span>
-            <span className="pill streak-pill" title="Daily streak">🔥 {stats.streak}</span>
+            <span className="pill xp-pill" title="XP earned"><Zap size={14} strokeWidth={2.6} /> {stats.xp}</span>
+            <span className="pill streak-pill" title="Daily streak"><Flame size={14} strokeWidth={2.4} /> {stats.streak}</span>
             <Link id="auth-chip" className={`pill auth-chip${user ? ' signed-in' : ''}`} href="/account" title="Account & progress sync">
-              👤 <span className="auth-label">{user ? (user.displayName || user.username) : t('sign_in')}</span>
+              <UserRound size={15} strokeWidth={2.4} /> <span className="auth-label">{user ? (user.displayName || user.username) : t('sign_in')}</span>
             </Link>
             <button
               id="sound-toggle"
@@ -100,16 +103,16 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               aria-pressed={fxOn}
               onClick={() => { const on = !fxEnabled(); setFxEnabled(on); setFxOn(on); if (on) sfx('click'); }}
             >
-              {fxOn ? '🔊' : '🔇'}
+              {fxOn ? <Volume2 /> : <VolumeX />}
             </button>
             <button
               id="theme-toggle"
               className="icon-btn"
               title="Toggle dark theme"
               aria-label="Toggle dark theme"
-              onClick={() => setThemeIcon(toggleTheme() === 'dark' ? '☀️' : '🌙')}
+              onClick={() => setDark(toggleTheme() === 'dark')}
             >
-              {themeIcon}
+              {dark ? <Sun /> : <Moon />}
             </button>
             <div className="lang-switch" role="group" aria-label="Language">
               {(Object.entries(LANGS) as Array<[Lang, string]>).map(([code, label]) => (
@@ -139,10 +142,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="footer-links">
             {NAV.map((n) => <Link key={n.page} href={n.href}>{t(n.key)}</Link>)}
-            <a href="https://github.com/benjamin-bock/hianlao" target="_blank" rel="noopener">GitHub ↗</a>
+            <a href="https://github.com/benjamin-bock/hianlao" target="_blank" rel="noopener"><FaGithub style={{ verticalAlign: '-.12em', marginRight: '.25em' }} />GitHub</a>
           </div>
           <p className="footer-note">
-            MIT licensed · {VOCAB.length}+ words · {Object.keys(LESSON_BY_ID).length} lessons · {GRAMMAR.length} grammar guides · made with ❤️ for{' '}
+            MIT licensed · {VOCAB.length}+ words · {Object.keys(LESSON_BY_ID).length} lessons · {GRAMMAR.length} grammar guides · made with <Heart size={13} style={{ verticalAlign: '-.1em', color: 'var(--lao-red)', fill: 'var(--lao-red)' }} /> for{' '}
             <span className="lao">ຄົນລາວ</span> <span className="lao-roman">khon Lao</span> worldwide
           </p>
         </div>
@@ -157,7 +160,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             className={`bn-item${n.page === active ? ' active' : ''}`}
             aria-current={n.page === active ? 'page' : undefined}
           >
-            <span className="bn-icon" aria-hidden="true">{n.icon}</span>
+            <span className="bn-icon" aria-hidden="true">{(() => { const I = NAV_ICONS[n.page]; return I ? <I /> : null; })()}</span>
             <span className="bn-label">{t(n.key)}</span>
           </Link>
         ))}

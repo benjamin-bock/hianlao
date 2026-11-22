@@ -1,11 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HianLao logo">
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="#002868"/>
-  <rect x="2" y="26" width="60" height="12" fill="#ce1126"/>
-  <!-- That Luang style stupa -->
-  <rect x="14" y="44" width="36" height="8" rx="2" fill="#fff"/>
-  <rect x="18" y="36" width="28" height="8" rx="2" fill="#fff"/>
-  <path d="M22 36 Q32 18 42 36 Z" fill="#fff"/>
-  <rect x="30" y="10" width="4" height="12" rx="2" fill="#ffc800"/>
-  <circle cx="32" cy="9" r="3" fill="#ffc800"/>
-  <circle cx="32" cy="31" r="3" fill="#ffc800"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#002868"/>
+      <stop offset=".55" stop-color="#2b47c4"/>
+      <stop offset="1" stop-color="#ce1126"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <!-- That Luang-inspired stupa, geometric white mark -->
+  <g fill="#fff">
+    <circle cx="32" cy="11.5" r="2.7"/>
+    <path d="M32 14.5 L38 30 H26 Z"/>
+    <rect x="22.5" y="31" width="19" height="5.4" rx="2"/>
+    <rect x="19.5" y="38.4" width="25" height="5.4" rx="2"/>
+    <rect x="16.5" y="45.8" width="31" height="5.8" rx="2"/>
+  </g>
+  <circle cx="32" cy="33.7" r="1.7" fill="#ffc800"/>
+  <circle cx="32" cy="41.1" r="1.7" fill="#ffc800"/>
 </svg>

@@ -1,4 +1,5 @@
 'use client';
+import { BicepsFlexed, CircleCheck, CircleX, Dumbbell, Flame, Hourglass, RotateCcw, Star, Volume2 } from 'lucide-react';
 
 // Review: spaced repetition, two layers.
 //   list    — lessons due for review (per-lesson SRS queue) + a "word drill"
@@ -233,13 +234,13 @@ export default function ReviewPage() {
     return (
       <>
         <div className="page-head">
-          <h1>🔁 {t('review_title')}</h1>
+          <h1><RotateCcw size={26} style={{ verticalAlign: '-.25em', marginRight: '.3em', color: 'var(--brand)' }} /> {t('review_title')}</h1>
           <p className="section-sub">{t('review_sub')}</p>
         </div>
 
         <div className="card practice-card">
           <div className="practice-head">
-            <span className="practice-ico" aria-hidden="true">🏋️</span>
+            <span className="practice-ico" aria-hidden="true"><Dumbbell /></span>
             <div>
               <strong>{t('rev_practice_title')}</strong>
               <p className="section-sub">
@@ -263,7 +264,7 @@ export default function ReviewPage() {
           <>
             {due.length ? (
               <section className="unit-section">
-                <h2>🔥 {t('review_due')} ({due.length})</h2>
+                <h2><Flame size={20} style={{ verticalAlign: '-.2em', marginRight: '.25em', color: '#ff7a00' }} /> {t('review_due')} ({due.length})</h2>
                 <div className="lessons-path" style={{ marginLeft: 0 }}>
                   {due.map((l) => <LessonRow key={l.id} l={l} dueNow />)}
                 </div>
@@ -288,7 +289,7 @@ export default function ReviewPage() {
     return (
       <div className="fx-stage">
         <div className="summary-card card">
-          <div className="summary-star">{mistakes ? '💪' : '⭐'}</div>
+          <div className="summary-star">{mistakes ? <BicepsFlexed /> : <Star />}</div>
           <h2>{t('rev_done_title')}</h2>
           <div className="summary-letters">
             {practiced.map((w) => (
@@ -303,7 +304,7 @@ export default function ReviewPage() {
           </p>
         </div>
         <div className="summary-actions">
-          <button className="btn btn-primary btn-lg" onClick={startPractice}>🔁 {t('rev_practice_start')}</button>
+          <button className="btn btn-primary btn-lg" onClick={startPractice}><RotateCcw /> {t('rev_practice_start')}</button>
           <button className="btn btn-ghost btn-lg" onClick={() => { setMode('list'); refreshList(); }}>{t('alpha_back')}</button>
         </div>
       </div>
@@ -329,13 +330,13 @@ export default function ReviewPage() {
 
       {current.kind === 'listen' ? (
         <div className="big-word card drill-card rev-listen-card">
-          <button className="icon-btn listen-play" title={t('rev_q_listen')} aria-label={t('rev_q_listen')} onClick={() => { void speakItem(current.w); }}>🔊</button>
+          <button className="icon-btn listen-play" title={t('rev_q_listen')} aria-label={t('rev_q_listen')} onClick={() => { void speakItem(current.w); }}><Volume2 /></button>
         </div>
       ) : current.kind === 'meaning' ? (
         <div className="big-word card drill-card">
           <div className="alpha-glyph-lg lao">{current.w.lao}</div>
           <div className="word-romanization">{current.w.romanization}</div>
-          <button className="icon-btn speak-btn" title="🔊" aria-label="🔊" onClick={() => { void speakItem(current.w); }}>🔊</button>
+          <button className="icon-btn speak-btn" title="Listen" aria-label="Listen" onClick={() => { void speakItem(current.w); }}><Volume2 /></button>
         </div>
       ) : (
         <div className="big-word card drill-card">
@@ -372,8 +373,7 @@ export default function ReviewPage() {
 
       {picked ? (
         <div className={`feedback ${picked.correct ? 'ok' : 'bad'}`}>
-          <img src="/img/elephant.svg" alt="" className={`feedback-mascot${picked.correct ? '' : ' somber'}`} aria-hidden="true" />
-          <div className="feedback-icon" aria-hidden="true">{picked.correct ? '🎉' : '💡'}</div>
+          <div className="feedback-icon" aria-hidden="true">{picked.correct ? <CircleCheck /> : <CircleX />}</div>
           <div>
             {picked.correct ? (
               <H
@@ -401,7 +401,7 @@ function LessonRow({ l, dueNow }: { l: { id: string } & ReviewEntry; dueNow: boo
   const meta = LESSON_BY_ID[l.id];
   return (
     <Link className={`lesson-node${dueNow ? '' : ' locked'}`} href={`/lesson?id=${l.id}`}>
-      <div className="lesson-circle" style={{ ['--unit-color' as string]: '#8b5cf6' }}>{dueNow ? '🔁' : '⏳'}</div>
+      <div className="lesson-circle" style={{ ['--unit-color' as string]: '#8b5cf6' }}>{dueNow ? <RotateCcw /> : <Hourglass />}</div>
       <div className="lesson-meta">
         <strong>{meta ? pf(meta, 'title') ?? meta.id : l.id}</strong>
         <span>{dueNow ? t('review_start') : new Date(l.due).toLocaleString()}</span>

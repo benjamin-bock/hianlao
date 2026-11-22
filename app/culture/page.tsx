@@ -3,6 +3,7 @@
 // Culture: illustrated stories. Ported from legacy culturepage.js.
 import { useT } from '@/lib/i18n';
 import { CULTURE } from '@/data/culture.ts';
+import { CultureIcon } from '@/components/Icons';
 import type { CultureBlock } from '@/data/types';
 
 export default function CulturePage() {
@@ -19,7 +20,7 @@ export default function CulturePage() {
       {CULTURE.map((c) => (
         <section key={c.id} className="doc-section card culture-section" id={`c-${c.id}`}>
           {c.img ? <img className="culture-img" src={`/img/${c.img}`} alt={c.title} loading="lazy" /> : null}
-          <h2>{c.icon} {fr ? c.titleFr : c.title}</h2>
+          <h2><CultureIcon id={c.id} style={{ verticalAlign: '-.15em', marginRight: '.35em', color: 'var(--brand)' }} /> {fr ? c.titleFr : c.title}</h2>
           {c.blocks.map((b, i) => <CultureBlockView key={i} b={b} fr={fr} />)}
         </section>
       ))}

@@ -5,7 +5,7 @@ import type { CultureStory } from './types.ts';
 
 export const CULTURE: CultureStory[] = [
   {
-    id: "laos", icon: "🇱🇦", img: "stupa.svg", title: "Laos at a glance", titleFr: "Le Laos en un coup d’œil",
+    id: "laos", icon: "🇱🇦", img: "illu/travelers.svg", title: "Laos at a glance", titleFr: "Le Laos en un coup d’œil",
     blocks: [
       { t: "p", html: "<b>Laos</b> (<span class=\"lao\">ປະເທດລາວ</span>, <i>Pa-thet Lao</i>) is a landlocked country in Southeast Asia, bordered by Thailand, Vietnam, Cambodia, Myanmar and China. Its people call it <b>\"the land of a million elephants\"</b> — the former kingdom of <b>Lan Xang</b> (<span class=\"lao\">ລ້ານຊ້າງ</span>).", htmlFr: "Le <b>Laos</b> (<span class=\"lao\">ປະເທດລາວ</span>, <i>Pa-thet Lao</i>) est un pays enclavé d’Asie du Sud-Est, bordé par la Thaïlande, le Vietnam, le Cambodge, le Myanmar et la Chine. Ses habitants l’appellent <b>« le pays du million d’éléphants »</b> — l’ancien royaume de <b>Lan Xang</b> (<span class=\"lao\">ລ້ານຊ້າງ</span>)." },
       { t: "p", html: "The <b>Mekong river</b> (<span class=\"lao\">ແມ່ນ້ຳຂອງ</span>, <i>mae nam khong</i>) is the country's lifeline and border. The capital is <b>Vientiane</b> (<span class=\"lao\">ວຽງຈັນ <i>(Vieng Chan)</i></span></span>), and the spiritual heart is <b>Luang Prabang</b> (<span class=\"lao\">ຫຼວງພະບາງ</span>), a UNESCO city of golden temples. Other wonders: the mysterious <b>Plain of Jars</b> and the <b>Pak Ou caves</b> full of Buddha statues.", htmlFr: "Le <b>Mékong</b> (<span class=\"lao\">ແມ່ນ້ຳຂອງ</span>, <i>mae nam khong</i>) est la colonne vertébrale et la frontière du pays. La capitale est <b>Vientiane</b> (<span class=\"lao\">ວຽງຈັນ</span>, <i>Vieng Chan</i>), et le cœur spirituel est <b>Luang Prabang</b> (<span class=\"lao\">ຫຼວງພະບາງ</span>), ville de temples dorés classée à l’UNESCO. Autres merveilles : la mystérieuse <b>Plaine des Jarres</b> et les <b>grottes de Pak Ou</b>, pleines de statues de Bouddha." },
@@ -23,7 +23,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "festivals", icon: "🎆", img: "festival.svg", title: "Festivals & celebrations", titleFr: "Fêtes et célébrations",
+    id: "festivals", icon: "🎆", img: "illu/celebration.svg", title: "Festivals & celebrations", titleFr: "Fêtes et célébrations",
     blocks: [
       { t: "p", html: "<b>Pi Mai</b> (<span class=\"lao\">ປີໃໝ່</span>) — the <b>Lao New Year</b> in mid-April — is the biggest festival. For three days, people splash water on each other for good luck, build sand stupas at temples and visit family. It is joy, water and <span class=\"lao\">ສະບາຍດີ</span> everywhere.", htmlFr: "<b>Pi Mai</b> (<span class=\"lao\">ປີໃໝ່</span>) — le <b>nouvel an lao</b> à la mi-avril — est la plus grande fête. Pendant trois jours, on s’arrose d’eau pour porter chance, on construit des stuvas de sable dans les temples et on rend visite à la famille. C’est la joie, l’eau et des <span class=\"lao\">ສະບາຍດີ</span> partout." },
       { t: "list", items: [
@@ -40,7 +40,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "food", icon: "🍛", img: "food.svg", title: "Food & meals", titleFr: "Manger à la lao",
+    id: "food", icon: "🍛", img: "illu/eating-together.svg", title: "Food & meals", titleFr: "Manger à la lao",
     blocks: [
       { t: "p", html: "Lao meals are built around <b>sticky rice</b> (<span class=\"lao\">ເຂົ້າໜຽວ</span>, <i>khao niao</i>) — eaten with the hands, rolled into small balls and dipped into dishes. The national dish is <b>larb</b> (<span class=\"lao\">ລາບ</span>): a fresh minced-meat salad with lime, fish sauce, herbs and toasted rice powder. <b>Tam mak hoong</b> (<span class=\"lao\">ຕຳໝາກຮຸ່ງ</span>) is the fiery green papaya salad.", htmlFr: "Les repas lao s’organisent autour du <b>riz gluant</b> (<span class=\"lao\">ເຂົ້າໜຽວ</span>, <i>khao niao</i>) — mangé à la main, roulé en petites boulettes et trempé dans les plats. Le plat national est le <b>larb</b> (<span class=\"lao\">ລາບ</span>) : une salade de viande hachée fraîche, au citron vert, sauce de poisson, herbes et riz grillé pilé. Le <b>tam mak hoong</b> (<span class=\"lao\">ຕຳໝາກຮຸ່ງ</span>) est la salade de papaye verte, bien piquante." },
       { t: "list", items: [
@@ -59,7 +59,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "etiquette", icon: "🙏", img: "greeting.svg", title: "Etiquette & daily life", titleFr: "Politesse et vie quotidienne",
+    id: "etiquette", icon: "🙏", img: "illu/hello.svg", title: "Etiquette & daily life", titleFr: "Politesse et vie quotidienne",
     blocks: [
       { t: "p", html: "The Lao greeting is the <b>nop</b> — hands pressed together like a prayer: raise them to your chest for equals, higher for elders, monks and Buddha images. Say <span class=\"lao\">ສະບາຍດີ</span> <i>(sa-bai-dii)</i> with a smile.", htmlFr: "La salutation lao est le <b>nop</b> — mains jointes comme pour une prière : à hauteur de poitrine entre égaux, plus haut pour les aînés, les moines et les images de Bouddha. Dis <span class=\"lao\">ສະບາຍດີ</span> <i>(sa-bai-dii)</i> avec le sourire." },
       { t: "list", items: [
@@ -80,7 +80,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "language", icon: "🗣️", img: "script.svg", title: "The Lao language", titleFr: "La langue lao",
+    id: "language", icon: "🗣️", img: "illu/chatting.svg", title: "The Lao language", titleFr: "La langue lao",
     blocks: [
       { t: "p", html: "Lao belongs to the <b>Tai language family</b>, and spoken Lao is quite close to Thai — but the scripts, tones and many words are different, and Lao has its own charm. The standard is the <b>Vientiane dialect</b>; other dialects exist in the north (Luang Prabang) and south (Champasak), plus Lao communities in Thailand (Isan).", htmlFr: "Le lao appartient à la <b>famille des langues tai</b>, et le lao parlé est proche du thaï — mais les écritures, les tons et bien des mots diffèrent, et le lao a son charme propre. La norme est le <b>dialecte de Vientiane</b> ; d’autres dialectes existent au nord (Luang Prabang) et au sud (Champasak), sans oublier les communautés lao de Thaïlande (Isan)." },
       { t: "p", html: "Lao is <b>analytic</b>: no verb conjugations, no plural forms, no genders. Grammar is mostly word order and small particles. Once you learn the tones and the script, everything clicks — — <span class=\"lao\">ຮຽນ</span> <i>(hian, \"to learn\")</i> is exactly what HianLao is for!", htmlFr: "Le lao est une langue <b>analytique</b> : pas de conjugaisons, pas de pluriels, pas de genres. La grammaire tient à l’ordre des mots et à quelques petites particules. Quand tu maîtrises les tons et l’écriture, tout devient limpide — <span class=\"lao\">ຮຽນ</span> <i>(hian, « apprendre »)</i> est exactement la vocation de HianLao !" },
@@ -88,7 +88,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "diaspora", icon: "🌏", img: "elephant.svg", title: "The Lao diaspora", titleFr: "La diaspora lao",
+    id: "diaspora", icon: "🌏", img: "illu/connected-world.svg", title: "The Lao diaspora", titleFr: "La diaspora lao",
     blocks: [
       { t: "p", html: "After the fall of the Kingdom of Laos in 1975, hundreds of thousands of Lao fled as refugees. Today there are vibrant Lao communities in the <b>United States</b> (California, Minnesota, Texas…), <b>France</b> (Paris, Lyon…), <b>Australia</b>, <b>Canada</b> and beyond.", htmlFr: "Après la chute du royaume du Laos en 1975, des centaines de milliers de Lao ont fui comme réfugiés. Aujourd’hui, des communautés lao dynamiques vivent aux <b>États-Unis</b> (Californie, Minnesota, Texas…), en <b>France</b> (Paris, Lyon…), en <b>Australie</b>, au <b>Canada</b> et ailleurs." },
       { t: "p", html: "For second and third generations, Lao is often the <b>heritage language</b>: spoken at home with grandparents, alive at temple festivals and Pi Mai celebrations. HianLao exists so that language stays free and open — no subscriptions, no paywalls — because <b>every Lao child should be able to learn the language of their family</b>: <span class=\"lao\">ພາສາຂອງເຮົາ</span> <i>(pha-sa khong hao)</i>, \"our language\".", htmlFr: "Pour les deuxième et troisième générations, le lao est souvent une <b>langue d’héritage</b> : parlée à la maison avec les grands-parents, vivante dans les fêtes de temple et les célébrations de Pi Mai. HianLao existe pour que cette langue reste libre et ouverte — sans abonnement, sans paywall — parce que <b>chaque enfant lao devrait pouvoir apprendre la langue de sa famille</b> : <span class=\"lao\">ພາສາຂອງເຮົາ</span> <i>(pha-sa khong hao)</i>, « notre langue »." },
@@ -96,7 +96,7 @@ export const CULTURE: CultureStory[] = [
     ],
   },
   {
-    id: "proverbs", icon: "💬", img: "script.svg", title: "Lao proverbs & sayings", titleFr: "Proverbes et dictons lao",
+    id: "proverbs", icon: "💬", img: "illu/book-reading.svg", title: "Lao proverbs & sayings", titleFr: "Proverbes et dictons lao",
     blocks: [
       { t: "p", html: "Lao wisdom in a few words — these sayings are used in everyday life and are a lovely way to sound like a local:", htmlFr: "La sagesse lao en quelques mots — ces dictons s’emploient dans la vie de tous les jours et sont une jolie façon de parler comme un local :" },
       { t: "list", items: [

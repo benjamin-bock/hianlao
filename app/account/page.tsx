@@ -8,6 +8,8 @@ import { useT } from '@/lib/i18n';
 import { api, initAuth, getState, getUser, totalDone, type ApiUser } from '@/lib/store';
 import { unlockedAchievements, lockedAchievements } from '@/lib/achievements';
 import { useShell } from '@/components/SiteShell';
+import { BadgeIcon } from '@/components/Icons';
+import { Flame, UserRound, Zap } from 'lucide-react';
 import { UNITS } from '@/data/units.ts';
 
 export default function AccountPage() {
@@ -103,18 +105,18 @@ function ProfileCard({ user, onLogout }: { user: ApiUser & { createdAt?: string 
 
   return (
     <div className="card auth-card">
-      <h1>👤 {user.displayName || user.username}</h1>
+      <h1><UserRound size={28} style={{ verticalAlign: '-.25em', marginRight: '.3em', color: 'var(--brand)' }} /> {user.displayName || user.username}</h1>
       <p className="muted">{t('member_since').replace('{x}', String(user.createdAt || '').slice(0, 10)).replace('{u}', user.username)}</p>
       <div className="summary-stats">
-        <div className="stat"><strong>⚡ {s.xp}</strong><span>XP</span></div>
-        <div className="stat"><strong>🔥 {s.streak}</strong><span>{t('stat_streak')}</span></div>
+        <div className="stat"><strong><Zap size={18} style={{ verticalAlign: '-.2em', color: '#b8860b' }} /> {s.xp}</strong><span>XP</span></div>
+        <div className="stat"><strong><Flame size={18} style={{ verticalAlign: '-.2em', color: '#ff7a00' }} /> {s.streak}</strong><span>{t('stat_streak')}</span></div>
         <div className="stat"><strong>{totalDone()}/{totalLessons}</strong><span>{t('stat_lessons_n')}</span></div>
       </div>
       <h2 style={{ marginTop: '1rem' }}>{t('summary_achievements')} ({unlocked.length}/{unlocked.length + locked.length})</h2>
       <div className="badge-grid">
         {[...unlocked, ...locked].map((a) => (
           <div key={a.id} className={`badge-card${a.unlocked ? '' : ' locked'}`}>
-            <span className="badge-icon">{a.icon}</span>
+            <span className="badge-icon"><BadgeIcon id={a.id} /></span>
             <div><strong>{a.name}</strong><p>{a.desc}</p></div>
           </div>
         ))}

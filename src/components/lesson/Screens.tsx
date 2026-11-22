@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { useT } from '@/lib/i18n';
 import { pop, shake } from '@/lib/fx';
+import { BadgeIcon } from '@/components/Icons';
+import { CircleCheck, CircleX, HeartCrack, ShieldCheck, Trophy } from 'lucide-react';
 
 export const esc = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -25,8 +27,7 @@ export function Feedback({ ok, correctText, explain, practice, hearts, onContinu
   const xp = practice ? 5 : 10;
   return (
     <div className={`feedback ${ok ? 'ok' : 'bad'}`}>
-      <img src="/img/elephant.svg" alt="" className={`feedback-mascot${ok ? '' : ' somber'}`} aria-hidden="true" />
-      <div className="feedback-icon" aria-hidden="true">{ok ? '🎉' : '💡'}</div>
+      <div className="feedback-icon" aria-hidden="true">{ok ? <CircleCheck /> : <CircleX />}</div>
       <div>
         <strong>{ok ? pickVariant(t('fb_ok_variants')) : t('fb_bad')}</strong>
         {ok
@@ -56,8 +57,7 @@ export function FailScreen({ correct, total, lessonHref }: { correct: number; to
   return (
     <div className="lesson-stage fx-stage" ref={ref}>
       <div className="summary card fail">
-        <img src="/img/elephant.svg" alt="" className="fail-mascot" aria-hidden="true" />
-        <div className="summary-icon">💔</div>
+        <div className="summary-icon"><HeartCrack /></div>
         <h1>{t('fail_title')}</h1>
         <p
           dangerouslySetInnerHTML={{
@@ -95,7 +95,7 @@ export function SummaryScreen({ icon, laoHtml, body, stats, nextId, missedCount,
   return (
     <div className="lesson-stage fx-stage">
       <div className="summary card">
-        <div className="summary-icon" ref={iconRef}>{icon}</div>
+        <div className="summary-icon" ref={iconRef}>{icon === '🏆' ? <Trophy /> : <ShieldCheck />}</div>
         <h1>{t('done_title')}</h1>
         {laoHtml ? <p className="summary-lao" dangerouslySetInnerHTML={{ __html: laoHtml }} /> : null}
         <p>{body}</p>
@@ -120,7 +120,7 @@ export function SummaryScreen({ icon, laoHtml, body, stats, nextId, missedCount,
             <div className="badge-grid">
               {badges.slice(-6).map((a) => (
                 <div className="badge-card" key={a.id}>
-                  <span className="badge-icon">{a.icon}</span>
+                  <span className="badge-icon"><BadgeIcon id={a.id} /></span>
                   <div><strong>{a.name}</strong><p>{a.desc}</p></div>
                 </div>
               ))}

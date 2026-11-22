@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans, Noto_Sans_Lao } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { SiteShell } from '@/components/SiteShell';
+
+const sans = Plus_Jakarta_Sans({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
+const lao = Noto_Sans_Lao({ subsets: ['lao'], variable: '--font-lao', display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hianlao.vercel.app'),
@@ -40,7 +44,7 @@ const themeInit = `(function(){try{document.documentElement.dataset.theme=localS
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${lao.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>

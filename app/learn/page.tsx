@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n';
 import { isDone, totalDone, api, getUser, getState, setGoal, getDueReviews, getWeakWords } from '@/lib/store';
 import { useShell } from '@/components/SiteShell';
+import { UnitIcon } from '@/components/Icons';
+import { Check, Lock, Play, RotateCcw, Target, Zap } from 'lucide-react';
 import { UNITS } from '@/data/units.ts';
 import { VOCAB_BY_ID } from '@/data/vocab.ts';
 
@@ -58,10 +60,10 @@ export default function LearnPage() {
             value={String(goal)}
             onChange={(e) => { const g = setGoal(Number(e.target.value)); setGoalState(g); setXpToday(getState().xpToday || 0); }}
           >
-            {[10, 20, 50, 100].map((g) => <option key={g} value={String(g)}>⚡ {g} XP</option>)}
+            {[10, 20, 50, 100].map((g) => <option key={g} value={String(g)}>{g} XP</option>)}
           </select>
           <div className="goal-bar"><div className="goal-fill" style={{ width: `${goalPct}%` }} /></div>
-          <span className="muted">{t('goal_today')}: ⚡ {xpToday || 0} / {goal || 20} XP ({goalPct}%)</span>
+          <span className="muted">{t('goal_today')}: <Zap size={13} style={{ verticalAlign: '-.1em' }} /> {xpToday || 0} / {goal || 20} XP ({goalPct}%)</span>
         </div>
       </div>
 
@@ -70,7 +72,7 @@ export default function LearnPage() {
         <div className="nudges">
           {nudges.due ? (
             <Link className="card nudge-card nudge-review" href="/review">
-              <span className="nudge-icon">🔁</span>
+              <span className="nudge-icon"><RotateCcw /></span>
               <div className="nudge-text">
                 <strong>{nudges.due} {t('learn_due_card')}</strong>
                 <span className="muted">{t('learn_due_sub')}</span>
@@ -80,7 +82,7 @@ export default function LearnPage() {
           ) : null}
           {nudges.weak ? (
             <Link className="card nudge-card nudge-weak" href="/lesson?id=__weak">
-              <span className="nudge-icon">🎯</span>
+              <span className="nudge-icon"><Target /></span>
               <div className="nudge-text">
                 <strong>{nudges.weak} {t('learn_weak_card')}</strong>
                 <span className="muted">{t('learn_weak_sub')}</span>
@@ -94,7 +96,7 @@ export default function LearnPage() {
       {UNITS.map((unit) => (
         <section key={unit.id} className="unit-section">
           <div className="unit-header" style={{ ['--unit-color' as string]: unit.color }}>
-            <div className="unit-badge" style={{ ['--unit-color' as string]: unit.color }}>{unit.icon}</div>
+            <div className="unit-badge" style={{ ['--unit-color' as string]: unit.color }}><UnitIcon id={unit.id} /></div>
             <div>
               <h2>{t('unit_n').replace('{x}', String(unit.num)).replace('{y}', pf(unit, 'title') ?? '')}</h2>
               <p className="unit-desc">{pf(unit, 'desc') ?? ''}</p>
@@ -114,7 +116,7 @@ export default function LearnPage() {
                   aria-disabled={unlocked ? 'false' : 'true'}
                   onClick={(e) => { if (!unlocked) e.preventDefault(); }}
                 >
-                  <div className="lesson-circle">{done ? '✓' : unlocked ? '▶' : '🔒'}</div>
+                  <div className="lesson-circle">{done ? <Check strokeWidth={3.2} /> : unlocked ? <Play /> : <Lock />}</div>
                   <div className="lesson-meta">
                     <strong>{pf(l, 'title') ?? ''}</strong>
                     <span>{t('n_exercises').replace('{x}', String(l.exercises.length))}</span>
@@ -128,7 +130,7 @@ export default function LearnPage() {
 
       {next ? (
         <div className="sticky-cta">
-          <Link className="btn btn-primary btn-lg" href={`/lesson?id=${next.id}`}>▶ {t('next_cta')}: {pf(next, 'title') ?? ''}</Link>
+          <Link className="btn btn-primary btn-lg" href={`/lesson?id=${next.id}`}><Play /> {t('next_cta')}: {pf(next, 'title') ?? ''}</Link>
         </div>
       ) : null}
 
@@ -175,7 +177,7 @@ function LeaderboardCard({ user }: { user: { id: number; username: string; displ
                 <li key={e.username} className={me ? 'me' : ''}>
                   <span className="lb-rank">{String(i + 1)}</span>
                   <span className="lb-name">{e.displayName || e.username}</span>
-                  <span className="lb-xp">⚡ {e.xp}</span>
+                  <span className="lb-xp"><Zap size={13} style={{ verticalAlign: '-.1em' }} /> {e.xp}</span>
                 </li>
               );
             })

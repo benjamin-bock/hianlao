@@ -7,6 +7,8 @@ import { useT } from '@/lib/i18n';
 import { getState, totalDone } from '@/lib/store';
 import { SpeakButton } from '@/components/SpeakButton';
 import { H } from '@/components/H';
+import { UnitIcon } from '@/components/Icons';
+import { BookOpen, CaseSensitive, Gift, GraduationCap, Landmark, Target, UserRound, Volume2, type LucideIcon } from 'lucide-react';
 import { VOCAB, VOCAB_BY_ID } from '@/data/vocab.ts';
 import { UNITS, LESSON_BY_ID } from '@/data/units.ts';
 import { GRAMMAR } from '@/data/grammar.ts';
@@ -42,7 +44,9 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-art">
-          <img src="/img/stupa.svg" alt="That Luang stupa illustration" />
+          <div className="illu-frame">
+            <img src="/img/illu/online-learning.svg" alt="Illustration of learning Lao online" />
+          </div>
           <div className="hero-word-card card">
             <div className="word-lao lao">ສະບາຍດີ</div>
             <div className="word-tr">sa-bai-dii</div>
@@ -55,14 +59,17 @@ export default function Home() {
       <section className="features">
         <h2>{t('features_title')}</h2>
         <div className="feature-grid">
-          {feature('🎯', t('feat_lessons'), t('feat_lessons_desc'))}
-          {feature('🔤', t('feat_alphabet'), t('feat_alphabet_desc'))}
-          {feature('🔊', t('feat_audio'), t('feat_audio_desc'))}
-          {feature('📖', t('feat_grammar'), t('feat_grammar_desc'))}
-          {feature('🧺', t('feat_words'), t('feat_words_desc'))}
-          {feature('🇱🇦', t('feat_culture'), t('feat_culture_desc'))}
-          {feature('👤', t('feat_account'), t('feat_account_desc'))}
-          {feature('💚', t('feat_free'), t('feat_free_desc'))}
+          {/* feature cards rendered from the list below */}
+          {[
+            { icon: Target, color: '#58cc02', title: t('feat_lessons'), text: t('feat_lessons_desc') },
+            { icon: CaseSensitive, color: '#1cb0f6', title: t('feat_alphabet'), text: t('feat_alphabet_desc') },
+            { icon: Volume2, color: '#8b5cf6', title: t('feat_audio'), text: t('feat_audio_desc') },
+            { icon: BookOpen, color: '#ff9600', title: t('feat_grammar'), text: t('feat_grammar_desc') },
+            { icon: GraduationCap, color: '#0ea5e9', title: t('feat_words'), text: t('feat_words_desc') },
+            { icon: Landmark, color: '#d946ef', title: t('feat_culture'), text: t('feat_culture_desc') },
+            { icon: UserRound, color: '#14b8a6', title: t('feat_account'), text: t('feat_account_desc') },
+            { icon: Gift, color: '#ce1126', title: t('feat_free'), text: t('feat_free_desc') }
+          ].map((f) => feature(f))}
         </div>
       </section>
 
@@ -72,7 +79,7 @@ export default function Home() {
         <div className="units-preview">
           {UNITS.map((u) => (
             <Link key={u.id} className="unit-chip" href="/learn" style={{ ['--unit-color' as string]: u.color }}>
-              <span className="unit-icon">{u.icon}</span>
+              <span className="unit-icon"><UnitIcon id={u.id} /></span>
               <span className="unit-title">{u.num}. {u.title}</span>
             </Link>
           ))}
@@ -81,7 +88,7 @@ export default function Home() {
       </section>
 
       <section className="cta card">
-        <img src="/img/elephant.svg" alt="" className="cta-mascot" aria-hidden="true" />
+        <img src="/img/illu/graduation.svg" alt="" className="cta-illu" aria-hidden="true" />
         <H as="h2" html={t('cta_title')} />
         <p>{t('cta_sub')}</p>
         <Link className="btn btn-primary btn-lg" href={ctaHref}>{t('cta_now')}</Link>
@@ -90,12 +97,13 @@ export default function Home() {
   );
 }
 
-function feature(icon: string, title: string, text: string) {
+function feature(f: { icon: LucideIcon; color: string; title: string; text: string }) {
+  const Icon = f.icon;
   return (
-    <div key={title} className="feature-card card">
-      <div className="feature-icon">{icon}</div>
-      <h3>{title}</h3>
-      <p>{text}</p>
+    <div key={f.title} className="feature-card card">
+      <div className="feature-icon" style={{ ['--fc' as string]: f.color }}><Icon /></div>
+      <h3>{f.title}</h3>
+      <p>{f.text}</p>
     </div>
   );
 }

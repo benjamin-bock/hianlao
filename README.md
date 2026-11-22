@@ -70,6 +70,10 @@ KV data model: `user:<name>` (JSON record), `session:<token>` (30-day TTL), `pro
 
 **Tests**: `npm test` runs `tests/check-data.mjs` (content integrity: PWA assets, SEO files, French fields, romanization coverage) and `tests/api.test.mjs` (spins a loopback mock of the KV REST API and exercises the full register → login → sync → leaderboard → logout flow through the route handlers: 29 assertions).
 
+## 🎨 Design & assets
+
+UI icons come from [Lucide](https://lucide.dev) (`lucide-react`) and FontAwesome via `react-icons` (`FaGithub` in the footer); content-id → icon mappings live in `src/components/Icons.tsx`. Illustrations are [unDraw](https://undraw.co) SVGs, vendored in `public/img/illu/` and recolored to the brand palette (license: `public/img/illu/UNDRAW-LICENSE.txt`). Typefaces are self-hosted at build time via `next/font` (Plus Jakarta Sans + Noto Sans Lao). The logo/PWA icons are generated from `public/img/logo.svg`.
+
 ## 🗂️ Project structure
 
 ```

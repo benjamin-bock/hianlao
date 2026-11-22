@@ -21,6 +21,7 @@ import { LESSON_BY_ID, UNITS } from '@/data/units.ts';
 import type { Exercise, Lesson, VocabEntry } from '@/data/types';
 import { ExerciseView } from '@/components/lesson/ExerciseView';
 import { Feedback, FailScreen, SummaryScreen, esc } from '@/components/lesson/Screens';
+import { Flame, Heart, X } from 'lucide-react';
 
 const XP_PER_CORRECT = 10;
 const PRACTICE_XP = 5;
@@ -151,7 +152,7 @@ export default function LessonClient() {
       if (nc === 3 || nc === 5 || nc === 8 || nc === 12 || nc === 16) {
         sfx('combo');
         buzz([12, 40, 12]);
-        xpFly(`🔥 ×${nc} ${t('combo_word')}`, window.innerWidth / 2, Math.max(window.innerHeight * 0.2, 90));
+        xpFly(`×${nc} ${t('combo_word')}`, window.innerWidth / 2, Math.max(window.innerHeight * 0.2, 90));
       }
     } else if (wid && !s.practiceMode) {
       addWeakWord(wid);
@@ -287,11 +288,11 @@ export default function LessonClient() {
           ? [
             { strong: `+${state.xpEarned}`, span: t('stat_xp') },
             { strong: `${acc}%`, span: t('stat_acc') },
-            { strong: `⚡ ${totalXp}`, span: t('stat_total_xp') },
+            { strong: `${totalXp}`, span: t('stat_total_xp') },
           ]
           : [
-            { strong: `+${state.practiceXp}`, span: '⚡ XP earned' },
-            { strong: `⚡ ${totalXp}`, span: t('stat_total_xp') },
+            { strong: `+${state.practiceXp}`, span: 'XP earned' },
+            { strong: `${totalXp}`, span: t('stat_total_xp') },
           ]}
         nextId={nextLessonId(activeLesson, isWeak)}
         missedCount={isSummary ? state.missed.length : 0}
@@ -315,19 +316,21 @@ export default function LessonClient() {
   return (
     <>
       <div className="lesson-topbar">
-        <Link className="icon-btn" href="/learn" aria-label="Exit lesson">✕</Link>
+        <Link className="icon-btn" href="/learn" aria-label="Exit lesson"><X /></Link>
         <div className="progress"><div className={`progress-fill${progressPct >= 100 ? ' done' : ''}`} style={{ width: `${progressPct}%` }} /></div>
-        <span className="combo" ref={comboRef} style={{ display: state.combo >= 2 ? '' : 'none' }}>🔥 ×{state.combo}</span>
+        <span className="combo" ref={comboRef} style={{ display: state.combo >= 2 ? '' : 'none' }}><Flame /> ×{state.combo}</span>
         <span className="hearts" aria-label="Hearts">
-          {'❤️'.repeat(Math.max(state.hearts, 0))}{'🖤'.repeat(Math.max(5 - state.hearts, 0))}
+          {Array.from({ length: 5 }, (_, i) => (
+            <Heart key={i} className={i < state.hearts ? 'heart-full' : 'heart-empty'} strokeWidth={2} />
+          ))}
         </span>
       </div>
 
       <div className="lesson-stage fx-stage" key={state.exKey}>
         {state.practiceMode ? (
-          <div className="retry-note">🛠️ {t('practice_mode')}</div>
+          <div className="retry-note">{t('practice_mode')}</div>
         ) : cur.isRetry ? (
-          <div className="retry-note">🔁 {t('again_note')}</div>
+          <div className="retry-note">{t('again_note')}</div>
         ) : null}
 
         <div className="exercise-head">

@@ -1,4 +1,5 @@
 'use client';
+import { BicepsFlexed, Check, CircleCheck, CircleX, Lock, PartyPopper, RotateCcw, Star, Volume2 } from 'lucide-react';
 
 // /alphabet — learn the Lao script the way Duolingo teaches kana.
 //
@@ -178,7 +179,7 @@ export default function AlphabetPage() {
             ▶ {known > 0 ? t('alpha_continue') : t('alpha_start')} · {t('alpha_g_' + guided.id)}
           </button>
         ) : (
-          <div className="card alpha-all-done">🎉 {t('alpha_all_mastered')}</div>
+          <div className="card alpha-all-done"><PartyPopper style={{ verticalAlign: '-.15em', marginRight: '.3em' }} /> {t('alpha_all_mastered')}</div>
         )}
 
         <div className="lessons-path alpha-path">
@@ -187,7 +188,7 @@ export default function AlphabetPage() {
             const done = pct >= 100;
             const unlocked = groupUnlocked(store, i);
             const hasNew = g.letters.some((_, j) => letterLevel(store, g.id, j + 1) === 0);
-            const cta = done ? '⭐' : unlocked ? (hasNew ? t('alpha_start') : t('alpha_continue')) : t('alpha_locked');
+            const cta = done ? '✓' : unlocked ? (hasNew ? t('alpha_start') : t('alpha_continue')) : t('alpha_locked');
             return (
               <button
                 key={g.id}
@@ -201,7 +202,7 @@ export default function AlphabetPage() {
                   startGroup(g.id);
                 }}
               >
-                <div className="lesson-circle">{done ? '✓' : unlocked ? String(i + 1) : '🔒'}</div>
+                <div className="lesson-circle">{done ? <Check strokeWidth={3.2} /> : unlocked ? String(i + 1) : <Lock />}</div>
                 <div className="lesson-meta">
                   <strong>{t('alpha_g_' + g.id)}</strong>
                   <span>{pct}% · {cta}</span>
@@ -221,7 +222,7 @@ export default function AlphabetPage() {
 
         {known > 0 ? (
           <button className="btn btn-ghost practice-mixed" onClick={() => startGroup('', true)}>
-            🔁 {t('alpha_practice_all')}
+            <RotateCcw /> {t('alpha_practice_all')}
           </button>
         ) : null}
 
@@ -319,7 +320,7 @@ export default function AlphabetPage() {
     return (
       <div className="fx-stage">
         <div className="big-word card summary-card">
-          <div className="summary-star">{doneTitle || run.mixed ? '⭐' : '💪'}</div>
+          <div className="summary-star">{doneTitle || run.mixed ? <Star /> : <BicepsFlexed />}</div>
           <h2>{run.mixed ? t('alpha_mixed_done_title') : doneTitle ? t('alpha_done_title') : t('alpha_run_done')}</h2>
           <div className="summary-letters">
             {drillIds.map((id) => {
@@ -342,7 +343,7 @@ export default function AlphabetPage() {
               ▶ {t('alpha_next_group', { x: t('alpha_g_' + nextG.id) })}
             </button>
           ) : (
-            <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}>🔁 {t('alpha_again')}</button>
+            <button className="btn btn-primary btn-lg" onClick={() => (run.mixed ? startGroup('', true) : startGroup(run.group.id))}><RotateCcw /> {t('alpha_again')}</button>
           )}
           <button className="btn btn-ghost btn-lg" onClick={() => setMode('home')}>{t('alpha_back')}</button>
         </div>
@@ -384,7 +385,7 @@ function ShowcaseCard({ gid, n, letter, note }: { gid: string; n: number; letter
         className="icon-btn speak-btn intro-speak"
         title="Listen" aria-label="Listen"
         onClick={() => speakAlpha(gid, n, letter)}
-      >🔊</button>
+      ><Volume2 /></button>
     </div>
   );
 }
@@ -438,7 +439,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
             className="icon-btn speak-btn"
             title="Listen" aria-label="Listen"
             onClick={() => speakAlpha(def.gid, def.n, letter)}
-          >🔊</button>
+          ><Volume2 /></button>
         </div>
       ) : null}
 
@@ -484,7 +485,7 @@ function Drill({ current, queue, totalQ, picked, mixed, label, onAnswer, onNext 
 
       {picked ? (
         <div className={`feedback ${isRight ? 'ok' : 'bad'}`}>
-          <img src="/img/elephant.svg" alt="" className={`feedback-mascot${isRight ? '' : ' somber'}`} aria-hidden="true" />
+          <div className="feedback-icon" aria-hidden="true">{isRight ? <CircleCheck /> : <CircleX />}</div>
           {isRight ? (
             <H as="p" html={`${esc(pickVariant(tRaw('fb_ok_variants')))} ${esc(pickVariant(tRaw('fb_praise')))} · ${esc(letter.lao)} — ${esc(letter.roman)}`} />
           ) : (

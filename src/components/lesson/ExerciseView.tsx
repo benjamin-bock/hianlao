@@ -1,4 +1,5 @@
 'use client';
+import { Mic, Volume2 } from 'lucide-react';
 
 // Exercise renderers (React port of legacy lesson.js): multiple choice,
 // listen, match, word banks (type-as-tiles + sentence building) and speaking.
@@ -131,7 +132,7 @@ function ListenView({ ex, answered, onResolve }: ExerciseProps) {
           aria-label={t('title_play_audio')}
           onClick={play}
         >
-          🔊
+          <Volume2 />
         </button>
         <p className="muted">
           {voiceless
@@ -510,7 +511,7 @@ function SpeakView({ ex, answered, onResolve }: ExerciseProps) {
       {mic ? (
         <>
           <button type="button" className="btn btn-mic btn-lg" disabled={busy || answered} onClick={ask}>
-            🎤 {t('speak_tap')}
+            <Mic /> {t('speak_tap')}
           </button>
           <p className="muted speak-status">{status}</p>
           <button type="button" className="btn btn-ghost" disabled={answered} onClick={saidIt}>
