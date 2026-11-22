@@ -402,11 +402,16 @@ body.in-lesson #header, body.in-lesson #footer { display: none; }
 /* grid children may contain wide tables/Lao strings: let them shrink instead
    of blowing out the column past the viewport (mobile overflow fix) */
 .doc-layout > * { min-width: 0; }
+/* stretch the aside to the full row height so .toc-sticky has room to stick
+   (the grid's align-items: start would otherwise size the aside to its content) */
+.doc-aside { align-self: stretch; }
 .doc-content { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
 .toc-sticky { position: sticky; top: 84px; display: flex; flex-direction: column; gap: .35rem; }
 .toc-link { text-decoration: none; font-weight: 600; color: var(--muted); padding: .3rem .5rem; border-radius: 8px; }
 .toc-link:hover { background: #f3efe4; color: var(--ink); }
-.doc-section { margin-bottom: 1.5rem; padding: 1.5rem; }
+.toc-link.active { color: #2c6602; background: #e9f9d9; }
+/* keep hash-jumped section headings clear of the sticky header */
+.doc-section { scroll-margin-top: 84px; margin-bottom: 1.5rem; padding: 1.5rem; }
 .doc-section h2 { font-size: 1.4rem; margin-bottom: .75rem; }
 .doc-section p { margin: .6rem 0; }
 .doc-list { margin: .5rem 0; padding-left: 1.3rem; }
@@ -604,7 +609,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="dark"] .lesson-node, [data-theme="dark"] .badge-card, [data-theme="dark"] .type-input,
 [data-theme="dark"] .search-input, [data-theme="dark"] .unit-chip, [data-theme="dark"] .btn-ghost,
 [data-theme="dark"] .lang-btn { background: #1c1f2b; color: var(--ink); border-color: var(--line); }
-[data-theme="dark"] .option-card:hover, [data-theme="dark"] .tile:hover, [data-theme="dark"] .nav-link:hover { background: #232736; }
+[data-theme="dark"] .option-card:hover, [data-theme="dark"] .tile:hover, [data-theme="dark"] .nav-link:hover, [data-theme="dark"] .toc-link:hover { background: #232736; }
+[data-theme="dark"] .toc-link.active { background: #17290f; color: #b3f28a; }
 [data-theme="dark"] .option-card.selected { background: #12314a; }
 [data-theme="dark"] .ex-row, [data-theme="dark"] th { background: #232736; }
 [data-theme="dark"] table { background: #1c1f2b; }

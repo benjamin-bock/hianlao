@@ -1,6 +1,7 @@
 'use client';
 
 // Grammar bible: TOC + sections. Ported from legacy grammarpage.js.
+import { useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n';
 import { GRAMMAR } from '@/data/grammar.ts';
 import type { GrammarBlock } from '@/data/types';
@@ -21,6 +22,28 @@ function wrapLao(text: string): string {
 
 export default function GrammarPage() {
   const { t, lang } = useT();
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Scrollspy: highlight the TOC entry of the topmost section visible below
+  // the sticky header (top offset matches .toc-sticky's `top: 84px`).
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('section.doc-section'));
+    if (sections.length === 0) return;
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target.id);
+          else visible.delete(e.target.id);
+        }
+        const current = sections.find((s) => visible.has(s.id));
+        setActiveId(current ? current.id : null);
+      },
+      { rootMargin: '-84px 0px 0px 0px' },
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
@@ -34,7 +57,14 @@ export default function GrammarPage() {
             <strong>{t('grammar_toc')}</strong>
             <nav className="toc">
               {GRAMMAR.map((g) => (
-                <a key={g.id} href={`#g-${g.id}`} className="toc-link">{g.icon} {lang === 'fr' ? g.titleFr : g.title}</a>
+                <a
+                  key={g.id}
+                  href={`#g-${g.id}`}
+                  className={`toc-link${activeId === `g-${g.id}` ? ' active' : ''}`}
+                  aria-current={activeId === `g-${g.id}` ? 'true' : undefined}
+                >
+                  {g.icon} {lang === 'fr' ? g.titleFr : g.title}
+                </a>
               ))}
             </nav>
           </div>
