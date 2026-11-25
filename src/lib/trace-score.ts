@@ -15,6 +15,26 @@ export const MAX_ADVANCE_PX = 38;  // max arc-length jump per step (~15 model un
 export const MIN_COV = 0.84;       // ≥84% of curve reached in forward order
 export const MAX_OFF_PATH = 0.30;  // ≤30% of user ink outside corridor
 
+// ---- progressive assistance ladder ----
+// The pad supports a Duolingo-style handoff from fully guided to freehand:
+//   guided   — the ink IS the model path: it fills as the learner drags along it
+//   snapped  — freehand ink, strongly pulled toward the guide (60%)
+//   assisted — freehand ink, gently pulled toward the guide (30%)
+//   faint    — no pulling, dashed guide + start hint only
+//   bare     — ghost glyph + start hint only, no centerline at all
+export type AssistMode = 'guided' | 'snapped' | 'assisted' | 'faint' | 'bare';
+export const SNAP_FACTOR: Record<Exclude<AssistMode, 'guided' | 'faint' | 'bare'>, number> = { snapped: 0.6, assisted: 0.3 };
+export const GUIDE_MIN_COV = 0.95;  // guided mode: path must be filled to ~95% arc-length
+
+/** Assist level for a letter's strength: first write fully guided, then less. */
+export function traceAssistForLevel(lv: number): AssistMode {
+  if (lv <= 0) return 'guided';
+  if (lv === 1) return 'snapped';
+  if (lv === 2) return 'assisted';
+  if (lv === 3) return 'faint';
+  return 'bare';
+}
+
 export function toCanvasPt(p: Pt): Pt {
   return { x: p.x * MODEL_SCALE + MODEL_OFFSET, y: p.y * MODEL_SCALE + MODEL_OFFSET };
 }
@@ -152,6 +172,39 @@ export function advanceStrokeProgress(
     if (bestD <= CORRIDOR_R && best > idx) idx = best;
   }
   return idx;
+}
+
+/**
+ * Pull one freehand point toward the guide so the ink hugs the letter shape
+ * even with mouse jitter: partially guided practice without taking over.
+ * `factor` 0.6 = snapped mode, 0.3 = assisted mode.
+ */
+export function snapPoint(
+  pt: Pt,
+  guidePts: Pt[],
+  fromIdx: number,
+  factor: number,
+): Pt {
+  let best = fromIdx;
+  let bestD = Infinity;
+  const lo = Math.max(0, fromIdx - 8);
+  for (let j = lo; j < guidePts.length; j++) {
+    const ahead = cumDistance(guidePts, lo, j);
+    if (ahead > 130) break;
+    const d = Math.hypot(pt.x - guidePts[j].x, pt.y - guidePts[j].y);
+    if (d < bestD) { bestD = d; best = j; }
+  }
+  if (bestD === Infinity || bestD > 90) return pt;
+  const g = guidePts[best];
+  return { x: pt.x + (g.x - pt.x) * factor, y: pt.y + (g.y - pt.y) * factor };
+}
+
+function cumDistance(pts: Pt[], from: number, to: number): number {
+  let d = 0;
+  for (let i = from + 1; i <= to && i < pts.length; i++) {
+    d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+  }
+  return d;
 }
 
 export type StrokeFailReason = 'ok' | 'start' | 'offpath' | 'incomplete';

@@ -7,6 +7,7 @@
 //   - "practice mixed" never contains unknown letters (no everything-at-once)
 //   - mastering a group unlocks the next one and moves the guided pointer
 import { ALPHA_GROUPS } from '../src/data/alphabet.ts';
+import { traceAssistForLevel } from '../src/lib/trace-score.ts';
 import {
   MAX_LV, allLetterIds, letterId, letterLevel, groupPercent,
   groupUnlocked, nextGuidedIndex, composeGroupRun, composeMixedRun,
@@ -66,6 +67,25 @@ console.log('Strengthening run (nothing new left):');
 const runAgain = composeGroupRun(c1, c1Weak);
 ok(runAgain.hasNew === false && runAgain.intro.length === 0, 'a run on a fully-introduced group introduces nothing new');
 ok(runAgain.drill.length > 0, 'it still drills the weak letters');
+
+console.log('Interleaved drilling & progressive handwriting:');
+const runSeq = composeGroupRun(c1, empty);
+const kinds = runSeq.drill.map((s) => `${s.kind}:${s.n}`);
+ok(runSeq.drill.some((s) => s.kind === 'write'), 'a new-letter run includes writing steps (letters are written more than once)');
+ok(runSeq.drill.filter((s) => s.kind === 'write').every((s) => s.gid === c1.id), 'new-letter writing steps target the run\u2019s new letters');
+// A A A B B B blocks are banned: the first three quiz steps must not repeat the same letter
+ok(new Set(kinds.slice(0, 3)).size >= 2 || kinds.slice(0, 3).some((k) => k.startsWith('write')),
+  'new letters are interleaved, not drilled as AAA BBB blocks');
+// every new letter gets at least one write in the drill, in addition to its guided first write
+for (const s of runSeq.intro) {
+  ok(kinds.includes(`write:${s.n}`), `letter ${s.n} gets an extra (less guided) write step in the drill`);
+}
+const traceSeq = traceAssistForLevel;
+ok(traceSeq(0) === 'guided', 'assist ladder: first write is fully guided (the pen stays on the path)');
+ok(traceSeq(1) === 'snapped', 'assist ladder: second write snaps the ink onto the guide');
+ok(traceSeq(2) === 'assisted', 'assist ladder: third write only nudges the ink');
+ok(traceSeq(3) === 'faint', 'assist ladder: fourth write shows a faint outline only');
+ok(traceSeq(4) === 'bare', 'assist ladder: a mastered letter is written freehand');
 
 if (failures) {
   console.error(`\n${failures} CHECK(S) FAILED ✘`);

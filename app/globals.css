@@ -756,6 +756,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .trace-guide-tracer {
   fill: var(--blue); stroke: #fff; stroke-width: 1.6; opacity: .95;
 }
+.trace-guide-faint .trace-guide-line { opacity: .22; stroke-dasharray: 3 7; }
+.trace-guide-faint .trace-guide-start { fill: rgba(88, 204, 2, .55); }
 
 
 .group-card.done .group-cta { color: var(--green-dark); }

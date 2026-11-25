@@ -12,8 +12,11 @@ import { BicepsFlexed, Check, CircleCheck, CircleX, Lock, PartyPopper, RotateCcw
 //
 // Modes:
 //   home    — group cards with per-letter completion bars + a full reference
-//   intro   — one "meet the letter" showcase card per NEW letter of the run
-//   drill   — 4-option multiple choice; right auto-advances, wrong re-queues
+//   intro   — one "meet the letter" showcase card per NEW letter of the run,
+//             followed by its first, fully-guided handwriting trace
+//   drill   — interleaved 4-option quizzes + handwriting steps; the guide
+//             fades out as the letter levels up (guided → snapped → assisted
+//             → faint → freehand), right auto-advances, wrong re-queues
 //   summary — the run's letters with their post-run bars, mistakes, XP
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -29,9 +32,10 @@ import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, type AlphaGr
 import {
   MAX_LV, letterLevel, groupPercent, knownCount, bumpLetter,
   composeGroupRun, composeMixedRun, loadStore, groupUnlocked, nextGuidedIndex,
-  type AlphaStore, type Run, type RunQ,
+  type AlphaStore, type Run, type RunStep, type RunQ,
 } from '@/lib/alpha-progress';
 import { shuffle } from '@/lib/shuffle';
+import { traceAssistForLevel } from '@/lib/trace-score';
 
 // letter defs with their group id + 1-based position (matches audio ids)
 const LETTER_DEFS = ALPHA_GROUPS.flatMap((g) => g.letters.map((letter, i) => ({ gid: g.id, group: g, letter, n: i + 1 })));
@@ -49,6 +53,7 @@ function speakAlpha(gid: string, n: number, letter: AlphaLetter, rate = 0.8) {
 }
 
 type Q = RunQ;
+type Step = RunStep;
 
 // 4-option MC: the answer + 3 distractors (same group first, then anywhere).
 // Distractors sharing the answer's roman (ຂ/ຄ both "kh"), sharing another
@@ -96,8 +101,8 @@ export default function AlphabetPage() {
   const [run, setRun] = useState<Run | null>(null);
   const [introIdx, setIntroIdx] = useState(0);
   const [totalQ, setTotalQ] = useState(0);
-  const [queue, setQueue] = useState<Q[]>([]);
-  const [current, setCurrent] = useState<Q | null>(null);
+  const [queue, setQueue] = useState<Step[]>([]);
+  const [current, setCurrent] = useState<Step | null>(null);
   const [picked, setPicked] = useState<AlphaLetter | null>(null);
   const [mistakes, setMistakes] = useState(0);
   const [writeStep, setWriteStep] = useState<{ gid: string; n: number; letter: AlphaLetter } | null>(null);
@@ -126,7 +131,7 @@ export default function AlphabetPage() {
     startRun(mixedRun ? composeMixedRun(store) : composeGroupRun(ALPHA_GROUPS.find((g) => g.id === id) || ALPHA_GROUPS[0], store));
   }
 
-  function nextQuestion(rest: Q[]) {
+  function nextQuestion(rest: Step[]) {
     if (!rest.length) {
       const xp = run?.hasNew ? 5 : 2;
       setPicked(null);
@@ -143,7 +148,7 @@ export default function AlphabetPage() {
   }
 
   function answer(choice: AlphaLetter) {
-    if (!current || picked) return;
+    if (!current || current.kind !== 'q' || picked) return;
     const right = choice.lao === currentLetter(current)?.lao;
     setPicked(choice);
     if (run?.bumpable) setStore(bumpLetter(store, current.gid, current.n, right));
@@ -296,6 +301,7 @@ export default function AlphabetPage() {
     return (
       <TracePad
         letter={writeStep.letter}
+        assist={traceAssistForLevel(0)}
         onPass={() => {
           setStore(bumpLetter(store, writeStep.gid, writeStep.n, true));
           if (moreIntro) {
@@ -351,11 +357,37 @@ export default function AlphabetPage() {
     );
   }
 
-  // ---------- drill ----------
+  // ---------- drill: interleaved quiz & handwriting steps ----------
+  if (current && current.kind === 'write') {
+    const def = LET.get(`${current.gid}-${current.n}`)!;
+    const remaining = queue.length + 1;
+    const answered = Math.max(0, totalQ - remaining);
+    return (
+      <div className="fx-stage" key={`w-${current.gid}-${current.n}`}>
+        <div className="page-head alpha-drill-head">
+          <Link className="btn btn-ghost" href="/alphabet">
+            ← {t('alpha_back')}
+          </Link>
+          <span className="alpha-progress">{t('alpha_count').replace('{x}', String(answered)).replace('{y}', String(totalQ))}</span>
+        </div>
+        <div className="session-bar" aria-hidden="true"><div style={{ width: `${Math.round((100 * answered) / Math.max(1, totalQ))}%` }} /></div>
+        <TracePad
+          letter={def.letter}
+          assist={traceAssistForLevel(letterLevel(store, current.gid, current.n))}
+          onPass={() => {
+            if (run?.bumpable) setStore(bumpLetter(store, current.gid, current.n, true));
+            nextQuestion(queue);
+          }}
+        />
+        <span className="muted mixed-flag">{t('alpha_g_' + def.gid)}</span>
+      </div>
+    );
+  }
+
   return (
     <Drill
-      current={current}
-      queue={queue}
+      current={current as Q | null}
+      queue={queue as Q[]}
       totalQ={totalQ}
       picked={picked}
       mixed={!!run?.mixed}
