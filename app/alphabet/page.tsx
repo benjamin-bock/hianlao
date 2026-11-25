@@ -14,9 +14,11 @@ import { BicepsFlexed, Check, CircleCheck, CircleX, Lock, PartyPopper, RotateCcw
 //   home    — group cards with per-letter completion bars + a full reference
 //   intro   — one "meet the letter" showcase card per NEW letter of the run,
 //             followed by its first, fully-guided handwriting trace
-//   drill   — interleaved 4-option quizzes + handwriting steps; the guide
-//             fades out as the letter levels up (guided → snapped → assisted
-//             → faint → freehand), right auto-advances, wrong re-queues
+//   drill   — interleaved 4-option quizzes + handwriting steps + "assemble"
+//             steps that merge two already-known letters into a syllable
+//             (ຈ + າ → ຈາ), kana-style; the guide fades out as the letter
+//             levels up (guided → snapped → assisted → faint → freehand),
+//             right auto-advances, wrong re-queues
 //   summary — the run's letters with their post-run bars, mistakes, XP
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -29,13 +31,15 @@ import { H } from '@/components/H';
 import { esc } from '@/components/lesson/Screens';
 import TracePad from '@/components/alphabet/TracePad';
 import { ALPHA_GROUPS, CONSONANT_GROUPS, VOWEL_GROUPS, ALL_LETTERS, type AlphaGroup, type AlphaLetter } from '@/data/alphabet';
+import { mixOptions } from '@/data/alpha-mix';
 import {
   MAX_LV, letterLevel, groupPercent, knownCount, bumpLetter,
   composeGroupRun, composeMixedRun, loadStore, groupUnlocked, nextGuidedIndex,
-  type AlphaStore, type Run, type RunStep, type RunQ,
+  type AlphaStore, type Run, type RunStep, type RunQ, type RunMix,
 } from '@/lib/alpha-progress';
 import { shuffle } from '@/lib/shuffle';
 import { traceAssistForLevel } from '@/lib/trace-score';
+import { combineMix } from '@/data/alpha-mix';
 
 // letter defs with their group id + 1-based position (matches audio ids)
 const LETTER_DEFS = ALPHA_GROUPS.flatMap((g) => g.letters.map((letter, i) => ({ gid: g.id, group: g, letter, n: i + 1 })));
@@ -317,7 +321,10 @@ export default function AlphabetPage() {
 
   // ---------- summary ----------
   if (mode === 'summary' && run) {
-    const drillIds = Array.from(new Set(run.drill.map((q) => `${q.gid}-${q.n}`)));
+    const drillIds = Array.from(new Set(run.drill.flatMap((q): string[] => {
+      if (q.kind === 'mix') return [`${q.cGid}-${q.cN}`, `${q.vGid}-${q.vN}`];
+      return [`${q.gid}-${q.n}`];
+    })));
     const pct = run.mixed ? null : groupPercent(store, run.group);
     const doneTitle = pct !== null && pct >= 100;
     // group mastered → the next path node unlocks: offer it as the primary action
@@ -384,6 +391,40 @@ export default function AlphabetPage() {
     );
   }
 
+  // ---------- drill: assemble two known letters into a syllable ----------
+  if (current && current.kind === 'mix') {
+    const cDef = LET.get(`${current.cGid}-${current.cN}`)!;
+    const vDef = LET.get(`${current.vGid}-${current.vN}`)!;
+    const remaining = queue.length + 1;
+    const answered = Math.max(0, totalQ - remaining);
+    const onRight = () => {
+      if (run?.bumpable) {
+        // a correct assembly strengthens both letters at once
+        const bumped = bumpLetter(bumpLetter(store, current.cGid, current.cN, true), current.vGid, current.vN, true);
+        setStore(bumped);
+      }
+      window.setTimeout(() => nextQuestion(queue), 620);
+    };
+    const onWrong = () => {
+      setMistakes((m) => m + 1);
+      if (current.tries < 1) setQueue((prev) => [...prev, { ...current, tries: current.tries + 1 }]);
+    };
+    return (
+      <MixDrill
+        step={current}
+        cLetter={cDef.letter}
+        vLetter={vDef.letter}
+        store={store}
+        answered={answered}
+        totalQ={totalQ}
+        label={run?.mixed ? t('alpha_practice_all') : run ? t('alpha_g_' + run.group.id) : ''}
+        onRight={onRight}
+        onWrong={onWrong}
+        onNext={() => nextQuestion(queue)}
+      />
+    );
+  }
+
   return (
     <Drill
       current={current as Q | null}
@@ -399,6 +440,11 @@ export default function AlphabetPage() {
 }
 
 // "Meet the letter" card — auto-plays the letter's audio once, Duolingo-style.
+//
+// "Assemble" question — two letters the learner already knows are merged
+// into one syllable (ຈ + າ → ຈາ). Both directions: read the assembled glyph
+// (options are sounds) or pick the glyph for a given sound (options are
+// glyph strings). The two source letters stay on screen as scaffold cards.
 function ShowcaseCard({ gid, n, letter, note }: { gid: string; n: number; letter: AlphaLetter; note?: string }) {
   const { t } = useT();
   const glyphRef = useRef<HTMLDivElement>(null);
@@ -543,6 +589,145 @@ function RefCard({ gid, n, letter, lang, lv }: { gid: string; n: number; letter:
       <div className="word-romanization">{letter.roman}</div>
       <LvBar lv={lv} />
       {note ? <div className="alpha-note">{note}</div> : null}
+    </div>
+  );
+}
+
+// Assemble question: known consonant + known vowel sign → one syllable.
+// Mirrors the Drill UI: read direction shows the assembled glyph with sound
+// options, build direction shows the sound with assembled-glyph options.
+function MixDrill({ step, cLetter, vLetter, store, answered, totalQ, label, onRight, onWrong, onNext }: {
+  step: RunMix;
+  cLetter: AlphaLetter;
+  vLetter: AlphaLetter;
+  store: AlphaStore;
+  answered: number;
+  totalQ: number;
+  label: string;
+  onRight: () => void;
+  onWrong: () => void;
+  onNext: () => void;
+}) {
+  const { t, tRaw } = useT();
+  const [picked, setPicked] = useState<string | null>(null);
+
+  const known = useMemo(() => ({
+    cons: LETTER_DEFS.filter((d) => d.gid.startsWith('c') && letterLevel(store, d.gid, d.n) >= 1).map((d) => d.letter),
+    vows: LETTER_DEFS.filter((d) => d.gid.startsWith('v') && letterLevel(store, d.gid, d.n) >= 1).map((d) => d.letter),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [store, step.cGid, step.cN, step.vGid, step.vN]);
+
+  const { syll, opts } = useMemo(() => {
+    const syll = combineMix(cLetter, vLetter);
+    if (!syll) return { syll: null, opts: [] as Array<{ lao: string; roman: string }> };
+    return { syll, opts: shuffle(mixOptions(cLetter, vLetter, known.cons, known.vows)) };
+  }, [cLetter, vLetter, known]);
+
+  // data edge (uncombinable pair): offer to skip instead of blocking the run
+  if (!syll || !opts.length) {
+    return (
+      <div className="fx-stage">
+        <button className="btn btn-continue btn-lg" onClick={onNext}>{t('cont')}</button>
+      </div>
+    );
+  }
+
+  const read = step.dir === 'mix-read';
+  const target = read ? syll.roman : syll.lao;
+  const isRight = picked !== null && picked === target;
+  const wasWrong = picked !== null && !isRight;
+
+  const pick = (value: string, e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (picked) return;
+    const right = value === (read ? syll!.roman : syll!.lao);
+    setPicked(value);
+    if (right) {
+      if (e) {
+        pop(e.currentTarget);
+        const r = e.currentTarget.getBoundingClientRect();
+        burstAt(r.left + r.width / 2, r.top + r.height / 2, 14);
+      }
+      sfx('correct');
+      buzz([12, 30, 12]);
+      onRight();
+    } else {
+      if (e) shake(e.currentTarget);
+      sfx('wrong');
+      buzz(70);
+      onWrong();
+    }
+  };
+
+  return (
+    <div className="fx-stage" key={`m-${step.cGid}-${step.cN}-${step.vGid}-${step.vN}-${step.tries}`}>
+      <div className="page-head alpha-drill-head">
+        <Link className="btn btn-ghost" href="/alphabet">
+          ← {t('alpha_back')}
+        </Link>
+        <span className="alpha-progress">{t('alpha_count').replace('{x}', String(answered)).replace('{y}', String(totalQ))}</span>
+      </div>
+      <div className="session-bar" aria-hidden="true"><div style={{ width: `${Math.round((100 * answered) / Math.max(1, totalQ))}%` }} /></div>
+
+      {/* scaffold: the two known letters, then the question */}
+      <div className="alpha-mix-parts">
+        <span className="alpha-mix-part card"><span className="lao">{cLetter.lao}</span><span className="word-romanization">{cLetter.roman}</span></span>
+        <span className="alpha-mix-plus">+</span>
+        <span className="alpha-mix-part card"><span className="lao">{vLetter.lao}</span><span className="word-romanization">{vLetter.roman}</span></span>
+      </div>
+
+      <p className="drill-prompt">{read ? t('alpha_mix_read') : t('alpha_mix_build')}</p>
+
+      {read ? (
+        <div className="big-word card drill-card alpha-mix-word">
+          <div className="alpha-glyph-lg lao">{syll.lao}</div>
+          <span className="word-romanization">{t('alpha_mix_parts').replace('{a}', cLetter.roman).replace('{b}', vLetter.roman)}</span>
+        </div>
+      ) : (
+        <div className="big-word card drill-card">
+          <div className="mix-sound-xl">{syll.roman}</div>
+        </div>
+      )}
+
+      <div className="options">
+        {opts.map((o, i) => {
+          const value = read ? o.roman : o.lao;
+          const cls = [
+            'option-card',
+            read ? '' : 'glyph-option',
+            picked && value === target ? 'correct' : '',
+            wasWrong && value === picked ? 'wrong' : '',
+          ].filter(Boolean).join(' ');
+          return (
+            <button
+              key={value}
+              className={cls}
+              disabled={!!picked}
+              onClick={(e) => pick(value, e)}
+            >
+              {read
+                ? <span className="roman-only">{o.roman}</span>
+                : <span className="lao glyph-only">{o.lao}</span>}
+              <span className="kbd" aria-hidden="true">{i + 1}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {picked ? (
+        <div className={`feedback ${isRight ? 'ok' : 'bad'}`}>
+          <div className="feedback-icon" aria-hidden="true">{isRight ? <CircleCheck /> : <CircleX />}</div>
+          {isRight ? (
+            <H as="p" html={`${esc(pickVariant(tRaw('fb_ok_variants')))} ${esc(pickVariant(tRaw('fb_praise')))} · ${esc(syll.lao)} — ${esc(syll.roman)}`} />
+          ) : (
+            <H as="p" html={`${esc(t('fb_bad'))} ${t('fb_correct_answer').replace('{x}', esc(`${syll.lao} — ${syll.roman}`))}`} />
+          )}
+        </div>
+      ) : null}
+
+      {wasWrong ? (
+        <button className="btn btn-continue btn-lg" onClick={onNext}>{t('cont')}</button>
+      ) : null}
+      <span className="muted mixed-flag">{label}</span>
     </div>
   );
 }
