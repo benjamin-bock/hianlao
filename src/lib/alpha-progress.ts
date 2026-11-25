@@ -139,7 +139,7 @@ export function nextGuidedIndex(store: AlphaStore): number {
 }
 
 /** All known-but-not-mastered letters across every group, weakest first. */
-function globalWeakPool(store: AlphaStore): Array<{ g: AlphaGroup; n: number }> {
+function globalWeakPool(store: AlphaStore): Array<{ g: AlphaGroup; n: number; lv: number }> {
   return ALPHA_GROUPS.flatMap((g) =>
     g.letters.map((_, i) => ({
       g,
@@ -149,8 +149,7 @@ function globalWeakPool(store: AlphaStore): Array<{ g: AlphaGroup; n: number }> 
     })),
   )
     .filter((s) => s.lv >= 1 && s.lv < MAX_LV)
-    .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts))
-    .map((s) => ({ g: s.g, n: s.n }));
+    .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts));
 }
 
 export function totalLetters(): number {
@@ -181,8 +180,9 @@ export function bumpLetter(store: AlphaStore, gid: string, n: number, right: boo
 
 export type Dir = 'char' | 'roman';
 export interface RunQ { kind: 'q'; gid: string; n: number; dir: Dir; tries: number }
+export interface RunWrite { kind: 'write'; gid: string; n: number }
 export interface RunShowcase { kind: 'showcase'; gid: string; n: number }
-export type RunStep = RunQ | RunShowcase;
+export type RunStep = RunQ | RunWrite | RunShowcase;
 export interface Run {
   group: AlphaGroup;
   mixed: boolean;
@@ -191,7 +191,8 @@ export interface Run {
   /** false for mixed runs before any letter is known: don't create lv from nothing */
   bumpable: boolean;
   intro: RunShowcase[];
-  drill: RunQ[];
+  /** mixed quiz + handwriting steps, already interleaved by the composer */
+  drill: RunStep[];
 }
 
 const mkQ = (g: AlphaGroup, n: number, dir?: Dir): RunQ => ({
@@ -199,6 +200,7 @@ const mkQ = (g: AlphaGroup, n: number, dir?: Dir): RunQ => ({
   dir: dir || (Math.random() < 0.5 ? 'char' : 'roman'),
   tries: 0,
 });
+const mkW = (g: AlphaGroup, n: number): RunWrite => ({ kind: 'write', gid: g.id, n });
 
 /** letters of a group, weakest (lowest level, least recent) first */
 export function groupWeakFirst(g: AlphaGroup, store: AlphaStore): number[] {
@@ -221,16 +223,22 @@ function shuffle<T>(arr: T[]): T[] {
  * A group run, Duolingo-style, on the guided path:
  *  - up to NEW_BATCH unseen letters *of this group* get a showcase card each
  *    (new letters only ever come from the current path node);
- *  - each new letter is drilled 3× right away (shape→sound, sound→shape, mixed);
- *  - review questions are slotted after each new letter's batch, drawn
- *    weakest-first from ALL letters already introduced (any earlier group),
- *    so old letters keep being strengthened while new ones arrive;
+ *  - new letters are drilled in INTERLEAVED rounds — qA qB qC wA qA wB qC …
+ *    (never AAA BBB CCC) with one extra writing step per letter, so a letter
+ *    whose gauge fills faster never blocks the others: every letter is
+ *    revisited round by round, earlier ones keep coming back in parallel,
+ *    and the next run introduces further letters while these level up;
+ *  - review steps are slotted between the rounds, weakest-first from ALL
+ *    letters already introduced (any earlier group); weak letters (lv<3)
+ *    get a handwriting step instead of a quiz, so writing stays part of
+ *    practice at every strength level — progressively less guided (TracePad
+ *    derives the assist mode from the live level);
  *  - with nothing new left, the run becomes a pure strengthening session
- *    (up to 10 questions on the letters below mastery).
+ *    (up to 10 steps on letters below mastery, quizzes mixed with writes).
  */
 export function composeGroupRun(g: AlphaGroup, store: AlphaStore): Run {
   const intro: RunShowcase[] = [];
-  const drill: RunQ[] = [];
+  const drill: RunStep[] = [];
 
   const levels = g.letters.map((_, i) => letterLevel(store, g.id, i + 1));
   const newIdx: number[] = [];
@@ -243,21 +251,32 @@ export function composeGroupRun(g: AlphaGroup, store: AlphaStore): Run {
   if (hasNew) {
     newIdx.forEach((n) => intro.push({ kind: 'showcase', gid: g.id, n }));
     const review = [...pool];
-    for (const n of newIdx) {
-      drill.push(mkQ(g, n, 'char'), mkQ(g, n, 'roman'), mkQ(g, n));
-      for (let k = 0; k < 2 && review.length; k++) {
-        const r = review.shift()!;
-        drill.push(mkQ(r.g, r.n));
+    let slot = 0;
+    // weakest letters get a handwriting step most of the time (never lv≥MAX),
+    // quizzes keep the sound/shape side of review alive
+    const pushReview = () => {
+      const s = review.shift();
+      if (!s) return false;
+      drill.push(s.lv < 3 || slot % 2 === 1 ? mkW(s.g, s.n) : mkQ(s.g, s.n));
+      slot += 1;
+      return true;
+    };
+    const rounds: Array<Dir | undefined> = ['char', 'roman', undefined];
+    for (let r = 0; r < rounds.length; r++) {
+      for (const n of newIdx) {
+        drill.push(mkQ(g, n, rounds[r]));
+        if (r === 1) drill.push(mkW(g, n));  // one less-guided write per new letter
       }
+      // reviews flow between the rounds, in parallel with the new letters
+      pushReview();
+      pushReview();
     }
     // top up short runs (e.g. a single late letter) with more review
-    while (drill.length < 9 && review.length) {
-      const r = review.shift()!;
-      drill.push(mkQ(r.g, r.n));
-    }
+    while (drill.length < 9 && pushReview()) { /* filled by pushReview */ }
   } else {
-    const batch = (pool.length ? pool : g.letters.map((_, i) => ({ g, n: i + 1 }))).slice(0, 10);
-    for (const s of shuffle(batch)) drill.push(mkQ(s.g, s.n));
+    const batch = (pool.length ? pool : g.letters.map((_, i) => ({ g, n: i + 1, lv: 0 }))).slice(0, 10);
+    // strengthening session: below-mastery letters alternate writes and quizzes
+    shuffle(batch).forEach((s, i) => drill.push(s.lv > 0 && s.lv < MAX_LV && i % 2 === 0 ? mkW(s.g, s.n) : mkQ(s.g, s.n)));
   }
 
   return { group: g, mixed: false, hasNew, bumpable: true, intro, drill };
@@ -274,7 +293,9 @@ export function composeMixedRun(store: AlphaStore, size = 12): Run {
   )
     .filter((s) => s.lv >= 1)
     .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts));
-  const drill = shuffle(known.slice(0, size).map((s) => mkQ(s.g, s.n)));
+  // every 3rd weakest letter gets a handwriting step instead of a quiz,
+  // so mixed practice also revisits the motor memory, at the right assist level
+  const drill = shuffle(known.slice(0, size).map((s, i) => (s.lv < 3 && i % 3 === 2 ? mkW(s.g, s.n) : mkQ(s.g, s.n))));
   const group = drill[0] ? (ALPHA_GROUPS.find((g) => g.id === drill[0].gid) || ALPHA_GROUPS[0]) : ALPHA_GROUPS[0];
   return { group, mixed: true, hasNew: false, bumpable: drill.length > 0, intro: [], drill };
 }

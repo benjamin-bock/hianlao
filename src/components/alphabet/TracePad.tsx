@@ -19,15 +19,19 @@ import type { AlphaLetter } from '@/data/alphabet';
 import { ALPHA_GLYPHS, ALPHA_STROKES } from '@/data/alpha-strokes';
 import {
   CANVAS,
+  GUIDE_MIN_COV,
   MODEL_OFFSET,
   MODEL_SCALE,
+  SNAP_FACTOR,
   START_R,
   advanceStrokeProgress,
   polylineMeta,
   resamplePolyline,
   samplePath,
   scoreDirectionalStroke,
+  snapPoint,
   toCanvasPt,
+  type AssistMode,
   type Pt,
   type StrokeFailReason,
 } from '@/lib/trace-score';
@@ -85,7 +89,16 @@ function dilate(src: Uint8Array, r: number): Uint8Array {
   return out;
 }
 
-export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPass: () => void }) {
+// Which guide-overlay bits each assist level shows on screen.
+const OVERLAY: Record<AssistMode, { line: boolean; arrows: boolean; tracer: boolean; rings: boolean }> = {
+  guided:   { line: true, arrows: true, tracer: true, rings: true },
+  snapped:  { line: true, arrows: true, tracer: true, rings: true },
+  assisted: { line: true, arrows: true, tracer: false, rings: true },
+  faint:    { line: true, arrows: false, tracer: false, rings: false },
+  bare:     { line: false, arrows: false, tracer: false, rings: false },
+};
+
+export default function TracePad({ letter, assist = 'snapped', onPass }: { letter: AlphaLetter; assist?: AssistMode; onPass: () => void }) {
   const { t } = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -106,6 +119,14 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
 
   const model = ALPHA_STROKES[letter.lao];
   const glyphOutline = ALPHA_GLYPHS[letter.lao];
+  const overlay = OVERLAY[assist];
+  const snapFactor = assist === 'snapped' || assist === 'assisted' ? SNAP_FACTOR[assist] : 0;
+
+  function guidedCoverage(): number {
+    const cur = guides && step < guides.length ? guides[step] : null;
+    if (!cur || !cur.len) return 0;
+    return cur.cum[liveProgress.current] / cur.len;
+  }
 
   const guides = useMemo(() => {
     if (!model) return null;
@@ -115,6 +136,9 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
       return { pts: cp, d: p.d, len: p.len, cum: p.cum };
     });
   }, [model]);
+
+  /** guided mode: the ink is the model path itself, filled up to liveProgress. */
+  const guided = !!guides && assist === 'guided';
 
   function clearTimer() {
     if (timerRef.current !== null) {
@@ -159,7 +183,7 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     if (!dpr) return;
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dpr, step, verdict, fontTick]);
+  }, [dpr, step, verdict, fontTick, assist]);
 
   function pos(e: React.PointerEvent): Pt {
     const el = canvasRef.current!;
@@ -227,7 +251,7 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
 
       // Live traced progress highlight along the current stroke
       const cur = guides[step];
-      if (cur && liveProgress.current > 0 && startedOk.current && verdict !== 'fail') {
+      if (!guided && cur && liveProgress.current > 0 && startedOk.current && verdict !== 'fail') {
         ctx.strokeStyle = verdict === 'pass' ? 'rgba(88, 204, 2, 0.85)' : 'rgba(28, 176, 246, 0.35)';
         ctx.lineWidth = BRUSH * 0.85;
         ctx.lineCap = 'round';
@@ -239,6 +263,26 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
         }
         ctx.stroke();
       }
+    }
+
+    // Guided mode: the model path itself is the ink — it hugs the letter
+    // shape perfectly and fills as the learner drags along it.
+    if (guided && guides) {
+      const cur = guides[step];
+      if (cur && liveProgress.current > 0 && startedOk.current) {
+        const done = verdict === 'pass' || guidedCoverage() >= GUIDE_MIN_COV;
+        ctx.strokeStyle = done ? '#58cc02' : '#1cb0f6';
+        ctx.lineWidth = BRUSH * 0.62;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cur.pts[0].x, cur.pts[0].y);
+        for (let k = 1; k <= liveProgress.current && k < cur.pts.length; k++) {
+          ctx.lineTo(cur.pts[k].x, cur.pts[k].y);
+        }
+        ctx.stroke();
+      }
+      return;
     }
 
     // Learner's freehand ink
@@ -293,14 +337,25 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     if (!drawing.current) return;
     e.preventDefault();
     const s = strokes.current[strokes.current.length - 1];
-    const p = pos(e);
+    const raw = pos(e);
     const last = s[s.length - 1];
-    if (Math.hypot(p.x - last.x, p.y - last.y) < 3) return;
-    s.push(p);
+    if (Math.hypot(raw.x - last.x, raw.y - last.y) < 3) return;
 
     if (guides && step < guides.length && startedOk.current) {
       const cur = guides[step];
-      liveProgress.current = advanceStrokeProgress(p, last, cur.pts, cur.cum, liveProgress.current);
+      if (guided) {
+        // the pad leads: progress only advances while the pointer stays in the
+        // corridor, so the learner physically walks along the perfect trace
+        liveProgress.current = advanceStrokeProgress(raw, last, cur.pts, cur.cum, liveProgress.current);
+      } else {
+        const p = snapFactor
+          ? snapPoint(raw, cur.pts, liveProgress.current, snapFactor)
+          : raw;
+        s.push(p);
+        liveProgress.current = advanceStrokeProgress(p, last, cur.pts, cur.cum, liveProgress.current);
+      }
+    } else {
+      s.push(raw);
     }
     draw();
   }
@@ -314,9 +369,47 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
   }
 
   function evaluate() {
-    if (!strokes.current.length) return;
-    if (guides && step < guides.length) evaluateStroke();
-    else evaluateWhole(false);
+    if (!strokes.current.length && !guided) return;
+    if (guides && step < guides.length) {
+      if (guided) evaluateGuided();
+      else evaluateStroke();
+    } else evaluateWhole(false);
+  }
+
+  // Guided mode: the shape is the model path — pass when the learner's drag
+  // carried the trace (nearly) to the end; too short = keep following.
+  function evaluateGuided() {
+    if (!guides) return;
+    const cur = guides[step];
+    const cov = guidedCoverage();
+    if (startedOk.current && cov >= GUIDE_MIN_COV && cur) {
+      liveProgress.current = cur.pts.length - 1;
+      const next = step + 1;
+      setVerdict('pass');
+      sfx('correct');
+      buzz([12, 30, 12]);
+      pop(cardRef.current);
+      draw();
+      timerRef.current = window.setTimeout(() => {
+        strokes.current = [];
+        setStep(next);
+        onPass();
+      }, 680);
+    } else {
+      sfx('wrong');
+      buzz(50);
+      shake(cardRef.current);
+      setFailReason(startedOk.current ? 'incomplete' : 'start');
+      setVerdict('fail');
+      draw();
+      timerRef.current = window.setTimeout(() => {
+        strokes.current = [];
+        liveProgress.current = 0;
+        startedOk.current = false;
+        setHasInk(false);
+        setVerdict('none');
+      }, 950);
+    }
   }
 
   function evaluateStroke() {
@@ -492,7 +585,11 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
           <span className="trace-stroke-count">
             {guides.length > 1
               ? t('alpha_trace_step').replace('{a}', String(Math.min(step + 1, guides.length))).replace('{b}', String(guides.length))
-              : t('alpha_trace_arrows')}
+              : assist === 'bare'
+                ? t('alpha_trace_free')
+                : assist === 'faint'
+                  ? t('alpha_trace_free_hint')
+                  : t('alpha_trace_arrows')}
           </span>
         </div>
       ) : null}
@@ -506,21 +603,23 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           />
-          {guides && guide && verdict !== 'pass' ? (
-            <svg className="trace-guide" viewBox={`0 0 ${CANVAS} ${CANVAS}`} style={{ pointerEvents: 'none' }}>
+          {guides && guide && overlay.line && verdict !== 'pass' ? (
+            <svg className={`trace-guide${assist === 'faint' ? ' trace-guide-faint' : ''}`} viewBox={`0 0 ${CANVAS} ${CANVAS}`} style={{ pointerEvents: 'none' }}>
               <g key={`${letter.lao}-${step}-${replayKey}`}>
                 <path className="trace-guide-line" d={guide.d} />
-                {arrows.map((a, i) => (
+                {overlay.arrows ? arrows.map((a, i) => (
                   <path
                     key={i}
                     className="trace-guide-arrow"
                     d="M -4,-5 L 4,0 L -4,5"
                     transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}
                   />
-                ))}
-                <circle className="trace-guide-start-ring" cx={guide.pts[0].x} cy={guide.pts[0].y} r="10" />
+                )) : null}
+                {overlay.rings ? (
+                  <circle className="trace-guide-start-ring" cx={guide.pts[0].x} cy={guide.pts[0].y} r="10" />
+                ) : null}
                 <circle className="trace-guide-start" cx={guide.pts[0].x} cy={guide.pts[0].y} r="5.5" />
-                {!isDrawing && verdict === 'none' ? (
+                {overlay.tracer && !isDrawing && verdict === 'none' ? (
                   <circle className="trace-guide-tracer" r="5">
                     <animateMotion path={guide.d} dur="2.6s" repeatCount="indefinite" />
                   </circle>
