@@ -8,7 +8,10 @@ import { useT } from '@/lib/i18n';
 import { isDone, totalDone, api, getUser, getState, setGoal, getDueReviews, getWeakWords } from '@/lib/store';
 import { useShell } from '@/components/SiteShell';
 import { UnitIcon } from '@/components/Icons';
-import { Check, Lock, Play, RotateCcw, Target, Zap } from 'lucide-react';
+import { sfx, buzz, shake, confettiBurst, reducedMotion } from '@/lib/fx';
+import { Check, Lock, PartyPopper, Play, RotateCcw, Target, Zap } from 'lucide-react';
+
+let celebratedGoal = false;
 import { UNITS } from '@/data/units.ts';
 import { VOCAB_BY_ID } from '@/data/vocab.ts';
 
@@ -29,6 +32,7 @@ export default function LearnPage() {
   const [doneMap, setDoneMap] = useState<Record<string, number>>({});
   const [nudges, setNudges] = useState({ due: 0, weak: 0 });
   const [firstDone, setFirstDone] = useState(false);
+  const [lockedTip, setLockedTip] = useState<string | null>(null);
 
   useEffect(() => {
     const s = getState();
@@ -39,11 +43,26 @@ export default function LearnPage() {
     setNudges({ due: getDueReviews().length, weak: getWeakWords().filter((w) => VOCAB_BY_ID[w.id]).length });
     setFirstDone(totalDone() > 0);
     bump((n) => n + 1);
+    if (s.xpToday >= (s.goal || 20) && !celebratedGoal && !reducedMotion()) {
+      celebratedGoal = true;
+      sfx('levelup');
+      confettiBurst(60);
+    }
   }, []);
 
   const goalPct = Math.min(100, Math.round(((xpToday || 0) / (goal || 20)) * 100));
+  const goalDone = goalPct >= 100;
   const firstUndone = allLessons.findIndex((l) => !doneMap[l.id]);
   const next = firstUndone >= 0 ? allLessons[firstUndone] : null;
+
+  const onLockedTap = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    sfx('wrong');
+    buzz(30);
+    shake(e.currentTarget);
+    setLockedTip(id);
+    window.setTimeout(() => setLockedTip((cur) => (cur === id ? null : cur)), 2200);
+  };
 
   return (
     <>
@@ -52,7 +71,7 @@ export default function LearnPage() {
         <p className="section-sub">{doneCount}/{allLessons.length} {t('learn_sub')}</p>
       </div>
 
-      <div className="card goal-card">
+      <div className={`card goal-card${goalDone ? ' done' : ''}`}>
         <div className="goal-row">
           <strong>{t('goal_title')}</strong>
           <select
@@ -63,7 +82,11 @@ export default function LearnPage() {
             {[10, 20, 50, 100].map((g) => <option key={g} value={String(g)}>{g} XP</option>)}
           </select>
           <div className="goal-bar"><div className="goal-fill" style={{ width: `${goalPct}%` }} /></div>
-          <span className="muted">{t('goal_today')}: <Zap size={13} style={{ verticalAlign: '-.1em' }} /> {xpToday || 0} / {goal || 20} XP ({goalPct}%)</span>
+          {goalDone ? (
+            <span className="goal-done-note"><PartyPopper size={15} style={{ verticalAlign: '-.15em' }} /> {t('goal_done')}</span>
+          ) : (
+            <span className="muted">{t('goal_today')}: <Zap size={13} style={{ verticalAlign: '-.1em' }} /> {xpToday || 0} / {goal || 20} XP ({goalPct}%)</span>
+          )}
         </div>
       </div>
 
@@ -114,8 +137,13 @@ export default function LearnPage() {
                   href={unlocked ? `/lesson?id=${l.id}` : '#'}
                   style={{ ['--unit-color' as string]: unit.color }}
                   aria-disabled={unlocked ? 'false' : 'true'}
-                  onClick={(e) => { if (!unlocked) e.preventDefault(); }}
+                  {...(unlocked ? {} : { 'data-sfx-off': true })}
+                  onClick={(e) => { if (!unlocked) onLockedTap(e, l.id); }}
                 >
+                  {!done && unlocked && next && next.id === l.id ? (
+                    <span className="start-bubble" aria-hidden="true">{t('learn_start_hint')}</span>
+                  ) : null}
+                  {lockedTip === l.id ? <span className="locked-tip" role="status">{t('learn_locked_tip')}</span> : null}
                   <div className="lesson-circle">{done ? <Check strokeWidth={3.2} /> : unlocked ? <Play /> : <Lock />}</div>
                   <div className="lesson-meta">
                     <strong>{pf(l, 'title') ?? ''}</strong>
