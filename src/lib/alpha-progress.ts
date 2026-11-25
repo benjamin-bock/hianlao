@@ -181,8 +181,10 @@ export function bumpLetter(store: AlphaStore, gid: string, n: number, right: boo
 export type Dir = 'char' | 'roman';
 export interface RunQ { kind: 'q'; gid: string; n: number; dir: Dir; tries: number }
 export interface RunWrite { kind: 'write'; gid: string; n: number }
+/** assemble two known letters into one syllable (consonant + vowel sign) */
+export interface RunMix { kind: 'mix'; cGid: string; cN: number; vGid: string; vN: number; dir: 'mix-read' | 'mix-build'; tries: number }
 export interface RunShowcase { kind: 'showcase'; gid: string; n: number }
-export type RunStep = RunQ | RunWrite | RunShowcase;
+export type RunStep = RunQ | RunWrite | RunMix | RunShowcase;
 export interface Run {
   group: AlphaGroup;
   mixed: boolean;
@@ -201,6 +203,56 @@ const mkQ = (g: AlphaGroup, n: number, dir?: Dir): RunQ => ({
   tries: 0,
 });
 const mkW = (g: AlphaGroup, n: number): RunWrite => ({ kind: 'write', gid: g.id, n });
+const mkMix = (c: { g: AlphaGroup; n: number }, v: { g: AlphaGroup; n: number }): RunMix => ({
+  kind: 'mix', cGid: c.g.id, cN: c.n, vGid: v.g.id, vN: v.n,
+  dir: Math.random() < 0.5 ? 'mix-read' : 'mix-build',
+  tries: 0,
+});
+
+/**
+ * Known consonant × known vowel pairs eligible for syllable assembly,
+ * weakest letters first — assembly is exactly where revision meets challenge:
+ * old letters come back, but now they must work *together*.
+ */
+export function mixPool(store: AlphaStore): Array<{ c: { g: AlphaGroup; n: number }; v: { g: AlphaGroup; n: number } }> {
+  const weak = (kind: 'consonants' | 'vowels') =>
+    ALPHA_GROUPS.filter((g) => g.kind === kind)
+      .flatMap((g) => g.letters.map((_, i) => ({ g, n: i + 1, lv: letterLevel(store, g.id, i + 1), ts: store.letters[letterId(g.id, i + 1)]?.ts || 0 })))
+      .filter((s) => s.lv >= 1)
+      .sort((a, b) => (a.lv - b.lv) || (a.ts - b.ts));
+  const cons = weak('consonants');
+  const vows = weak('vowels');
+  const pairs: Array<{ c: { g: AlphaGroup; n: number }; v: { g: AlphaGroup; n: number } }> = [];
+  for (const c of cons) for (const v of vows) pairs.push({ c: { g: c.g, n: c.n }, v: { g: v.g, n: v.n } });
+  return pairs;
+}
+
+/**
+ * Turn some review slots of an existing drill into assembly steps, in place.
+ * Only letters the learner already knows are converted (never the run's own
+ * new letters), and every other eligible slot stays a quiz/write so the
+ * classical drilling survives alongside the new mechanic. */
+function weaveMixSteps(
+  drill: RunStep[],
+  pairs: Array<{ c: { g: AlphaGroup; n: number }; v: { g: AlphaGroup; n: number } }>,
+  maxSteps = 3,
+  keep: Set<string> = new Set(),
+): void {
+  if (!pairs.length) return;
+  let p = 0;
+  let used = 0;
+  const max = Math.min(pairs.length, maxSteps);
+  for (let i = 0; i < drill.length && used < max; i++) {
+    const step = drill[i];
+    if (step.kind === 'q' || step.kind === 'write') {
+      if (keep.has(`${step.gid}-${step.n}`)) continue;
+      const pair = pairs[p++ % pairs.length];
+      drill[i] = mkMix(pair.c, pair.v);
+      used += 1;
+      i += 1; // leave the next slot alone: reviews stay quizzes/writes too
+    }
+  }
+}
 
 /** letters of a group, weakest (lowest level, least recent) first */
 export function groupWeakFirst(g: AlphaGroup, store: AlphaStore): number[] {
@@ -273,10 +325,25 @@ export function composeGroupRun(g: AlphaGroup, store: AlphaStore): Run {
     }
     // top up short runs (e.g. a single late letter) with more review
     while (drill.length < 9 && pushReview()) { /* filled by pushReview */ }
+    // syllable assembly: pair the run's NEW letters with already-known letters
+    // of the other kind, plus weakest review pairs — new glyphs merge with the
+    // learned stock instead of staying isolated single letters
+    const pairs = mixPool(store);
+    const complement = g.kind === 'consonants'
+      ? ALPHA_GROUPS.filter((x) => x.kind === 'vowels').flatMap((x) => groupWeakFirst(x, store).map((n) => ({ g: x, n })).filter((s) => letterLevel(store, s.g.id, s.n) >= 1)).slice(0, 2)
+      : ALPHA_GROUPS.filter((x) => x.kind === 'consonants').flatMap((x) => groupWeakFirst(x, store).map((n) => ({ g: x, n })).filter((s) => letterLevel(store, s.g.id, s.n) >= 1)).slice(0, 2);
+    const newPairs = complement.flatMap((o) => {
+      const cSide = g.kind === 'consonants';
+      return newIdx.map((n) => (cSide
+        ? { c: { g, n }, v: { g: o.g, n: o.n } }
+        : { c: { g: o.g, n: o.n }, v: { g, n } }));
+    });
+    weaveMixSteps(drill, [...newPairs, ...pairs], 3, new Set(newIdx.map((n) => `${g.id}-${n}`)));
   } else {
     const batch = (pool.length ? pool : g.letters.map((_, i) => ({ g, n: i + 1, lv: 0 }))).slice(0, 10);
     // strengthening session: below-mastery letters alternate writes and quizzes
     shuffle(batch).forEach((s, i) => drill.push(s.lv > 0 && s.lv < MAX_LV && i % 2 === 0 ? mkW(s.g, s.n) : mkQ(s.g, s.n)));
+    weaveMixSteps(drill, mixPool(store), 3);
   }
 
   return { group: g, mixed: false, hasNew, bumpable: true, intro, drill };
@@ -296,6 +363,7 @@ export function composeMixedRun(store: AlphaStore, size = 12): Run {
   // every 3rd weakest letter gets a handwriting step instead of a quiz,
   // so mixed practice also revisits the motor memory, at the right assist level
   const drill = shuffle(known.slice(0, size).map((s, i) => (s.lv < 3 && i % 3 === 2 ? mkW(s.g, s.n) : mkQ(s.g, s.n))));
+  weaveMixSteps(drill as RunStep[], mixPool(store), 3);
   const group = drill[0] ? (ALPHA_GROUPS.find((g) => g.id === drill[0].gid) || ALPHA_GROUPS[0]) : ALPHA_GROUPS[0];
   return { group, mixed: true, hasNew: false, bumpable: drill.length > 0, intro: [], drill };
 }

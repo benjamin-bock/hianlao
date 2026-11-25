@@ -759,6 +759,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .trace-guide-faint .trace-guide-line { opacity: .22; stroke-dasharray: 3 7; }
 .trace-guide-faint .trace-guide-start { fill: rgba(88, 204, 2, .55); }
 
+/* assemble step: two known letters merged into one syllable */
+.alpha-mix-parts { display: flex; align-items: center; justify-content: center; gap: .6rem; margin: .4rem 0 .6rem; }
+.alpha-mix-part { display: flex; flex-direction: column; align-items: center; gap: .1rem; padding: .45rem .9rem; }
+.alpha-mix-part .lao { font-size: 1.5rem; line-height: 1.2; }
+.alpha-mix-part .word-romanization { font-size: .72rem; 
+}
+.alpha-mix-plus { font-weight: 800; color: var(--muted); font-size: 1.2rem; }
+.alpha-mix-word .word-romanization { margin-top: .2rem; }
+.mix-sound-xl { font-size: 2.1rem; font-weight: 800; letter-spacing: .02em; padding: .6rem 1.2rem; }
+
 
 .group-card.done .group-cta { color: var(--green-dark); }
 .practice-mixed { margin: 0 0 1.5rem; }
