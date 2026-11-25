@@ -1,124 +1,53 @@
 'use client';
 
-// TracePad — the Duolingo-style manuscript exercise. The glyph is drawn as a
-// pale ghost outline on a canvas and the learner traces over it.
+// TracePad — Duolingo-style Lao handwriting pad.
 //
-// Consonants have stroke models (src/data/alpha-strokes.ts): the exercise
-// becomes stroke-by-stroke. Each stroke gets an animated guide overlay with a
-// start dot and directional arrowheads; the learner traces only the current
-// stroke, which is scored on its own line mask:
-//   coverage = share of the guide line's ink the learner actually touched
-//   spill    = share of the learner's ink that landed outside the glyph's
-//              strokes (any of them, so starting the next stroke early is ok)
-// Passing a stroke repaints it as a solid green line (the "written" ink) and
-// unlocks the next guide; the last one fires onPass like before. Letters
-// without a model keep the original whole-glyph trace.
+// Consonants have exact Noto Sans Lao Looped vector silhouettes (ALPHA_GLYPHS)
+// and stroke-order centerlines (ALPHA_STROKES) in the same 100×100 grid, so
+// the guide fits the ghost glyph identically across every device and browser.
+// Each consonant starts on its head circle (ຫົວ) and flows in a continuous
+// curve; the pad enforces starting at the circle and following the path in
+// order, while giving generous finger tolerance.
 //
-// Model coordinates live on a shared 100×100 grid (y 5 ascender · 30 head ·
-// 54 bowl · 78 baseline · 100 descender). To align guide and glyph, the
-// model's ink box is fitted (contain) onto the ghost glyph's measured ink box.
+// Vowel syllables (no stroke model) use whole-glyph multi-stroke tracing so
+// learners can lift their finger between the carrier and vowel signs.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n';
 import { sfx, buzz, pop, shake } from '@/lib/fx';
 import type { AlphaLetter } from '@/data/alphabet';
-import { ALPHA_STROKES } from '@/data/alpha-strokes';
+import { ALPHA_GLYPHS, ALPHA_STROKES } from '@/data/alpha-strokes';
+import {
+  CANVAS,
+  MODEL_OFFSET,
+  MODEL_SCALE,
+  START_R,
+  advanceStrokeProgress,
+  polylineMeta,
+  resamplePolyline,
+  samplePath,
+  scoreDirectionalStroke,
+  toCanvasPt,
+  type Pt,
+  type StrokeFailReason,
+} from '@/lib/trace-score';
 
-const CANVAS = 280;                       // logical size (CSS px)
-const BRUSH = 13;                         // brush diameter — tracing tolerance
-const GHOST = 'rgba(28, 176, 246, .16)';  // pale blue glyph outline
-const LAO_FONT = '"Noto Sans Lao", "Lao MN", "Leelawadee UI", "DokChampa", sans-serif';
-const COV_MIN = 0.72;    // whole-glyph mode: ≥72% of the glyph's ink touched
-const SPILL_MAX = 0.35;  // whole-glyph mode: ≤35% of learner ink off the glyph
-const S_COV = 0.64;      // per-stroke mode: ≥64% of the guide line traced
-const S_SPILL = 0.34;    // per-stroke mode: ≤34% of learner ink off the glyph
+export { samplePath };
 
-interface Pt { x: number; y: number }
-interface Guide { pts: Pt[]; len: number }
+const BRUSH = 14;
+const GHOST = 'rgba(28, 176, 246, .20)';
+const LAO_FONT = '"Noto Sans Lao Looped", "Noto Sans Lao", "Lao MN", "Leelawadee UI", "DokChampa", sans-serif';
+const COV_MIN = 0.68;    // whole-glyph mode: ≥68% of syllable ink covered
+const SPILL_MAX = 0.36;  // whole-glyph mode: ≤36% of ink off-glyph
 
-// ——— path sampling: SVG 'd' (M L Q A) → polyline ———————————————————————
+// Notebook line positions in 100×100 model space (cap-line & baseline)
+const GUIDE_LINES_Y = [25, 75];
 
-export function samplePath(d: string): Pt[] {
-  const pts: Pt[] = [];
-  let cur: Pt = { x: 0, y: 0 };
-  const re = /([MLQA])([^MLQA]*)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(d))) {
-    const n = m[2].trim().split(/[\s,]+/).map(Number);
-    if (m[1] === 'M') { cur = { x: n[0], y: n[1] }; pts.push({ ...cur }); }
-    else if (m[1] === 'L') { cur = { x: n[0], y: n[1] }; pts.push({ ...cur }); }
-    else if (m[1] === 'Q') {
-      const c = { x: n[0], y: n[1] }, end = { x: n[2], y: n[3] };
-      for (let i = 1; i <= 24; i++) {
-        const t = i / 24, u = 1 - t;
-        pts.push({ x: u * u * cur.x + 2 * u * t * c.x + t * t * end.x, y: u * u * cur.y + 2 * u * t * c.y + t * t * end.y });
-      }
-      cur = { ...end };
-    } else if (m[1] === 'A') {
-      // W3C endpoint → center conversion, then sample the arc
-      const [rx, ry, xrot, laf, sf, x2, y2] = n;
-      const x1 = cur.x, y1 = cur.y;
-      let rxs = Math.abs(rx), rys = Math.abs(ry);
-      if (!rxs || !rys) { cur = { x: x2, y: y2 }; pts.push({ ...cur }); continue; }
-      const rad = (xrot * Math.PI) / 180;
-      const cos = Math.cos(rad), sin = Math.sin(rad);
-      const dx = (x1 - x2) / 2, dy = (y1 - y2) / 2;
-      const x1p = cos * dx + sin * dy, y1p = -sin * dx + cos * dy;
-      const lam = (x1p * x1p) / (rxs * rxs) + (y1p * y1p) / (rys * rys);
-      if (lam > 1) { const sq = Math.sqrt(lam); rxs *= sq; rys *= sq; }
-      const num = rxs * rxs * rys * rys - rxs * rxs * y1p * y1p - rys * rys * x1p * x1p;
-      const den = rxs * rxs * y1p * y1p + rys * rys * x1p * x1p;
-      const co = Math.sqrt(Math.max(0, num / (den || 1)));
-      let cxp = (co * rxs * y1p) / rys, cyp = (-co * rys * x1p) / rxs;
-      if (laf === sf) { cxp = -cxp; cyp = -cyp; }
-      const cx = cos * cxp - sin * cyp + (x1 + x2) / 2;
-      const cy = sin * cxp + cos * cyp + (y1 + y2) / 2;
-      const ang = (ux: number, uy: number, vx: number, vy: number) => {
-        const dot = ux * vx + uy * vy, l = Math.hypot(ux, uy) * Math.hypot(vx, vy);
-        let a = Math.acos(Math.max(-1, Math.min(1, dot / (l || 1))));
-        if (ux * vy - uy * vx < 0) a = -a;
-        return a;
-      };
-      const t1 = ang(1, 0, (x1p - cxp) / rxs, (y1p - cyp) / rys);
-      let dt = ang((x1p - cxp) / rxs, (y1p - cyp) / rys, (-x1p - cxp) / rxs, (-y1p - cyp) / rys);
-      if (!sf && dt > 0) dt -= 2 * Math.PI;
-      if (sf && dt < 0) dt += 2 * Math.PI;
-      for (let i = 1; i <= 48; i++) {
-        const t = t1 + (dt * i) / 48;
-        const px = cx + rxs * Math.cos(t) * cos - rys * Math.sin(t) * sin;
-        const py = cy + rxs * Math.cos(t) * sin + rys * Math.sin(t) * cos;
-        pts.push({ x: px, y: py });
-      }
-      cur = { x: x2, y: y2 };
-    }
-  }
-  return pts;
+function strokePolylines(user: Pt[][]): Pt[][] {
+  return user.map((s) => (s.length === 1 ? [s[0], { x: s[0].x + 0.01, y: s[0].y }] : s));
 }
 
-function poly(pts: Pt[]): { d: string; len: number; cum: number[] } {
-  let d = '';
-  const cum: number[] = [];
-  let len = 0;
-  for (let i = 0; i < pts.length; i++) {
-    if (i) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
-    cum.push(len);
-    d += `${i ? 'L' : 'M'} ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`;
-  }
-  return { d, len, cum };
-}
-
-// ——— helpers shared by both modes ———————————————————————————————————————
-
-function strokePolylines(user: Array<Array<Pt>>): Array<Array<Pt>> {
-  const out: Array<Array<Pt>> = [];
-  for (const s of user) {
-    if (s.length === 1) out.push([{ x: s[0].x, y: s[0].y }, { x: s[0].x + 0.01, y: s[0].y }]);
-    else out.push(s);
-  }
-  return out;
-}
-
-function rasterize(polys: Array<Array<Pt>>, width: number): Uint8ClampedArray {
+function rasterize(polys: Pt[][], width: number): Uint8ClampedArray {
   const c = document.createElement('canvas');
   c.width = CANVAS;
   c.height = CANVAS;
@@ -133,17 +62,10 @@ function rasterize(polys: Array<Array<Pt>>, width: number): Uint8ClampedArray {
     for (let i = 1; i < p.length; i++) g.lineTo(p[i].x, p[i].y);
     g.stroke();
   }
-  return c.getContext('2d')!.getImageData(0, 0, CANVAS, CANVAS).data;
+  return g.getImageData(0, 0, CANVAS, CANVAS).data;
 }
 
-// RGBA raster → 1-byte-per-pixel alpha mask (dilate and lookups index pixels)
-function alphaMask(rgba: Uint8ClampedArray): Uint8Array {
-  const m = new Uint8Array(CANVAS * CANVAS);
-  for (let i = 0; i < CANVAS * CANVAS; i++) m[i] = rgba[i * 4 + 3] > 40 ? 1 : 0;
-  return m;
-}
-
-function dilate(src: Uint8ClampedArray | Uint8Array, r: number): Uint8Array {
+function dilate(src: Uint8Array, r: number): Uint8Array {
   const out = new Uint8Array(src);
   const disk: Array<[number, number]> = [];
   for (let dy = -r; dy <= r; dy++) {
@@ -163,114 +85,50 @@ function dilate(src: Uint8ClampedArray | Uint8Array, r: number): Uint8Array {
   return out;
 }
 
-// score learner ink against a guide-line mask, with spill measured outside a
-// looser mask covering every stroke of the glyph (early strokes of the next
-// line are not punished)
-function scoreStroke(userInk: Array<Array<Pt>>, linePts: Pt[], allPts: Array<Array<Pt>>) {
-  const line = alphaMask(rasterize(strokePolylines([linePts]), BRUSH * 0.78));
-  const allowed = dilate(alphaMask(rasterize(strokePolylines(allPts), BRUSH * 2)), Math.round(BRUSH * 1.15));
-  const user = alphaMask(rasterize(strokePolylines(userInk), BRUSH));
-  let lineInk = 0, touched = 0, ink = 0, spill = 0;
-  for (let y = 0; y < CANVAS; y++) {
-    for (let x = 0; x < CANVAS; x++) {
-      const i = y * CANVAS + x;
-      const u = user[i] === 1;
-      if (line[i]) { lineInk++; if (u) touched++; }
-      if (u) { ink++; if (!allowed[i]) spill++; }
-    }
-  }
-  const cov = lineInk ? touched / lineInk : 0;
-  const sp = ink ? spill / ink : 1;
-  return { cov, sp, ok: cov >= S_COV && sp <= S_SPILL };
-}
-
-// ——— TracePad ————————————————————————————————————————————————————————
-
 export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPass: () => void }) {
   const { t } = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const strokes = useRef<Array<Array<{ x: number; y: number }>>>([]);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const strokes = useRef<Pt[][]>([]);
   const drawing = useRef(false);
+  const liveProgress = useRef(0);
+  const startedOk = useRef(false);
+  const timerRef = useRef<number | null>(null);
+
   const [dpr, setDpr] = useState(0);
   const [verdict, setVerdict] = useState<'none' | 'pass' | 'fail'>('none');
-  const [step, setStep] = useState(0);       // index of the stroke being traced
-  const [fontTick, setFontTick] = useState(0); // re-measure once webfonts land
-  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [failReason, setFailReason] = useState<StrokeFailReason>('offpath');
+  const [step, setStep] = useState(0);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasInk, setHasInk] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
+  const [fontTick, setFontTick] = useState(0);
 
   const model = ALPHA_STROKES[letter.lao];
-  const modelPts = useMemo(
-    () => (model ? model.map((st) => samplePath(st.d)) : null),
-    [model],
-  );
-
-  // ghost-glyph ink box (measured) and the model→canvas transform (fit)
-  const [fit, setFit] = useState<{ sc: number; ox: number; oy: number } | null>(null);
-  useEffect(() => {
-    if (!modelPts) { setFit(null); return; }
-    const c = document.createElement('canvas');
-    c.width = CANVAS;
-    c.height = CANVAS;
-    const g = c.getContext('2d');
-    if (!g) { setFit(null); return; }
-    g.fillStyle = '#000';
-    g.font = `${CANVAS * 0.55}px ${LAO_FONT}`;
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(letter.lao, CANVAS / 2, CANVAS / 2 + CANVAS * 0.02);
-    const data = g.getImageData(0, 0, CANVAS, CANVAS).data;
-    let x0 = CANVAS, y0 = CANVAS, x1 = 0, y1 = 0, any = false;
-    for (let y = 0; y < CANVAS; y++) {
-      for (let x = 0; x < CANVAS; x++) {
-        if (data[(y * CANVAS + x) * 4 + 3] > 40) {
-          any = true;
-          if (x < x0) x0 = x;
-          if (x > x1) x1 = x;
-          if (y < y0) y0 = y;
-          if (y > y1) y1 = y;
-        }
-      }
-    }
-    if (!any) { setFit(null); return; }
-    let mx0 = 100, my0 = 100, mx1 = 0, my1 = 0;
-    for (const mp of modelPts) {
-      for (const p of mp) {
-        if (p.x < mx0) mx0 = p.x;
-        if (p.x > mx1) mx1 = p.x;
-        if (p.y < my0) my0 = p.y;
-        if (p.y > my1) my1 = p.y;
-      }
-    }
-    const mw = mx1 - mx0 || 1, mh = my1 - my0 || 1;
-    const gw = x1 - x0 + 1, gh = y1 - y0 + 1;
-    const sc = Math.min(gw / mw, gh / mh);
-    setFit({
-      sc,
-      ox: x0 + gw / 2 - (mx0 + mw / 2) * sc,
-      oy: y0 + gh / 2 - (my0 + mh / 2) * sc,
-    });
-  }, [modelPts, letter.lao, fontTick]);
-
-  const toCanvas = (p: Pt): Pt => (fit ? { x: p.x * fit.sc + fit.ox, y: p.y * fit.sc + fit.oy } : p);
+  const glyphOutline = ALPHA_GLYPHS[letter.lao];
 
   const guides = useMemo(() => {
-    if (!modelPts || !fit) return null;
-    return modelPts.map((pts) => {
-      const cp = pts.map(toCanvas);
-      const p = poly(cp);
+    if (!model) return null;
+    return model.map((st) => {
+      const cp = resamplePolyline(samplePath(st.d).map(toCanvasPt), 3);
+      const p = polylineMeta(cp);
       return { pts: cp, d: p.d, len: p.len, cum: p.cum };
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelPts, fit]);
+  }, [model]);
+
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
 
   useEffect(() => {
     setDpr(Math.min(window.devicePixelRatio || 1, 2.5));
-  }, []);
-
-  useEffect(() => {
     let alive = true;
     const ready = (document as Document & { fonts?: FontFaceSet }).fonts;
     ready?.ready.then(() => { if (alive) setFontTick((n) => n + 1); }).catch(() => {});
-    return () => { alive = false; };
+    return () => { alive = false; clearTimer(); };
   }, []);
 
   useEffect(() => {
@@ -284,21 +142,26 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
   }, [dpr]);
 
   useEffect(() => {
+    clearTimer();
     strokes.current = [];
+    liveProgress.current = 0;
+    startedOk.current = false;
     setVerdict('none');
+    setFailReason('offpath');
     setStep(0);
+    setHasInk(false);
+    setIsDrawing(false);
     if (dpr) draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [letter.lao]);
 
-  // redraw whenever progress or verdict changes (draw closes over fresh state)
   useEffect(() => {
     if (!dpr) return;
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dpr, step, verdict, fontTick]);
 
-  function pos(e: React.PointerEvent): { x: number; y: number } {
+  function pos(e: React.PointerEvent): Pt {
     const el = canvasRef.current!;
     const r = el.getBoundingClientRect();
     const scale = CANVAS / r.width;
@@ -308,6 +171,36 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     };
   }
 
+  function drawGhost(ctx: CanvasRenderingContext2D) {
+    // subtle notebook lines (cap-line & baseline)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(150, 145, 132, 0.22)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 5]);
+    for (const gy of GUIDE_LINES_Y) {
+      const y = gy * MODEL_SCALE + MODEL_OFFSET;
+      ctx.beginPath();
+      ctx.moveTo(14, y);
+      ctx.lineTo(CANVAS - 14, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = GHOST;
+    if (glyphOutline && typeof Path2D !== 'undefined') {
+      ctx.save();
+      ctx.translate(MODEL_OFFSET, MODEL_OFFSET);
+      ctx.scale(MODEL_SCALE, MODEL_SCALE);
+      ctx.fill(new Path2D(glyphOutline), 'evenodd');
+      ctx.restore();
+    } else {
+      ctx.font = `${CANVAS * 0.50}px ${LAO_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(letter.lao, CANVAS / 2, CANVAS / 2 + CANVAS * 0.02);
+    }
+  }
+
   function draw() {
     const el = canvasRef.current;
     if (!el || !dpr) return;
@@ -315,50 +208,83 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, CANVAS, CANVAS);
-    // ghost glyph
-    ctx.fillStyle = GHOST;
-    ctx.font = `${CANVAS * 0.55}px ${LAO_FONT}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(letter.lao, CANVAS / 2, CANVAS / 2 + CANVAS * 0.02);
+
+    drawGhost(ctx);
+
     if (guides) {
-      // strokes already written: solid green
-      ctx.strokeStyle = 'rgba(109, 199, 64, 0.9)';
-      ctx.lineWidth = BRUSH * 0.5;
+      // Completed strokes: clean Duolingo green
+      ctx.strokeStyle = 'rgba(88, 204, 2, 0.92)';
+      ctx.lineWidth = BRUSH * 0.65;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       for (let i = 0; i < step && guides[i]; i++) {
+        const pts = guides[i].pts;
         ctx.beginPath();
-        ctx.moveTo(guides[i].pts[0].x, guides[i].pts[0].y);
-        for (const p of guides[i].pts.slice(1)) ctx.lineTo(p.x, p.y);
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let k = 1; k < pts.length; k++) ctx.lineTo(pts[k].x, pts[k].y);
+        ctx.stroke();
+      }
+
+      // Live traced progress highlight along the current stroke
+      const cur = guides[step];
+      if (cur && liveProgress.current > 0 && startedOk.current && verdict !== 'fail') {
+        ctx.strokeStyle = verdict === 'pass' ? 'rgba(88, 204, 2, 0.85)' : 'rgba(28, 176, 246, 0.35)';
+        ctx.lineWidth = BRUSH * 0.85;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cur.pts[0].x, cur.pts[0].y);
+        for (let k = 1; k <= liveProgress.current && k < cur.pts.length; k++) {
+          ctx.lineTo(cur.pts[k].x, cur.pts[k].y);
+        }
         ctx.stroke();
       }
     }
-    // learner ink
-    ctx.strokeStyle = '#1cb0f6';
-    ctx.fillStyle = '#1cb0f6';
-    ctx.lineWidth = BRUSH * 0.55;
+
+    // Learner's freehand ink
+    const inkColor = verdict === 'pass' ? '#58cc02' : verdict === 'fail' ? '#ff4b4b' : '#1cb0f6';
+    ctx.strokeStyle = inkColor;
+    ctx.fillStyle = inkColor;
+    ctx.lineWidth = BRUSH * 0.62;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     for (const s of strokes.current) {
       if (s.length === 1) {
         ctx.beginPath();
-        ctx.arc(s[0].x, s[0].y, BRUSH * 0.28, 0, Math.PI * 2);
+        ctx.arc(s[0].x, s[0].y, BRUSH * 0.31, 0, Math.PI * 2);
         ctx.fill();
         continue;
       }
       ctx.beginPath();
       ctx.moveTo(s[0].x, s[0].y);
-      for (const p of s.slice(1)) ctx.lineTo(p.x, p.y);
+      for (let i = 1; i < s.length; i++) ctx.lineTo(s[i].x, s[i].y);
       ctx.stroke();
     }
   }
 
   function onPointerDown(e: React.PointerEvent) {
     e.preventDefault();
+    clearTimer();
     try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* synthetic/odd pointer ids */ }
+
+    const p = pos(e);
+    if (guides) {
+      if (verdict === 'fail' || strokes.current.length > 0) {
+        strokes.current = [];
+      }
+      const cur = guides[step];
+      if (cur) {
+        startedOk.current = Math.hypot(p.x - cur.pts[0].x, p.y - cur.pts[0].y) <= START_R;
+        liveProgress.current = startedOk.current
+          ? advanceStrokeProgress(p, null, cur.pts, cur.cum, 0)
+          : 0;
+      }
+    }
+
     drawing.current = true;
-    strokes.current.push([pos(e)]);
+    setIsDrawing(true);
+    strokes.current.push([p]);
+    setHasInk(true);
     setVerdict('none');
     draw();
   }
@@ -369,8 +295,13 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     const s = strokes.current[strokes.current.length - 1];
     const p = pos(e);
     const last = s[s.length - 1];
-    if (Math.hypot(p.x - last.x, p.y - last.y) < 3) return; // thin the stream
+    if (Math.hypot(p.x - last.x, p.y - last.y) < 3) return;
     s.push(p);
+
+    if (guides && step < guides.length && startedOk.current) {
+      const cur = guides[step];
+      liveProgress.current = advanceStrokeProgress(p, last, cur.pts, cur.cum, liveProgress.current);
+    }
     draw();
   }
 
@@ -378,54 +309,68 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     if (!drawing.current) return;
     e.preventDefault();
     drawing.current = false;
+    setIsDrawing(false);
     evaluate();
   }
 
   function evaluate() {
     if (!strokes.current.length) return;
     if (guides && step < guides.length) evaluateStroke();
-    else evaluateWhole();
+    else evaluateWhole(false);
   }
 
-  // stroke-by-stroke: score only the current guide line
   function evaluateStroke() {
     if (!guides) return;
     const cur = guides[step];
-    const { ok } = scoreStroke(strokes.current, cur.pts, modelPts!.map((mp) => mp.map(toCanvas)));
-    if (ok) {
-      strokes.current = [];
+    const res = scoreDirectionalStroke(strokes.current, cur.pts, cur.cum, cur.len);
+    if (res.ok) {
       const next = step + 1;
-      setStep(next);
+      setVerdict('pass');
       sfx('correct');
       buzz([12, 30, 12]);
       pop(cardRef.current);
       if (next >= guides.length) {
-        setVerdict('pass');
-        window.setTimeout(onPass, 700);
+        liveProgress.current = cur.pts.length - 1;
+        draw();
+        timerRef.current = window.setTimeout(() => {
+          strokes.current = [];
+          setStep(next);
+          onPass();
+        }, 680);
       } else {
-        setVerdict('pass');
-        window.setTimeout(() => setVerdict('none'), 620);
+        timerRef.current = window.setTimeout(() => {
+          strokes.current = [];
+          liveProgress.current = 0;
+          startedOk.current = false;
+          setHasInk(false);
+          setStep(next);
+          setVerdict('none');
+        }, 550);
       }
     } else {
       sfx('wrong');
       buzz(50);
       shake(cardRef.current);
+      setFailReason(res.reason);
       setVerdict('fail');
-      window.setTimeout(() => {
+      draw();
+      timerRef.current = window.setTimeout(() => {
         strokes.current = [];
+        liveProgress.current = 0;
+        startedOk.current = false;
+        setHasInk(false);
         setVerdict('none');
-      }, 520);
+      }, 950);
     }
   }
 
-  // whole glyph (no model): the original behaviour
-  function evaluateWhole() {
+  function measureWhole() {
     const off = document.createElement('canvas');
     off.width = CANVAS;
     off.height = CANVAS;
     const octx = off.getContext('2d')!;
     octx.fillStyle = '#000';
-    octx.font = `${CANVAS * 0.55}px ${LAO_FONT}`;
+    octx.font = `${CANVAS * 0.50}px ${LAO_FONT}`;
     octx.textAlign = 'center';
     octx.textBaseline = 'middle';
     octx.fillText(letter.lao, CANVAS / 2, CANVAS / 2 + CANVAS * 0.02);
@@ -434,46 +379,70 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
     for (let i = 0; i < CANVAS * CANVAS; i++) {
       if (gdata[i * 4 + 3] > 40) mask[i] = 1;
     }
-    const dilated = dilate(mask, Math.round(BRUSH * 0.9));
+    const dilated = dilate(mask, Math.round(BRUSH * 0.95));
 
-    const udata = rasterize(strokes.current, BRUSH);
+    const udata = rasterize(strokePolylines(strokes.current), BRUSH);
     let glyphInk = 0, touched = 0, ink = 0, spill = 0;
-    for (let y = 0; y < CANVAS; y++) {
-      for (let x = 0; x < CANVAS; x++) {
-        const i = y * CANVAS + x;
-        const u = udata[i * 4 + 3] > 40;
-        if (mask[i]) glyphInk++;
-        if (u) {
-          ink++;
-          if (dilated[i]) {
-            if (mask[i]) touched++;
-          } else {
-            spill++;
-          }
+    for (let i = 0; i < CANVAS * CANVAS; i++) {
+      const u = udata[i * 4 + 3] > 40;
+      if (mask[i]) glyphInk++;
+      if (u) {
+        ink++;
+        if (dilated[i]) {
+          if (mask[i]) touched++;
+        } else {
+          spill++;
         }
       }
     }
-    const cov = glyphInk ? touched / glyphInk : 0;
-    const spillPct = ink ? spill / ink : 1;
+    return {
+      cov: glyphInk ? touched / glyphInk : 0,
+      spillPct: ink ? spill / ink : 1,
+    };
+  }
+
+  // Whole-glyph mode (multi-part vowel syllables): allow multiple strokes before passing
+  function evaluateWhole(explicitCheck: boolean) {
+    const { cov, spillPct } = measureWhole();
     const passed = cov >= COV_MIN && spillPct <= SPILL_MAX;
-    setVerdict(passed ? 'pass' : 'fail');
     if (passed) {
+      setVerdict('pass');
       sfx('correct');
       buzz([12, 30, 12]);
       pop(cardRef.current);
-      window.setTimeout(onPass, 750);
-    } else {
+      draw();
+      timerRef.current = window.setTimeout(onPass, 720);
+      return;
+    }
+    if (explicitCheck || spillPct > SPILL_MAX) {
       sfx('wrong');
       buzz(50);
       shake(cardRef.current);
+      setFailReason('offpath');
+      setVerdict('fail');
+      draw();
+      timerRef.current = window.setTimeout(() => {
+        strokes.current = [];
+        setHasInk(false);
+        setVerdict('none');
+      }, 850);
     }
   }
 
   function clear() {
+    clearTimer();
     strokes.current = [];
+    liveProgress.current = 0;
+    startedOk.current = false;
+    setHasInk(false);
     setVerdict('none');
     if (guides) setStep(0);
+    setReplayKey((k) => k + 1);
     draw();
+  }
+
+  function replay() {
+    setReplayKey((k) => k + 1);
   }
 
   // ——— overlay: animated guide for the current stroke ———————————————————
@@ -481,7 +450,7 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
   const arrows = useMemo(() => {
     if (!guide) return [];
     const { pts, cum, len } = guide;
-    const stops = len > 260 ? [0.28, 0.55, 0.82] : [0.55];
+    const stops = len > 420 ? [0.11, 0.38, 0.65, 0.90] : [0.12, 0.48, 0.86];
     return stops
       .map((f) => {
         const target = cum.length ? f * len : 0;
@@ -489,39 +458,41 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
         while (i < cum.length - 1 && cum[i] < target) i++;
         const p = pts[i];
         const q = pts[Math.min(pts.length - 1, i + 2)];
+        if (!p || !q || (p.x === q.x && p.y === q.y)) return null;
         const deg = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI;
-        if (!p || !q) return null;
         return { x: p.x, y: p.y, deg };
       })
       .filter((a): a is { x: number; y: number; deg: number } => a !== null);
   }, [guide]);
 
-  const endArrow = useMemo(() => {
-    if (!guide || guide.pts.length < 3) return null;
-    const p = guide.pts[guide.pts.length - 3];
-    const q = guide.pts[guide.pts.length - 1];
-    // rings end on the start dot — no arrow there
-    if (Math.hypot(q.x - guide.pts[0].x, q.y - guide.pts[0].y) < 16) return null;
-    return { x: q.x, y: q.y, deg: (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI };
-  }, [guide]);
+  const failMessage =
+    failReason === 'start'
+      ? t('alpha_trace_start')
+      : failReason === 'incomplete'
+        ? t('alpha_trace_finish')
+        : t('alpha_trace_try');
 
   return (
     <div className="trace-wrap">
       <p className="drill-prompt">{t('alpha_trace').replace('{c}', letter.lao)}</p>
       {guides ? (
         <div className="trace-meta">
-          <span className="trace-steps">
-            {guides.map((_, i) => (
-              <span
-                key={i}
-                className={`trace-dot${i < step ? ' done' : ''}${i === step ? ' cur' : ''}`}
-              >
-                {i < step ? '✓' : i + 1}
-              </span>
-            ))}
-          </span>
+          {guides.length > 1 ? (
+            <span className="trace-steps">
+              {guides.map((_, i) => (
+                <span
+                  key={i}
+                  className={`trace-dot${i < step ? ' done' : ''}${i === step ? ' cur' : ''}`}
+                >
+                  {i < step ? '✓' : i + 1}
+                </span>
+              ))}
+            </span>
+          ) : null}
           <span className="trace-stroke-count">
-            {t('alpha_trace_step').replace('{a}', String(Math.min(step + 1, guides.length))).replace('{b}', String(guides.length))}
+            {guides.length > 1
+              ? t('alpha_trace_step').replace('{a}', String(Math.min(step + 1, guides.length))).replace('{b}', String(guides.length))
+              : t('alpha_trace_arrows')}
           </span>
         </div>
       ) : null}
@@ -535,37 +506,39 @@ export default function TracePad({ letter, onPass }: { letter: AlphaLetter; onPa
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           />
-          {guides && verdict === 'none' ? (
+          {guides && guide && verdict !== 'pass' ? (
             <svg className="trace-guide" viewBox={`0 0 ${CANVAS} ${CANVAS}`} style={{ pointerEvents: 'none' }}>
-              {guide ? (
-                <g>
-                  <path className="trace-guide-line" d={guide.d} key={`${letter.lao}-${step}`} />
-                  <circle className="trace-guide-start" cx={guide.pts[0].x} cy={guide.pts[0].y} r="6" />
-                  {arrows.map((a, i) => (
-                    <polygon
-                      key={i}
-                      className="trace-guide-arrow"
-                      points="0,-9 12,0 0,9"
-                      transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}
-                    />
-                  ))}
-                  {endArrow ? (
-                    <polygon
-                      className="trace-guide-arrow end"
-                      points="0,-9 12,0 0,9"
-                      transform={`translate(${endArrow.x} ${endArrow.y}) rotate(${endArrow.deg})`}
-                    />
-                  ) : null}
-                </g>
-              ) : null}
+              <g key={`${letter.lao}-${step}-${replayKey}`}>
+                <path className="trace-guide-line" d={guide.d} />
+                {arrows.map((a, i) => (
+                  <path
+                    key={i}
+                    className="trace-guide-arrow"
+                    d="M -4,-5 L 4,0 L -4,5"
+                    transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}
+                  />
+                ))}
+                <circle className="trace-guide-start-ring" cx={guide.pts[0].x} cy={guide.pts[0].y} r="10" />
+                <circle className="trace-guide-start" cx={guide.pts[0].x} cy={guide.pts[0].y} r="5.5" />
+                {!isDrawing && verdict === 'none' ? (
+                  <circle className="trace-guide-tracer" r="5">
+                    <animateMotion path={guide.d} dur="2.6s" repeatCount="indefinite" />
+                  </circle>
+                ) : null}
+              </g>
             </svg>
           ) : null}
         </div>
-        {verdict === 'fail' ? <p className="trace-miss">{t('alpha_trace_try')}</p> : null}
+        {verdict === 'fail' ? <p className="trace-miss">{failMessage}</p> : null}
         {verdict === 'pass' ? <p className="trace-hit">{t('alpha_trace_ok')}</p> : null}
       </div>
       <div className="trace-actions">
-        <button className="btn btn-ghost" onClick={clear}>{t('alpha_trace_clear')}</button>
+        {guides ? (
+          <button type="button" className="btn btn-ghost" onClick={replay}>↻ {t('alpha_trace_replay')}</button>
+        ) : hasInk && verdict === 'none' ? (
+          <button type="button" className="btn btn-primary" onClick={() => evaluateWhole(true)}>{t('alpha_trace_check')}</button>
+        ) : null}
+        <button type="button" className="btn btn-ghost" onClick={clear}>{t('alpha_trace_clear')}</button>
       </div>
     </div>
   );
