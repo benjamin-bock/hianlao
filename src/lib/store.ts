@@ -71,12 +71,35 @@ export function mergeProgress(a: Progress, b: Progress): Progress {
 let currentUser: ApiUser | null = null;
 let putTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Push local state to the server right away (used for tab-close flushes,
+// reconnects, and healing previously failed syncs).
+export async function pushNow(): Promise<boolean> {
+  if (!currentUser || !api.available) return false;
+  if (putTimer) { clearTimeout(putTimer); putTimer = null; }
+  try {
+    return await api.putProgress(load());
+  } catch {
+    return false; // offline: stays in localStorage, retried on the next change or reconnect
+  }
+}
+
 async function putSoon() {
   if (!currentUser || !api.available) return;
   if (putTimer) clearTimeout(putTimer);
   putTimer = setTimeout(() => {
-    api.putProgress(load()).catch(() => { /* offline: stays in localStorage */ });
+    putTimer = null;
+    void pushNow();
   }, 600);
+}
+
+if (typeof window !== 'undefined') {
+  // Closing or backgrounding the tab right after a lesson must not lose the
+  // pending save, and coming back online should push what failed while offline.
+  window.addEventListener('pagehide', () => { void pushNow(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') void pushNow();
+  });
+  window.addEventListener('online', () => { void pushNow(); });
 }
 
 export async function addXp(n: number): Promise<number> {
@@ -263,6 +286,7 @@ export const api = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ progress }),
+      keepalive: true,
     });
     return r.ok;
   },
@@ -284,6 +308,8 @@ export async function initAuth(): Promise<ApiUser | null> {
     if (user) {
       const remote = await api.getProgress();
       if (remote) save(mergeProgress(load(), remote));
+      // Heal syncs that failed earlier (offline save, tab closed mid-push).
+      void pushNow();
     }
     return user;
   }

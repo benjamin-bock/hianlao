@@ -1,6 +1,6 @@
 import { sameOrigin, getCookies, clientIp, body, jsonError, SESSION_COOKIE } from '../_lib/util.ts';
 import { kvEnabled, rateLimit } from '../_lib/kv.ts';
-import { userFromToken, getProgress, saveProgress, validateProgress } from '../_lib/auth.ts';
+import { userFromToken, getProgress, saveProgress, mergeProgress } from '../_lib/auth.ts';
 
 async function authedUser(req: Request): Promise<string | null> {
   if (!kvEnabled) return null;
@@ -24,7 +24,9 @@ export async function PUT(req: Request): Promise<Response> {
   const username = await authedUser(req);
   if (!username) return jsonError(401, 'not signed in');
   const payload = await body(req);
-  const progress = await saveProgress(username, validateProgress(payload.progress));
+  // Merge instead of replace: a device with a stale local copy must never
+  // erase newer progress saved from another device.
+  const progress = await saveProgress(username, mergeProgress(await getProgress(username), payload.progress));
   return Response.json({ ok: true, progress });
 }
 

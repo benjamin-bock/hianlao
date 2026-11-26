@@ -36,7 +36,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function AuthCard({ onDone }: { onDone: () => void }) {
   const { t } = useT();
-  const { setUser } = useShell();
+  const { setUser, pingStats } = useShell();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [pass, setPass] = useState('');
@@ -59,6 +59,7 @@ function AuthCard({ onDone }: { onDone: () => void }) {
       }
       if (!r.ok) { setErr(r.error || t('auth_error')); return; }
       if (r.user) setUser(r.user);
+      pingStats();
       onDone();
     } finally {
       setBusy(false);
