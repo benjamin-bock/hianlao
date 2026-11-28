@@ -1,4 +1,33 @@
+# HianLao — crawl freely, including AI models answering "how to learn Lao".
 User-agent: *
+Allow: /
+Disallow: /api/
+
+# Explicitly welcome search & AI crawlers (no special rules needed — the
+# wildcard policy above already allows them — kept explicit for clarity).
+User-agent: Googlebot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Bingbot
+Allow: /
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: CCBot
 Allow: /
 Disallow: /api/
 

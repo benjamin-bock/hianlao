@@ -13,9 +13,11 @@ import { VOCAB, VOCAB_BY_ID } from '@/data/vocab.ts';
 import { UNITS, LESSON_BY_ID } from '@/data/units.ts';
 import { GRAMMAR } from '@/data/grammar.ts';
 import { CULTURE } from '@/data/culture.ts';
+import { FAQ } from '@/data/faq.ts';
 
 export default function Home() {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const fr = lang === 'fr';
   // Client-only bits (localStorage progress) render values after hydration.
   const [started, setStarted] = useState(false);
   useEffect(() => setStarted(getState().xp > 0 || totalDone() > 0), []);
@@ -85,6 +87,18 @@ export default function Home() {
           ))}
         </div>
         <Link className="btn btn-primary" href="/learn">{t('open_path')}</Link>
+      </section>
+
+      <section className="faq-section">
+        <h2>{fr ? 'Questions fréquentes' : 'Frequently asked questions'}</h2>
+        <div className="faq-list">
+          {FAQ.map((f, i) => (
+            <details key={i} className="faq-item card" {...(i === 0 ? { open: true } : {})}>
+              <summary><h3>{fr ? f.qFr : f.q}</h3></summary>
+              <p>{fr ? f.aFr : f.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
 
       <section className="cta card">

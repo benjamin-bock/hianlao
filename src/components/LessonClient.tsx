@@ -27,7 +27,7 @@ const XP_PER_CORRECT = 10;
 const PRACTICE_XP = 5;
 
 interface QueueItem { ex: Exercise; origin: number | null; isRetry: boolean }
-interface Banner { ok: boolean; correctText: string }
+interface Banner { ok: boolean; correctText: string; wid?: string }
 type Phase = 'lesson' | 'summary' | 'practice-done' | 'fail' | 'empty';
 
 interface EngineState {
@@ -170,11 +170,11 @@ export default function LessonClient() {
           xpEarned: prev.practiceMode ? prev.xpEarned : prev.xpEarned + XP_PER_CORRECT,
           practiceXp: prev.practiceMode ? prev.practiceXp + PRACTICE_XP : prev.practiceXp,
           blurbShown: true,
-          banner: { ok, correctText },
+          banner: { ok, correctText, wid: wid ?? undefined },
         };
       }
       if (prev.practiceMode) {
-        return { ...prev, answered: true, combo: 0, banner: { ok, correctText }, queue: [...prev.queue, { ...prev.cur!, isRetry: true }] };
+        return { ...prev, answered: true, combo: 0, banner: { ok, correctText, wid: wid ?? undefined }, queue: [...prev.queue, { ...prev.cur!, isRetry: true }] };
       }
       return {
         ...prev,
@@ -184,7 +184,7 @@ export default function LessonClient() {
         missed: prev.cur!.origin != null && !prev.missed.includes(prev.cur!.origin) ? [...prev.missed, prev.cur!.origin] : prev.missed,
         requeued: prev.requeued + 1,
         queue: [...prev.queue, { ...prev.cur!, isRetry: true }],
-        banner: { ok, correctText },
+        banner: { ok, correctText, wid: wid ?? undefined },
       };
     });
 
@@ -356,6 +356,7 @@ export default function LessonClient() {
             <Feedback
               ok={state.banner.ok}
               correctText={state.banner.correctText}
+              audioId={state.banner.wid}
               explain={feedbackNote(cur.ex, noteOf)}
               practice={state.practiceMode}
               hearts={state.hearts}

@@ -7,17 +7,21 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { useT } from '@/lib/i18n';
 import { pop, shake } from '@/lib/fx';
+import { speakItem } from '@/lib/speech';
+import { VOCAB_BY_ID } from '@/data/vocab.ts';
 import { BadgeIcon } from '@/components/Icons';
-import { CircleCheck, CircleX, HeartCrack, ShieldCheck, Trophy } from 'lucide-react';
+import { CircleCheck, CircleX, HeartCrack, ShieldCheck, Trophy, Volume2 } from 'lucide-react';
 
 export const esc = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // Fixed action-bar feedback shown after every answer. CONTINUE is always
 // enabled; when hearts run out it relabels to "See results".
-export function Feedback({ ok, correctText, explain, practice, hearts, onContinue }: {
+export function Feedback({ ok, correctText, audioId, explain, practice, hearts, onContinue }: {
   ok: boolean;
   correctText: string;
+  /** vocab id of the correct answer, when it has one — replay it on a miss */
+  audioId?: string;
   explain?: string;
   practice: boolean;
   hearts: number;
@@ -25,6 +29,7 @@ export function Feedback({ ok, correctText, explain, practice, hearts, onContinu
 }) {
   const { t, pickVariant } = useT();
   const xp = practice ? 5 : 10;
+  const audioItem = !ok && audioId ? VOCAB_BY_ID[audioId] : undefined;
   return (
     <div className={`feedback ${ok ? 'ok' : 'bad'}`}>
       <div className="feedback-icon" aria-hidden="true">{ok ? <CircleCheck /> : <CircleX />}</div>
@@ -42,6 +47,15 @@ export function Feedback({ ok, correctText, explain, practice, hearts, onContinu
             />
           )}
         {!ok && explain ? <p className="feedback-note">{explain}</p> : null}
+        {!ok && audioItem ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm feedback-replay"
+            onClick={() => { void speakItem(audioItem); }}
+          >
+            <Volume2 /> {t('title_play_audio')}
+          </button>
+        ) : null}
       </div>
       <button type="button" className="btn btn-continue btn-lg" onClick={onContinue}>
         {hearts <= 0 && !practice ? t('see_result') : t('cont')}
